@@ -1,17 +1,27 @@
 /**
  * The brief's four model invariants, as property-based tests.
  *
- * Inputs are drawn from realistic ranges (narrower than the UI's min/max in data/defaults.json)
- * for the reason given on `realisticInputs`.
+ * The rent-up and selling-costs-up invariants hold everywhere, so they are drawn over the full UI
+ * bounds (every field's min, max and step from data/defaults.json, via `uiBoundsInputs`). The
+ * growth invariant and the zero-growth identity use realistic ranges (narrower than the UI's) for
+ * the reasons given on `realisticInputs` and in the identity test.
  */
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import defaultsJson from '../../data/defaults.json';
 import taxRulesJson from '../../data/taxRules.json';
 import { runModel } from './model';
-import { parseTaxRules } from './schema';
-import { BUYER_TYPES, NATIONS, type Inputs } from './types';
+import { parseDefaults, parseTaxRules } from './schema';
+import {
+  BUYER_TYPES,
+  NATIONS,
+  NUMERIC_INPUT_KEYS,
+  type Inputs,
+  type NumericInputKey,
+} from './types';
 
 const taxRules = parseTaxRules(taxRulesJson);
+const defaults = parseDefaults(defaultsJson);
 const NO_SENSITIVITY = { sensitivity: false } as const;
 
 /** A decimal in [min, max] with 4 decimal places, so shrunk counterexamples stay readable. */
@@ -51,6 +61,36 @@ const realisticInputs: fc.Arbitrary<Inputs> = fc
     legalSelling: fc.integer({ min: 0, max: 5000 }),
     homeReport: fc.integer({ min: 0, max: 1000 }),
     years: fc.integer({ min: 1, max: 40 }),
+  })
+  .map(({ depositShare, ...rest }) => ({
+    ...rest,
+    deposit: Math.round(rest.price * depositShare),
+  }));
+
+/** Every value the UI allows for a field: min to max in steps of `step`, from defaults.json. */
+const uiValue = (key: NumericInputKey) => {
+  const { min, max, step } = defaults.fields[key];
+  const steps = Math.floor((max - min) / step + 1e-9);
+  return fc.integer({ min: 0, max: steps }).map((n) => Math.round((min + n * step) * 1e10) / 1e10);
+};
+
+/** Two UI values for a field, lower first (they may be equal). */
+const uiPair = (key: NumericInputKey): fc.Arbitrary<readonly [number, number]> =>
+  fc.tuple(uiValue(key), uiValue(key)).map(([a, b]) => [Math.min(a, b), Math.max(a, b)] as const);
+
+/**
+ * Any scenario the UI can produce: every numeric input across its full min/max at its step. The
+ * deposit is a share of the price, because the UI clamps it to the price ("Deposit can't be more
+ * than the price").
+ */
+const uiBoundsInputs: fc.Arbitrary<Inputs> = fc
+  .record({
+    nation: fc.constantFrom(...NATIONS),
+    buyerType: fc.constantFrom(...BUYER_TYPES),
+    depositShare: decimal(0, 1),
+    ...(Object.fromEntries(
+      NUMERIC_INPUT_KEYS.filter((key) => key !== 'deposit').map((key) => [key, uiValue(key)]),
+    ) as Record<Exclude<NumericInputKey, 'deposit'>, fc.Arbitrary<number>>),
   })
   .map(({ depositShare, ...rest }) => ({
     ...rest,
@@ -107,35 +147,69 @@ describe('model invariants (fast-check)', () => {
     expect(breakEven({ ...extreme, houseGrowth: -0.02 })).toBe(40);
   });
 
-  it('raising rent never makes the break-even year later', () => {
+  it('raising rent never makes the break-even year later (full UI bounds)', () => {
     fc.assert(
-      fc.property(realisticInputs, fc.integer({ min: 1, max: 2000 }), (inputs, extra) => {
-        const higher = { ...inputs, rent: inputs.rent + extra };
-        expect(breakEven(higher)).toBeLessThanOrEqual(breakEven(inputs));
+      fc.property(uiBoundsInputs, uiPair('rent'), (inputs, [low, high]) => {
+        const lower = { ...inputs, rent: low };
+        const higher = { ...inputs, rent: high };
+        expect(breakEven(higher)).toBeLessThanOrEqual(breakEven(lower));
       }),
-      { numRuns: 500 },
+      { numRuns: 1000 },
     );
   });
 
-  it('raising selling costs never makes the break-even year earlier', () => {
+  it('raising selling costs never makes the break-even year earlier (full UI bounds)', () => {
     fc.assert(
       fc.property(
-        realisticInputs,
-        decimal(0, 0.03),
-        fc.integer({ min: 0, max: 10000 }),
-        fc.integer({ min: 0, max: 2000 }),
+        uiBoundsInputs,
+        uiPair('agentFeeRate'),
+        uiPair('legalSelling'),
+        uiPair('homeReport'),
         (inputs, agent, legal, homeReport) => {
+          const lower = {
+            ...inputs,
+            agentFeeRate: agent[0],
+            legalSelling: legal[0],
+            homeReport: homeReport[0],
+          };
           const higher = {
             ...inputs,
-            agentFeeRate: inputs.agentFeeRate + agent,
-            legalSelling: inputs.legalSelling + legal,
-            homeReport: inputs.homeReport + homeReport,
+            agentFeeRate: agent[1],
+            legalSelling: legal[1],
+            homeReport: homeReport[1],
           };
-          expect(breakEven(higher)).toBeGreaterThanOrEqual(breakEven(inputs));
+          expect(breakEven(higher)).toBeGreaterThanOrEqual(breakEven(lower));
         },
       ),
-      { numRuns: 500 },
+      { numRuns: 1000 },
     );
+  });
+
+  it('draws the UI-bounds scenarios from the edges of every field too', () => {
+    // A guard on the generator itself: the corners the realistic ranges leave out (5%
+    // maintenance, 15% returns, 40 years, £10m prices) must be reachable.
+    const seen = { maxMaintenance: false, maxReturn: false, minReturn: false, maxPrice: false };
+    fc.assert(
+      fc.property(uiBoundsInputs, (inputs) => {
+        const { fields } = defaults;
+        expect(inputs.deposit).toBeLessThanOrEqual(inputs.price);
+        for (const key of NUMERIC_INPUT_KEYS) {
+          expect(inputs[key]).toBeGreaterThanOrEqual(fields[key].min);
+          expect(inputs[key]).toBeLessThanOrEqual(fields[key].max);
+        }
+        seen.maxMaintenance ||= inputs.maintenanceRate > 0.045;
+        seen.maxReturn ||= inputs.investmentReturn > 0.13;
+        seen.minReturn ||= inputs.investmentReturn < 0;
+        seen.maxPrice ||= inputs.price > 5_000_000;
+      }),
+      { numRuns: 1000 },
+    );
+    expect(seen).toEqual({
+      maxMaintenance: true,
+      maxReturn: true,
+      minReturn: true,
+      maxPrice: true,
+    });
   });
 
   it('zero-growth identity: buy minus rent = principal repaid - upfront costs - selling costs', () => {

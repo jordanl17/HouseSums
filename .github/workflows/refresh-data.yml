@@ -10,6 +10,11 @@ name: Refresh data
 # - push to data-test/**: dry run. Same fetch, build and checks, a job summary and an artifact,
 #   no PR. The files are also pushed to data-snapshot/<name> so they can be read without
 #   downloading the artifact (the build container cannot reach artifact storage).
+#
+# Permissions are per job. The refresh job runs npm packages and parses downloaded files, so it
+# gets a read-only token. Only the snapshot job (dry runs) and the pull-request job may push,
+# and only the pull-request job gets pull-requests: write. Both take the files from the refresh
+# job's artifact, so neither runs npm or touches the network sources.
 on:
   schedule:
     - cron: '17 6 20 * *'
@@ -42,10 +47,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: write
-      pull-requests: write
-    env:
-      DRY_RUN: ${{ github.event_name == 'push' }}
+      contents: read
+    outputs:
+      changed: ${{ steps.refresh.outputs.changed }}
     steps:
       - name: Check out
         uses: actions/checkout@v7
@@ -84,15 +88,30 @@ jobs:
 
       # The new files go into data/ in the workspace so the tests (which validate every data
       # file) and the build run against them. PRs opened with GITHUB_TOKEN do not trigger CI,
-      # so this is the check that the site still builds with the new data.
+      # so this is the check that the site still builds with the new data. If it fails, the
+      # snapshot and pull-request jobs do not run.
       - name: Test and build with the new data
         run: |
           cp out/areas.json out/rates.json out/sources.json data/
           npm test
           npm run build
 
-      - name: Publish dry-run snapshot
-        if: env.DRY_RUN == 'true'
+  snapshot:
+    name: Publish dry-run snapshot
+    needs: refresh
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download generated data
+        uses: actions/download-artifact@v8
+        with:
+          name: data-${{ github.run_id }}
+          path: out
+
+      - name: Push to data-snapshot/<name>
         env:
           TOKEN: ${{ github.token }}
           REF_NAME: ${{ github.ref_name }}
@@ -108,12 +127,33 @@ jobs:
           git push -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${branch}"
           echo "Snapshot pushed to ${branch}" >> "$GITHUB_STEP_SUMMARY"
 
+  pull-request:
+    name: Commit and open a pull request
+    needs: refresh
+    if: github.event_name != 'push' && needs.refresh.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Download generated data
+        uses: actions/download-artifact@v8
+        with:
+          name: data-${{ github.run_id }}
+          path: out
+
       - name: Commit and open a pull request
-        if: env.DRY_RUN != 'true' && steps.refresh.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           branch="data/refresh-$(date -u +%Y-%m)"
+          cp out/areas.json out/rates.json out/sources.json data/
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$branch"
@@ -133,6 +173,12 @@ jobs:
             echo "Could not open a PR automatically. Open it here: ${url}" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: No changes
-        if: env.DRY_RUN != 'true' && steps.refresh.outputs.changed != 'true'
+  no-changes:
+    name: No changes
+    needs: refresh
+    if: github.event_name != 'push' && needs.refresh.outputs.changed != 'true'
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Say so
         run: echo "The sources have not changed since the committed data. No PR." >> "$GITHUB_STEP_SUMMARY"

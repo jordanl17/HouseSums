@@ -80,6 +80,21 @@ const SAMPLE = ' (sample figure, not real data)';
 /** Allowance for floating-point loan-to-values such as 0.9000000000000001. */
 const LTV_EPSILON = 1e-9;
 
+/**
+ * Thrown by deriveInputs when the rates file has no quoted rates. There is no honest default for
+ * a mortgage rate, so the calculator stops rather than quietly modelling a 0% loan. Validated data
+ * never gets here: parseRatesFile rejects an empty list.
+ */
+export class NoMortgageRatesError extends Error {
+  constructor() {
+    super(
+      'deriveInputs: there are no mortgage rates to pick from (rates.rates is empty). ' +
+        'Load rates.json through parseRatesFile, which rejects an empty list.',
+    );
+    this.name = 'NoMortgageRatesError';
+  }
+}
+
 /** Find an area by slug, or null. */
 export function findArea(areas: AreasFile, slug: string | null): Area | null {
   if (slug === null) return null;
@@ -126,7 +141,10 @@ const tidy = (value: number): number => Math.round(value * 1e10) / 1e10;
 const isSample = (list: readonly AreaField[] | undefined, field: AreaField): boolean =>
   list?.includes(field) ?? false;
 
-/** Derive the full Inputs, the per-field reset values and provenance. Pure, never throws. */
+/**
+ * Derive the full Inputs, the per-field reset values and provenance. Pure. Throws
+ * NoMortgageRatesError if `rates.rates` is empty (validated data never is); otherwise never throws.
+ */
 export function deriveInputs(options: DeriveOptions): DerivedInputs {
   const { area, areas, rates, defaults, selection } = options;
   const overrides = options.overrides ?? {};
@@ -220,15 +238,13 @@ export function deriveInputs(options: DeriveOptions): DerivedInputs {
   // 5. Mortgage rate from the final loan-to-value and fix length.
   const ltv = price > 0 ? Math.max(0, price - deposit) / price : 0;
   const quoted = pickMortgageRate(rates, ltv, values.fixYears);
-  let rateSource = defaults.fields.mortgageRate.source;
-  if (quoted) {
-    rateSource = `${rates.source}: ${quoted.fixYears}-year fix, up to ${tidy(quoted.ltv * 100)}% loan-to-value`;
-    if (quoted.sample) rateSource += SAMPLE;
-  }
+  if (!quoted) throw new NoMortgageRatesError();
+  let rateSource = `${rates.source}: ${quoted.fixYears}-year fix, up to ${tidy(quoted.ltv * 100)}% loan-to-value`;
+  if (quoted.sample) rateSource += SAMPLE;
   const mortgageRate = set(
     'mortgageRate',
-    quoted?.rate ?? defaults.fields.mortgageRate.min,
-    typical(rateSource, quoted ? (quoted.asOf ?? rates.asOf) : null),
+    quoted.rate,
+    typical(rateSource, quoted.asOf ?? rates.asOf),
   );
 
   // 6. Rate after the fix and investment return, from the preset.

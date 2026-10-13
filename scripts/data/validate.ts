@@ -10,9 +10,13 @@
  * - areas disappear compared with the committed file (unless allowCountDrop);
  * - any value moves too far month on month compared with the committed file (unless allowMoves):
  *   prices and rents by more than 15%, 10-year growth by more than 1.5 points, rent growth by
- *   more than 5 points, a mortgage rate by more than 1.5 points;
+ *   more than 5 points, a mortgage rate by more than 15% of its old value (MAX_RATE_MOVE);
  * - a Bank of England series is missing or a rate is outside 0-25%.
  * Comparisons against the committed file are skipped for anything labelled as a sample.
+ *
+ * Warnings (reported in the job summary, never failing the run): a field that switched between
+ * the area's own figure and its nation's fallback since last month. Those are not compared month
+ * on month (the two figures measure different places), so the summary says so instead.
  */
 import type { AreaField, AreasFile, RatesFile, SourcesFile } from '../../src/lib/types.ts';
 import { AREA_FIELDS, NATIONS } from '../../src/lib/types.ts';
@@ -25,8 +29,19 @@ export const MAX_MOVE = {
   rent: 0.15,
   growth10y: 0.015,
   rentGrowth: 0.05,
-  mortgageRate: 0.015,
 } as const;
+
+/**
+ * The brief's "more than 15% month on month", applied to each Bank of England quoted rate as a
+ * relative move (5.00% to 5.80% is +16% and fails). A move must also exceed `floor` (0.25
+ * percentage points) to fail, so a tiny rate cannot trip the rule on ordinary noise: at 1.00%, a
+ * 0.20-point move is +20% but passes. At today's 4-6% rates the relative limit (0.6-0.9 points)
+ * is always the one that bites. allowMoves turns a failure into a warning.
+ */
+export const MAX_RATE_MOVE = { relative: 0.15, floor: 0.0025 } as const;
+
+/** Slack for floating-point noise, so a move of exactly the limit passes. */
+const LIMIT_EPSILON = 1e-9;
 
 /** Relative fields are compared as a share of the old value; the others in absolute terms. */
 const RELATIVE: Record<AreaField, boolean> = {
@@ -46,6 +61,18 @@ export interface CheckOptions {
 export interface CheckResult {
   errors: string[];
   warnings: string[];
+}
+
+export interface FallbackSwitch {
+  code: string;
+  name: string;
+  field: AreaField;
+  /** The nation whose figure the fallback side used. */
+  nation: AreasFile['areas'][number]['nation'];
+  /** True when the field now uses the nation figure; false when it went back to its own. */
+  toFallback: boolean;
+  from: number;
+  to: number;
 }
 
 export interface Move {
@@ -88,6 +115,47 @@ export function areaMoves(next: AreasFile, prev: AreasFile): Move[] {
     }
   }
   return moves.sort((x, y) => Math.abs(y.change) - Math.abs(x.change));
+}
+
+/**
+ * Fields that switched between an area's own figure and its nation's fallback since the previous
+ * file (areas matched by code). areaMoves leaves these out; checkAreas reports them as warnings.
+ */
+export function fallbackSwitches(next: AreasFile, prev: AreasFile): FallbackSwitch[] {
+  const before = new Map(prev.areas.map((a) => [a.code, a]));
+  const switches: FallbackSwitch[] = [];
+  for (const a of next.areas) {
+    const b = before.get(a.code);
+    if (!b) continue;
+    for (const field of AREA_FIELDS) {
+      if (b.sample?.includes(field) || a.sample?.includes(field)) continue;
+      const toFallback = a.fallbacks.includes(field);
+      if (b.fallbacks.includes(field) === toFallback) continue;
+      switches.push({
+        code: a.code,
+        name: a.name,
+        field,
+        nation: a.nation,
+        toFallback,
+        from: b[field],
+        to: a[field],
+      });
+    }
+  }
+  return switches;
+}
+
+const NATION_NAMES = {
+  eng: 'England',
+  sco: 'Scotland',
+  wal: 'Wales',
+  ni: 'Northern Ireland',
+} as const;
+
+export function describeSwitch(s: FallbackSwitch): string {
+  const nation = `the ${NATION_NAMES[s.nation]} figure`;
+  const [from, to] = s.toFallback ? ['its local figure', nation] : [nation, 'its local figure'];
+  return `${s.name}: ${s.field} switched from ${from} to ${to} (${s.from} to ${s.to}); not compared month on month`;
 }
 
 export function checkAreas(
@@ -136,6 +204,7 @@ export function checkAreas(
       if (options.allowCountDrop) warnings.push(`areas removed (allowed): ${list}`);
       else errors.push(`${gone.length} areas disappeared: ${list}`);
     }
+    for (const s of fallbackSwitches(next, prev)) warnings.push(describeSwitch(s));
     for (const m of areaMoves(next, prev)) {
       const limit = MAX_MOVE[m.field];
       if (Math.abs(m.change) <= limit) continue;
@@ -167,6 +236,14 @@ export function describeChange(m: Pick<Move, 'field' | 'change'>): string {
     : `${sign}${(m.change * 100).toFixed(2)} points`;
 }
 
+/** True when a quoted rate moved more than MAX_RATE_MOVE allows (relative, above the floor). */
+export function rateMoveTooBig(from: number, to: number): boolean {
+  const points = Math.abs(to - from);
+  if (points <= MAX_RATE_MOVE.floor + LIMIT_EPSILON) return false;
+  if (from === 0) return true;
+  return points / Math.abs(from) > MAX_RATE_MOVE.relative + LIMIT_EPSILON;
+}
+
 export function checkRates(
   next: RatesFile,
   prev: RatesFile | null,
@@ -187,12 +264,12 @@ export function checkRates(
     for (const r of next.rates) {
       const old = prev.rates.find((x) => x.series === r.series && !x.sample);
       if (!old) continue;
-      const change = r.rate - old.rate;
-      if (Math.abs(change) > MAX_MOVE.mortgageRate) {
-        const text = `${r.series}: rate moved from ${old.rate} to ${r.rate}`;
-        if (options.allowMoves) warnings.push(`${text} (allowed)`);
-        else errors.push(text);
-      }
+      if (!rateMoveTooBig(old.rate, r.rate)) continue;
+      const change = old.rate === 0 ? Infinity : r.rate / old.rate - 1;
+      const sign = change > 0 ? '+' : '';
+      const text = `${r.series}: rate moved from ${old.rate} to ${r.rate} (${sign}${(change * 100).toFixed(1)}%), limit ${MAX_RATE_MOVE.relative * 100}%`;
+      if (options.allowMoves) warnings.push(`${text} (allowed)`);
+      else errors.push(text);
     }
   }
   return { errors, warnings };
