@@ -1,0 +1,31 @@
+/*
+ * The island's frame. The grid itself is .calc-layout in base.css.
+ *
+ *   .calculator         the island root (also .calc-layout)
+ *   .calc-card          the answer card: answer, chart, key numbers
+ *   .calc-section       a supporting section in .calc-layout__more (what moves the answer,
+ *                       breakdown, how this works): a plain block on the page, not a card
+ */
+.calc-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.calc-layout__more {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.calc-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.calc-section h2 {
+  font-size: var(--size-xl);
+}

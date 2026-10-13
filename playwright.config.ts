@@ -9,7 +9,9 @@ import { normaliseBase } from './src/lib/url';
  * Locally Playwright uses the Chromium preinstalled at PLAYWRIGHT_BROWSERS_PATH.
  * CI installs it with `npx playwright install --with-deps chromium`.
  */
-const PORT = 4322;
+// E2E_PORT lets parallel worktrees each run their own preview server (default 4322). With
+// reuseExistingServer, two worktrees on one port would silently test each other's build.
+const PORT = Number(process.env.E2E_PORT ?? 4322);
 // 127.0.0.1 rather than localhost, so requests never go through an HTTP proxy.
 const HOST = '127.0.0.1';
 // Same default as astro.config.mjs. The preview gets the raw value, exactly as the build did.

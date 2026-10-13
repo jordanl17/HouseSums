@@ -45,11 +45,20 @@ import {
   type Selection,
 } from './types';
 
+/**
+ * An area as deriveInputs needs it. The ONS code is not used, so the client's compact area list
+ * (phase 4, src/lib/area-list.ts) can leave it out.
+ */
+export type DeriveArea = Omit<Area, 'code'>;
+
+/** The parts of areas.json deriveInputs reads: the data months and the nation-level figures. */
+export type AreasMeta = Pick<AreasFile, 'asOf' | 'nations'>;
+
 export interface DeriveOptions {
   /** The picked area, or null for none (nation-level figures are used). */
-  area: Area | null;
-  /** For nation-level figures and the data months. */
-  areas: AreasFile;
+  area: DeriveArea | null;
+  /** For nation-level figures and the data months. A whole AreasFile is fine. */
+  areas: AreasMeta | AreasFile;
   rates: RatesFile;
   defaults: DefaultsFile;
   selection: Selection;

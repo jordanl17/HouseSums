@@ -110,9 +110,10 @@ const clamp = (value: number, field: FieldSpec): number =>
 
 /**
  * The canonical URL text for a value in engine units, or null if it isn't a finite number.
- * Clamped to the field range, then rounded to the URL's precision.
+ * Clamped to the field range, then rounded to the URL's precision. Exported in phase 4 so the UI
+ * can tell whether an override still differs from its default by the same rule encodeState uses.
  */
-function encodeNumber(value: number, field: FieldSpec): string | null {
+export function encodeNumber(value: number, field: FieldSpec): string | null {
   if (typeof value !== 'number' || !Number.isFinite(value)) return null;
   const clamped = clamp(value, field);
   switch (kindOf(field)) {

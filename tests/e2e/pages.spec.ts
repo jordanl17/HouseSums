@@ -1,13 +1,20 @@
 import { expect, test } from '@playwright/test';
-import { expectNoHorizontalScroll, expectNoJavaScript, NOT_FOUND_PATH, PAGES } from './helpers';
+import {
+  expectNoHorizontalScroll,
+  expectNoJavaScript,
+  expectOnlyOwnScripts,
+  NOT_FOUND_PATH,
+  PAGES,
+} from './helpers';
 
 /**
  * Every page in the shell: loads with 200, has its heading, the shared header and
- * footer, no horizontal scroll at this project's width, and no JavaScript.
+ * footer, no horizontal scroll at this project's width, and no JavaScript (pages with the
+ * calculator island load scripts from our own origin only).
  * Runs at 360 and 1280 (the two Playwright projects).
  */
 
-for (const { path, title, h1 } of PAGES) {
+for (const { path, title, h1, island } of PAGES) {
   test.describe(`page ${path}`, () => {
     test('loads with its heading, header and footer', async ({ page }) => {
       const response = await page.goto(path);
@@ -33,9 +40,17 @@ for (const { path, title, h1 } of PAGES) {
       await expectNoHorizontalScroll(page);
     });
 
-    test('loads no JavaScript', async ({ page }) => {
-      await expectNoJavaScript(page, path);
-    });
+    if (island) {
+      test('loads JavaScript only for the calculator, only from our own origin', async ({
+        page,
+      }) => {
+        await expectOnlyOwnScripts(page, path);
+      });
+    } else {
+      test('loads no JavaScript', async ({ page }) => {
+        await expectNoJavaScript(page, path);
+      });
+    }
 
     test('copy has no em-dashes or exclamation marks', async ({ page }) => {
       await page.goto(path);

@@ -58,8 +58,8 @@ for (const theme of ['light', 'dark'] as const) {
       await page.keyboard.press('Enter');
       await expect(page.locator('main#main')).toBeFocused();
       await page.keyboard.press('Tab');
-      // Next stop after main is in the footer, past the header.
-      await expect(page.getByRole('contentinfo').getByRole('link').first()).toBeFocused();
+      // Next stop after main is the calculator's first input, past the header.
+      await expect(page.locator('#calc-area')).toBeFocused();
     });
 
     test('the home link and nav links show the ring when tabbed to', async ({ page }) => {

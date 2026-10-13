@@ -225,18 +225,26 @@ a:hover {
 }
 
 /*
- * Calculator grid. Three regions so that on mobile the answer sits directly
- * after the first inputs (area, buyer, price), with the rest of the inputs below.
+ * Calculator grid. Four regions so that on mobile the answer sits directly
+ * after the first inputs (area and price), with the rest of the inputs below
+ * and the supporting sections (what moves the answer, breakdown) last.
  *
  *   mobile:            desktop (>= 60rem):
  *   primary            primary | answer
  *   answer             rest    | answer
- *   rest
+ *   rest               rest    | more
+ *   more
+ *
+ * On desktop the answer spans the first two rows, whose height is set by the
+ * area and price fields and the answer itself; the inputs (rest) span rows two
+ * and three, and the last row is 1fr, so opening "Adjust every assumption"
+ * lengthens the left column without opening a gap under the answer card.
  *
  * <div class="calc-layout">
  *   <div class="calc-layout__primary">...</div>
  *   <div class="calc-layout__answer">...</div>
  *   <div class="calc-layout__rest">...</div>
+ *   <div class="calc-layout__more">...</div>   (optional)
  * </div>
  */
 .calc-layout {
@@ -246,7 +254,8 @@ a:hover {
   grid-template-areas:
     'primary'
     'answer'
-    'rest';
+    'rest'
+    'more';
   align-items: start;
 }
 
@@ -262,15 +271,20 @@ a:hover {
   grid-area: rest;
 }
 
+.calc-layout__more {
+  grid-area: more;
+}
+
 @media (min-width: 60rem) {
   .calc-layout {
     column-gap: var(--space-8);
     row-gap: var(--space-4);
     grid-template-columns: minmax(20rem, 5fr) minmax(0, 7fr);
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto auto 1fr;
     grid-template-areas:
       'primary answer'
-      'rest answer';
+      'rest answer'
+      'rest more';
   }
 }
 

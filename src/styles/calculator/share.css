@@ -1,0 +1,4 @@
+/* Followups teammate: "Copy link to these figures" and its fallback. */
+.share-link {
+  margin-top: var(--space-3);
+}

@@ -1,0 +1,107 @@
+/*
+ * Additions to the phase 2 primitives for the Preact versions in
+ * src/components/calculator/ui/. Same naming rules as src/styles/ui/.
+ *
+ *   .field__meta          tag and Reset together at the end of .field__head
+ *   .field__reset         the "Reset" link next to a changed input (a button styled as a link)
+ *   .field__note          calm note under a field (clamped values, deposit notes); polite live
+ *   .tag--button          a Tag that opens its source (a button)
+ *   .tag__icon            the small "i" inside it
+ *   .toggletip            wrapper positioning the bubble under the tag
+ *   .toggletip__bubble    the source text: ink on surface with an ink edge (no shadow)
+ *   .segmented__status    words under a segmented control, e.g. "Custom"
+ *   .data-table-scroll    focusable region that scrolls a wide table sideways
+ *   .data-table__row--current  the current setting in a table: bold plus a text marker
+ */
+.field__meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.field__reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: var(--size-xs);
+  line-height: var(--leading-body);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+.field__reset:hover {
+  text-decoration-thickness: 2px;
+}
+
+.field__note[hidden] {
+  display: none;
+}
+
+.toggletip {
+  position: relative;
+  display: inline-flex;
+}
+
+.tag--button {
+  border: 0;
+  cursor: pointer;
+}
+
+.tag__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: var(--border-thin) solid currentColor;
+  border-radius: var(--radius-pill);
+  font-size: 0.625rem;
+  line-height: 1;
+}
+
+.toggletip__bubble {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  z-index: 2;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 2 * var(--layout-gutter)));
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-thin) solid var(--color-ink);
+  border-radius: var(--space-3);
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-sm);
+  line-height: var(--leading-tight);
+  white-space: normal;
+  text-align: start;
+}
+
+.toggletip__bubble[hidden] {
+  display: none;
+}
+
+.segmented__status {
+  margin-top: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--size-sm);
+  color: var(--color-muted);
+}
+
+.data-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.data-table__row--current :is(td, th) {
+  font-weight: var(--weight-bold);
+}
+
+.data-table__row--current > :first-child::after {
+  content: ' (now)';
+}

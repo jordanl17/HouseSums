@@ -4,10 +4,10 @@ Each phase lands as one PR into `main`. The phase team appends its handoff notes
 
 | # | Phase | Branch | Status |
 |---|---|---|---|
-| 1 | Scaffold, CI and deploy | `phase/1-scaffold` | In review |
-| 2 | Brand and layout shell | `phase/2-brand` | In review |
-| 3 | Engine and data pipeline | `phase/3-engine` | In review |
-| 4 | Calculator UI | `phase/4-calculator` | Not started |
+| 1 | Scaffold, CI and deploy | `phase/1-scaffold` | Merged |
+| 2 | Brand and layout shell | `phase/2-brand` | Merged |
+| 3 | Engine and data pipeline | `phase/3-engine` | Merged |
+| 4 | Calculator UI | `phase/4-calculator` | In progress |
 | 5 | Area, nation and content pages, SEO | `phase/5-pages` | Not started |
 | 6 | Accessibility, performance and end-to-end | `phase/6-hardening` | Not started |
 
@@ -124,3 +124,35 @@ What the next phases must know:
 - **Sources page (phase 5)** should read `data/sources.json` (dataset, publisher, URL, licence, licence URL, asOf, notes, Bank series). The Bank of England data is under OGL v3 (bankofengland.co.uk/legal). The brief's "why now" rates are Moneyfacts figures; the site uses the Bank's lower quoted rates.
 - **Explainer assumptions (phase 5)** should add the tax cases left out: the 2% SDLT non-resident surcharge, companies and trusts, shared ownership, and the refund of higher rates when a previous home sells later. Inflation uprates insurance and the service charge only; selling costs are not uprated.
 
+
+### Phase 4: calculator UI
+
+In progress. The lead set up the island, its contracts and stubs; three teammates fill the stubs in parallel. Decisions: `docs/decisions.md`, "Calculator island (phase 4, lead)".
+
+#### Island props (for phase 5 area pages)
+`src/components/calculator/Calculator.tsx`, default export, props in `src/components/calculator/types.ts` (`CalculatorProps`):
+- `data: CalculatorData`: `{ defaults, taxRules, rates, areasMeta }`. Get it from `calculatorData()` in `src/lib/calculator-data.ts` (validated at build, cached).
+- `links: { areaList, howItWorks }`: `url('data/area-list.json')` and `url('how-it-works')`.
+- `initialArea?: ClientArea | null`: the page's area, from `areaForPage(slug)`. The island server-renders the full answer for it at build time (same `deriveInputs` + `runModel` as the browser), so the area page's HTML carries the answer before any JS runs, and hydration matches it.
+- `initialState?: { selection?, overrides? }`: starting selection or overrides (a nation page could pass `{ selection: { nationOverride: 'sco' } }`). Applied before the URL.
+- `syncUrl?: boolean` (default true): read the query on load and keep it in sync with `replaceState`. On an area page, `a=` is left out while the picked area is `initialArea`.
+
+Example: `<Calculator client:load data={calculatorData()} links={...} initialArea={areaForPage('leeds')} />`. For the page's own summary sentence, run `deriveInputs` + `runModel` at build with the same data (`areasFile()` gives the full file).
+
+#### Phase 4 contracts (for the teammates)
+Every child component gets one prop, `calc: CalcApi` (`InputsPanel` also gets `part`). Read state from it and change it only through its actions (`selectArea`, `setBuyerType`, `setOutlook`, `setNationOverride`, `setInput`, `resetInput`, `loadAreas`, `shareUrl`). `calc.field(key)` gives `{ spec, value, base, changed, provenance }` for any input. `calc.result` is the model output (null until an area is picked); `calc.status` is `empty`, `loading`, `ready` or `error` (`calc.problem` says why). Children never read or write the URL, fetch, or import JSON.
+
+| Owner | Files (may create and edit) | Must not touch |
+|---|---|---|
+| lead | `Calculator.tsx`, `types.ts`, `ui/**` (primitives), `src/lib/area-list.ts`, `src/lib/calculator-data.ts`, `src/pages/index.astro`, `src/pages/data/area-list.json.ts`, `src/styles/calculator.css`, `src/styles/calculator/primitives.css`, `layout.css`, `src/styles/base.css`, `src/layouts/Base.astro`, `tests/e2e/helpers.ts`, `calculator-helpers.ts` (except `pickArea`), `calculator.spec.ts`, `smoke`/`pages`/`focus` specs, `playwright.config.ts`, `docs/*.md` | |
+| inputs | `AreaPicker.tsx`, `InputsPanel.tsx`, `AdvancedPanel.tsx`, `src/styles/calculator/inputs.css`, the body of `pickArea()` in `tests/e2e/calculator-helpers.ts`, new `tests/e2e/inputs.spec.ts` and `tests/e2e/keyboard.spec.ts`, new pure helpers `src/lib/inputs.ts` (+ test) if needed | results and followups files, lead files |
+| results | `AnswerCard.tsx`, `KeyNumbers.tsx`, `Chart.tsx`, `Sensitivity.tsx`, `Breakdown.tsx`, `HowThisWorks.tsx`, `src/styles/calculator/results.css`, new `src/lib/copy.ts` + `copy.test.ts`, new `src/lib/chart.ts` + test if needed, new `tests/e2e/results.spec.ts` | inputs and followups files, lead files |
+| followups | `src/lib/defaults.ts` (the empty-rates error only) and `defaults.test.ts`, `scripts/data/**` validation and summary, `.github/workflows/refresh-data.yml`, `src/lib/model.property.test.ts`, `src/lib/analytics.ts` + `analytics.test.ts`, `ShareLink.tsx`, `src/styles/calculator/share.css`, new e2e specs `share-url.spec.ts`, `reference.spec.ts`, `nations.spec.ts`, `layout-shift.spec.ts` | the other calculator components, lead files |
+
+If you need a change in a lead file (a new optional `CalcApi` field, a primitive option), make the smallest additive change and list it in your handoff. Do not edit `docs/*.md`: put decisions in your handoff and the lead records them.
+
+**Test hooks** (`data-testid` unless it says id). Island: `calculator` (with `data-status` and `data-hydrated`), `answer-card` (the card section). Inputs: input ids `calc-{key}` for every key in `NUMERIC_INPUT_KEYS` (`calc-price`, `calc-homeReport`...) and `calc-area`; wrappers `field-calc-{key}` and `field-calc-area`; sliders id `calc-{key}-slider`; tags `tag-{key}`; Reset buttons `reset-{key}`; `buyer`, `outlook` (segmented fieldsets); `advanced` (the disclosure); nation override input id `calc-nation`, wrapper `field-calc-nation`. The Home Report field is not rendered outside Scotland. Results: `answer`, `answer-headline`, `answer-numeral`, `answer-note`, `answer-overtake`, `answer-flip`, `answer-empty`; `key-numbers`, `key-cash`, `key-first-month`, `key-after`; `chart`, `chart-table`; `sensitivity`; `breakdown`, `breakdown-upfront`, `breakdown-selling`, `breakdown-tax` (the property tax line, naming the tax), `year-table`; `how-this-works`. Share: `share-link`, `share-status`. Helpers in `tests/e2e/calculator-helpers.ts`: `gotoCalculator`, `expectStatus`, `pickArea`, `input`, `answerBox`, `params`, `REFERENCE_QUERY`.
+
+**Layout stability.** The answer card must not move or resize when inputs change: results reserve the space for every state (headline, note lines, chart height, key numbers), and the area and price fields (above the card at 360px) must not change height as values change (reserve the hint or note line).
+
+**Budget.** With the stubs the island chunk is about 29KB raw and the total 52KB of 100KB. Aim to keep the island under 40KB: no new runtime dependencies, no charting library, no JSON imports in client code.
