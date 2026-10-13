@@ -7,7 +7,7 @@ Each phase lands as one PR into `main`. The phase team appends its handoff notes
 | 1 | Scaffold, CI and deploy | `phase/1-scaffold` | Merged |
 | 2 | Brand and layout shell | `phase/2-brand` | Merged |
 | 3 | Engine and data pipeline | `phase/3-engine` | Merged |
-| 4 | Calculator UI | `phase/4-calculator` | In progress |
+| 4 | Calculator UI | `phase/4-calculator` | In review |
 | 5 | Area, nation and content pages, SEO | `phase/5-pages` | Not started |
 | 6 | Accessibility, performance and end-to-end | `phase/6-hardening` | Not started |
 
@@ -127,7 +127,7 @@ What the next phases must know:
 
 ### Phase 4: calculator UI
 
-In progress. The lead set up the island, its contracts and stubs; three teammates fill the stubs in parallel. Decisions: `docs/decisions.md`, "Calculator island (phase 4, lead)".
+In review. The lead set up the island, its contracts and stubs; three teammates (inputs, results, followups) filled them in parallel and the branches were merged without conflicts. Decisions: `docs/decisions.md`, "Calculator island (phase 4, lead)".
 
 #### Island props (for phase 5 area pages)
 `src/components/calculator/Calculator.tsx`, default export, props in `src/components/calculator/types.ts` (`CalculatorProps`):
@@ -156,3 +156,29 @@ If you need a change in a lead file (a new optional `CalcApi` field, a primitive
 **Layout stability.** The answer card must not move or resize when inputs change: results reserve the space for every state (headline, note lines, chart height, key numbers), and the area and price fields (above the card at 360px) must not change height as values change (reserve the hint or note line).
 
 **Budget.** With the stubs the island chunk is about 29KB raw and the total 52KB of 100KB. Aim to keep the island under 40KB: no new runtime dependencies, no charting library, no JSON imports in client code.
+
+#### What shipped (phase 4)
+Decisions: `docs/decisions.md`, "Calculator island (phase 4, lead)", "Inputs", "Results", "Follow-ups, analytics and sharing" and "Integration (phase 4)".
+
+- **Home page.** The heading, then one Preact island (`client:load`): inputs left (Area and Property price first), answer card right at 1280; stacked at 360 with the card straight after area and price. Before an area: "Pick a place. We'll bring the local numbers." in a card already the answer's size.
+- **Area picker** (`AreaPicker.tsx`): WAI-ARIA 1.2 combobox over 361 areas, matching without case, accents or punctuation, nation as secondary text. The list is `data/area-list.json` (static endpoint, about 26KB), fetched from our origin; failure is plain copy with "Try again".
+- **Inputs** (`InputsPanel.tsx`, `AdvancedPanel.tsx`, `src/lib/inputs.ts`): every input in the brief's table, labels, units and limits from `defaults.json`; sliders on price, rent, rate and growth; "Local figure"/"Typical figure" toggletips with source and month; Reset on every changed input; money accepts "£300k" and formats on blur; calm inline notes (deposit clamp, under-5% lender note, range clamps, loan-to-value explained); Outlook shows "Custom" naming what changed; the advanced panel "Adjust every assumption (17)" (18 under Scottish rules, with the Home Report).
+- **Results** (`AnswerCard`, `KeyNumbers`, `Chart`, `Sensitivity`, `Breakdown`, `HowThisWorks`, copy in `src/lib/copy.ts`, chart geometry in `src/lib/chart.ts`): every copy case (break-even, year 1, renting catches up again, no break-even with a model-checked "what would flip it" hint, no mortgage); key numbers; hand-rolled SVG chart with a keyboard/touch year inspector and a hidden table; sensitivity at 0-5% growth and the rate ±1 point; breakdown with the tax by name, relief or surcharge, selling costs and a collapsed year-by-year table.
+- **State and URL.** One model run per animation frame; `history.replaceState` only, non-default values only; a copied link reproduces every figure in a fresh browser (e2e).
+- **Analytics and sharing.** `src/lib/analytics.ts` (four events, no payload, GoatCounter count endpoint, off unless `PUBLIC_GOATCOUNTER_CODE`; the deploy build now passes `vars.GOATCOUNTER_CODE`). "Copy link to these figures" with a manual-copy fallback.
+- **Phase 3 follow-ups.** `NoMortgageRatesError`; relative 15% rate check with a 0.25-point floor; fallback switches reported as warnings; `refresh-data.yml` split so only the PR job has `pull-requests: write`; rent-up and selling-costs-up invariants over the full UI bounds.
+- **Tests.** 440 unit tests. e2e (238 runs across 360 and 1280): inputs, keyboard-only flow, results copy, chart, share and URL round trip, the reference scenario on screen equal to `runModel`, nations (SDLT, LBTT with Home Report, LTT, override), and a per-frame layout-shift check through a long run of input changes and from the empty state to the first answer.
+- **Budget.** Total client JS about 81KB of 100KB; the island chunk about 58KB, over the 40KB aim (see decisions).
+
+#### Deferred (phase 4)
+- **Island size** over the 40KB aim; phase 6 can lazy-load the breakdown and sensitivity or trim copy.
+- **Long names at 360px.** 24 areas whose "years in ..." needs three lines make the card 7px taller when picked (only on that change).
+- **refresh-data.yml** has only been checked statically since the job split. Push to `data-test/refresh` for a dry run before the scheduled run on the 20th.
+- **Analytics is off** until Jordan creates a GoatCounter site and sets the `GOATCOUNTER_CODE` repository variable. With it set, the live smoke test "loads scripts only from our own origin" still holds (no script is loaded), but tests that pick an area would send events to it from CI; add a check or skip analytics on the live test run if that matters.
+- Lighthouse runs are phase 6.
+
+#### For phase 5
+- Area pages: `<Calculator client:load data={calculatorData()} links={{ areaList: url('data/area-list.json'), howItWorks: url('how-it-works') }} initialArea={areaForPage(slug)} />` (props above). The whole answer, chart, key numbers, sensitivity and breakdown server-render from `initialArea`, so the HTML carries the computed answer. Use `src/lib/copy.ts` (`answerCopy`, `answerFacts`) for the page's own summary sentence so it matches the card.
+- `HowThisWorks.tsx` links to `/how-it-works/`; that page and `/sources/` are yours. The explainer should state the brief's assumptions plus the tax cases listed in the phase 3 notes.
+- Awkward ONS slugs (`kingston-upon-hull-city-of` and others) are still open; the picker shows the ONS names.
+

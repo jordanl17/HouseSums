@@ -33,6 +33,12 @@ function Message({ calc }: CalcProps) {
       <p class="answer__lead" data-testid="answer-empty" role="status">
         {text}
       </p>
+      {calc.status === 'empty' && (
+        <p class="answer__hint">
+          Start with the area and the price. Every other figure starts at a typical value you can
+          change.
+        </p>
+      )}
       {calc.status === 'error' && calc.problem === 'list-failed' && (
         <p>
           <button type="button" class="button button--secondary" onClick={() => calc.loadAreas()}>

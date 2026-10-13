@@ -41,6 +41,13 @@
   }
 }
 
+/* A long place name wraps the unit ("years in / Westminster"). Aligning the unit's last line
+   to the numeral's baseline lets the extra line rise beside the numeral, inside the numeral's
+   own line box, instead of making the headline taller. */
+.answer__sentence {
+  align-items: last baseline;
+}
+
 .answer__note {
   display: flex;
   flex-direction: column;
@@ -80,6 +87,11 @@
 
 .answer--message p {
   margin: 0;
+}
+
+.answer__hint {
+  max-width: 38rem;
+  color: var(--color-muted);
 }
 
 /* ---- Chart ---- */

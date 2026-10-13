@@ -29,3 +29,22 @@
 .calc-section h2 {
   font-size: var(--size-xl);
 }
+
+/* Before there is an answer: the message and an invisible copy of the answer's structure
+   (CardGhost.tsx) share one grid cell, so the card is already the size the answer will be. */
+.calc-card--waiting {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.calc-card--waiting > * {
+  grid-area: 1 / 1;
+}
+
+.calc-card__ghost {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  visibility: hidden;
+}

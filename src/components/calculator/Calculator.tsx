@@ -42,6 +42,7 @@ import AdvancedPanel from './AdvancedPanel';
 import AnswerCard from './AnswerCard';
 import AreaPicker from './AreaPicker';
 import Breakdown from './Breakdown';
+import CardGhost from './CardGhost';
 import Chart from './Chart';
 import HowThisWorks from './HowThisWorks';
 import InputsPanel from './InputsPanel';
@@ -332,6 +333,10 @@ export default function Calculator(props: CalculatorProps) {
     },
   };
 
+  // Until there is an answer the card holds an invisible copy of its structure, so it is
+  // already the answer's size (CardGhost.tsx).
+  const waiting = status !== 'ready' || calc.result === null || calc.area === null;
+
   return (
     <div
       class="calculator calc-layout"
@@ -348,7 +353,7 @@ export default function Calculator(props: CalculatorProps) {
 
       <div class="calc-layout__answer">
         <section
-          class="card calc-card"
+          class={waiting ? 'card calc-card calc-card--waiting' : 'card calc-card'}
           aria-labelledby="calc-answer-title"
           data-testid="answer-card"
         >
@@ -358,6 +363,7 @@ export default function Calculator(props: CalculatorProps) {
           <AnswerCard calc={calc} />
           <Chart calc={calc} />
           <KeyNumbers calc={calc} />
+          {waiting && <CardGhost />}
         </section>
         <ShareLink calc={calc} />
       </div>

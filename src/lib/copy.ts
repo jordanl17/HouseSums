@@ -241,7 +241,7 @@ export function flipHint(inputs: Inputs, run: BreakEvenRunner, noMortgage = fals
   return {
     key: null,
     breakEvenYear: null,
-    text: 'No single change to house price growth, rent, the mortgage rate or the years compared, within usual ranges, changes that.',
+    text: 'No single change within usual ranges would flip that.',
   };
 }
 
