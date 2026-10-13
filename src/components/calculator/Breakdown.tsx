@@ -11,9 +11,11 @@
  * Labels come from data/defaults.json. data-testid hooks: breakdown, breakdown-upfront,
  * breakdown-selling, breakdown-tax (the tax row's name cell), year-table.
  */
-import { taxName, taxNote, years } from '../../lib/copy';
+import { years } from '../../lib/copy';
+import { taxName, taxNote } from '../../lib/copy-details';
 import { formatMoney, formatPercent } from '../../lib/format';
-import { DataTable, Disclosure } from './ui';
+import { Disclosure } from './ui';
+import { DataTable } from './ui/DataTable';
 import type { CalcProps } from './types';
 
 const ITEM_COLUMNS = [

@@ -2,7 +2,13 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { formatFieldValue } from '../../src/components/calculator/ui/units';
 import { formatMoney } from '../../src/lib/format';
 import { NUMERIC_INPUT_KEYS } from '../../src/lib/types';
-import { REFERENCE_QUERY, expectStatus, gotoCalculator, input } from './calculator-helpers';
+import {
+  REFERENCE_QUERY,
+  expectStatus,
+  gotoCalculator,
+  input,
+  openDisclosure,
+} from './calculator-helpers';
 import { defaults, expectedFor } from './oracle';
 
 /**
@@ -43,6 +49,7 @@ test.describe('reference scenario on screen', () => {
   });
 
   test('every input shows the value the engine used', async ({ page }) => {
+    await openDisclosure(page, 'advanced');
     for (const key of NUMERIC_INPUT_KEYS) {
       const field = input(page, key);
       if (key === 'homeReport') {
@@ -86,6 +93,7 @@ test.describe('reference scenario on screen', () => {
     await expect(selling).toContainText(formatMoney(result.selling.agentFee));
     await expect(selling).toContainText(formatMoney(result.selling.legal));
 
+    await openDisclosure(page, 'year-table');
     const row = yearRow(page.getByTestId('year-table'), page, 10);
     await expect(row).toHaveCount(1);
     const ten = result.series[10]!;

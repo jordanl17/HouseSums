@@ -11,8 +11,8 @@
  */
 import { useEffect, useRef } from 'preact/hooks';
 import { track } from '../../lib/analytics';
-import { growthTable, rateTable } from '../../lib/copy';
-import { DataTable } from './ui';
+import { growthTable, rateTable } from '../../lib/copy-details';
+import { DataTable } from './ui/DataTable';
 import type { CalcProps } from './types';
 
 export default function Sensitivity({ calc }: CalcProps) {

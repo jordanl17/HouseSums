@@ -6,17 +6,19 @@
  * idle hydration can wait seconds on a busy phone, leaving inputs that look live but do nothing.
  * Its first render is server-rendered here (the empty state), so nothing jumps on hydration.
  *
- * Data: defaults, tax rules, rates and the nation figures are validated at build time and passed
- * as props (serialised into the HTML, not bundled as JS). The 361-area list is fetched from
- * data/area-list.json on our own origin when it is needed.
+ * Data: defaults, tax rules, rates and the nation figures are validated at build time; the
+ * server render reads them directly and the browser loads them from data/calculator.json
+ * (preloaded in the head; phase 6, see CalculatorIsland.tsx), so they are neither bundled as JS
+ * nor repeated in the HTML. The 361-area list is fetched from data/area-list.json on our own
+ * origin when it is needed.
  *
  * The inline script runs before first paint: when the link names an area (?a=...), it marks the
  * root so the empty card already reserves the answer's height (CardGhost.tsx), and the answer
  * arriving with the area list moves nothing. A plain visit gets a compact empty card.
  */
 import Base from '../layouts/Base.astro';
-import Calculator from '../components/calculator/Calculator';
-import { calculatorData, calculatorLinks } from '../lib/calculator-data';
+import CalculatorIsland from '../components/calculator/CalculatorIsland';
+import { calculatorLinks, calculatorPreloads } from '../lib/calculator-data';
 import { absoluteUrl, webApplicationLd } from '../lib/seo';
 import { url } from '../lib/url';
 import { nationName, nationPath } from '../lib/areas';
@@ -32,12 +34,12 @@ const jsonLd = webApplicationLd({
 });
 ---
 
-<Base description={description} jsonLd={jsonLd}>
+<Base description={description} jsonLd={jsonLd} preloads={calculatorPreloads()}>
   <h1 class="calc-title">Rent v buy: how long until buying beats renting?</h1>
   <script is:inline>
     if (/[?&]a=[^&]/.test(location.search)) document.documentElement.dataset.calcLink = '';
   </script>
-  <Calculator client:load data={calculatorData()} links={calculatorLinks()} />
+  <CalculatorIsland client:load links={calculatorLinks()} />
   <p class="nation-links" data-testid="nation-links">
     Rent v buy by nation:{' '}
     {NATIONS.map((nation, index) => (

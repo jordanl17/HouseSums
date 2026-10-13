@@ -57,6 +57,11 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+}
+
+/* Scoped to the island's card (phase 6, perf): this stylesheet now ships with every page, and
+   the reserved lines are for the live answer only, not the styleguide's static example. */
+.calc-card .answer__note {
   min-height: calc(var(--answer-note-lines) * var(--leading-body) * 1em + var(--space-1));
 }
 

@@ -10,7 +10,7 @@
  * its tax, and every area in a table.
  */
 import Base from '../../layouts/Base.astro';
-import Calculator from '../../components/calculator/Calculator';
+import CalculatorIsland from '../../components/calculator/CalculatorIsland';
 import AreaSummary from '../../components/AreaSummary.astro';
 import NationTable from '../../components/NationTable.astro';
 import RelatedAreas from '../../components/RelatedAreas.astro';
@@ -36,7 +36,7 @@ import {
 } from '../../lib/areas';
 import { NATIONS } from '../../lib/types';
 import '../../styles/area.css';
-import { calculatorData, calculatorLinks } from '../../lib/calculator-data';
+import { calculatorLinks, calculatorPreloads } from '../../lib/calculator-data';
 import { formatMoney } from '../../lib/format';
 import {
   absoluteUrl,
@@ -100,18 +100,14 @@ const jsonLd =
   ogImage={ogImagePath(nation)}
   ogImageAlt={ogImageAlt(nation)}
   jsonLd={jsonLd}
+  preloads={page.kind === 'area' ? calculatorPreloads() : undefined}
 >
   {page.kind === 'area' ? (
     <>
       <h1 class="area-title">
         Rent v buy in {page.area.name}: how long until buying beats renting?
       </h1>
-      <Calculator
-        client:load
-        data={calculatorData()}
-        links={calculatorLinks()}
-        initialArea={islandArea(page.area)}
-      />
+      <CalculatorIsland client:load links={calculatorLinks()} initialArea={islandArea(page.area)} />
       <AreaSummary area={page.area} />
       <RelatedAreas area={page.area} />
     </>

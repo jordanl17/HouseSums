@@ -38,6 +38,30 @@ async function analyzePlugins() {
   ];
 }
 
+/**
+ * Phase 6 (perf): @astrojs/preact's client renderer lazy-loads @preact/signals for islands given
+ * signal props. We never pass any (the island's props are plain data), so that code never runs,
+ * but the build still emitted it as a 7.8 KB chunk that counts towards the JS budget. In the
+ * client build only, the import resolves to this stub instead, which fails loudly if a signal
+ * prop is ever added. The server render does not use @preact/signals.
+ * @returns {import('vite').Plugin}
+ */
+function noSignalProps() {
+  const id = '\0house-sums:no-signals';
+  return {
+    name: 'house-sums:no-signal-props',
+    enforce: 'pre',
+    applyToEnvironment: (environment) => environment.name === 'client',
+    resolveId(source) {
+      return source === '@preact/signals' ? id : null;
+    },
+    load(loaded) {
+      if (loaded !== id) return null;
+      return "export function signal() { throw new Error('House Sums: signal props are not supported (astro.config.mjs).'); }";
+    },
+  };
+}
+
 export default defineConfig({
   site,
   base,
@@ -50,6 +74,22 @@ export default defineConfig({
   },
   integrations: [preact()],
   vite: {
-    plugins: await analyzePlugins(),
+    plugins: [noSignalProps(), ...(await analyzePlugins())],
+    environments: {
+      client: {
+        build: {
+          rolldownOptions: {
+            output: {
+              // Phase 6 (perf): Preact (core, hooks, JSX runtime) in a chunk of its own, so the
+              // island's chunks hold only our code and scripts/check-budget.mjs can hold the
+              // island to its own limit. Same bytes as before, just not mixed into the island.
+              codeSplitting: {
+                groups: [{ name: 'preact', test: /[\\/]node_modules[\\/]preact[\\/]/ }],
+              },
+            },
+          },
+        },
+      },
+    },
   },
 });

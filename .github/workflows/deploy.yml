@@ -97,7 +97,7 @@ jobs:
     name: Test the live site
     needs: deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     permissions:
       contents: read
     env:
@@ -132,5 +132,22 @@ jobs:
           path: |
             playwright-report/
             test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      # Phase 6: Lighthouse against the live site, for the record only. GitHub Pages and the
+      # runner's network make these numbers noisier than CI's, so it never fails the deploy; CI
+      # asserts the thresholds on the same build before it ships. Scores land in the job summary.
+      - name: Lighthouse against the live site (report only)
+        if: always()
+        continue-on-error: true
+        run: npm run lighthouse -- --url "$LIVE_URL" --report-only
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-live
+          path: lighthouse/
           if-no-files-found: ignore
           retention-days: 14

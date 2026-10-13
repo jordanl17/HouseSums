@@ -1,12 +1,54 @@
 /*
- * Narrow punctuation for the mono figures.
+ * Self-hosted fonts (OFL): B612 for text, B612 Mono for figures, tags and labels. Latin subset
+ * only, from @fontsource.
  *
- * B612 Mono gives the thousands comma and the decimal point a full character cell, so
- * "245,000" reads as "245, 000" and "4.30" as "4. 30". This face borrows only the comma
- * and full stop (unicode-range) from B612, whose punctuation is narrow, and sits first in
- * --font-mono. Digits stay B612 Mono and tabular. Every comma and point is the same width,
- * so right-aligned columns of figures still line up. Same self-hosted files as B612 itself.
+ * Phase 6 (perf): these @font-face rules replace @fontsource's own CSS, which also listed a
+ * .woff fallback per face that no supported browser ever downloads. Only woff2 is built now.
+ * The same four files are preloaded in Base.astro's head, so they download alongside the
+ * stylesheet instead of after it and are usually in before the first paint; font-display: swap
+ * still shows text straight away if they are slow.
+ *
+ * Narrow punctuation for the mono figures: B612 Mono gives the thousands comma and the decimal
+ * point a full character cell, so "245,000" reads as "245, 000" and "4.30" as "4. 30". The
+ * 'B612 Mono Punctuation' face borrows only the comma and full stop (unicode-range) from B612,
+ * whose punctuation is narrow, and sits first in --font-mono. Digits stay B612 Mono and tabular.
+ * Every comma and point is the same width, so right-aligned columns of figures still line up.
+ * Same files as B612 itself, so nothing extra downloads.
  */
+@font-face {
+  font-family: 'B612';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('../../node_modules/@fontsource/b612/files/b612-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'B612';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('../../node_modules/@fontsource/b612/files/b612-latin-700-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'B612 Mono';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('../../node_modules/@fontsource/b612-mono/files/b612-mono-latin-400-normal.woff2')
+    format('woff2');
+}
+
+@font-face {
+  font-family: 'B612 Mono';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('../../node_modules/@fontsource/b612-mono/files/b612-mono-latin-700-normal.woff2')
+    format('woff2');
+}
+
 @font-face {
   font-family: 'B612 Mono Punctuation';
   font-style: normal;

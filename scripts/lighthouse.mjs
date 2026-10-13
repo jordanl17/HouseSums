@@ -192,7 +192,12 @@ function summarise(lhr) {
       score: audit.score,
       display: audit.displayValue ?? '',
     }));
-  return { scores, metrics, opportunities, failing };
+  // Phase 6: the render-blocking insight's estimated FCP saving (0 when nothing blocks).
+  const renderBlocking = lhr.audits['render-blocking-insight'];
+  const renderBlockingMs = Math.round(
+    renderBlocking?.metricSavings?.FCP ?? renderBlocking?.numericValue ?? 0,
+  );
+  return { scores, metrics, opportunities, failing, renderBlockingMs };
 }
 
 /** @param {number[]} values */
@@ -281,11 +286,11 @@ async function main() {
   const lines = [
     `Lighthouse ${results[0] ? '' : '(no results) '}against ${root}, median of ${options.runs} run(s)`,
     '',
-    '| Page | Form | Performance | Accessibility | Best practices | SEO | LCP ms | TBT ms | CLS |',
-    '|---|---|---|---|---|---|---|---|---|',
+    '| Page | Form | Performance | Accessibility | Best practices | SEO | FCP ms | LCP ms | TBT ms | CLS | Render-blocking ms |',
+    '|---|---|---|---|---|---|---|---|---|---|---|',
     ...results.map(
       (r) =>
-        `| ${r.path} | ${r.form} | ${pct(r.medianScores.performance)} | ${pct(r.medianScores.accessibility)} | ${pct(r.medianScores['best-practices'])} | ${pct(r.medianScores.seo)} | ${Math.round(r.metrics['largest-contentful-paint'] ?? 0)} | ${Math.round(r.metrics['total-blocking-time'] ?? 0)} | ${(r.metrics['cumulative-layout-shift'] ?? 0).toFixed(3)} |`,
+        `| ${r.path} | ${r.form} | ${pct(r.medianScores.performance)} | ${pct(r.medianScores.accessibility)} | ${pct(r.medianScores['best-practices'])} | ${pct(r.medianScores.seo)} | ${Math.round(r.metrics['first-contentful-paint'] ?? 0)} | ${Math.round(r.metrics['largest-contentful-paint'] ?? 0)} | ${Math.round(r.metrics['total-blocking-time'] ?? 0)} | ${(r.metrics['cumulative-layout-shift'] ?? 0).toFixed(3)} | ${r.renderBlockingMs} |`,
     ),
     '',
     ...results.flatMap((r) => [

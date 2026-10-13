@@ -24,7 +24,6 @@
  */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { track } from '../../lib/analytics';
-import { findClientArea, parseAreaList } from '../../lib/area-list';
 import { answerCopy, answerFacts, messageText } from '../../lib/copy';
 import { deriveInputs } from '../../lib/defaults';
 import { runModel } from '../../lib/model';
@@ -45,17 +44,18 @@ import type {
   PresetName,
   Selection,
 } from '../../lib/types';
-import AdvancedPanel from './AdvancedPanel';
 import AnswerCard from './AnswerCard';
 import AreaPicker from './AreaPicker';
-import Breakdown from './Breakdown';
-import CardGhost from './CardGhost';
-import Chart from './Chart';
-import HowThisWorks from './HowThisWorks';
+import {
+  LaterAdvancedPanel,
+  LaterCardGhost,
+  LaterChart,
+  LaterMore,
+  LaterShareLink,
+  loadLater,
+} from './deferred';
 import InputsPanel from './InputsPanel';
 import KeyNumbers from './KeyNumbers';
-import Sensitivity from './Sensitivity';
-import ShareLink from './ShareLink';
 import type {
   AreaListState,
   AreaProblem,
@@ -65,7 +65,6 @@ import type {
   ClientArea,
   FieldModel,
 } from './types';
-import '../../styles/calculator.css';
 
 /** The four inputs the Outlook preset sets. Overriding any of them shows "Custom". */
 export const OUTLOOK_KEYS: readonly NumericInputKey[] = [
@@ -130,6 +129,8 @@ export default function Calculator(props: CalculatorProps) {
   /** True once the URL has been read, so we never overwrite a shared link before reading it. */
   const [urlRead, setUrlRead] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  /** True once the deferred chunk (deferred.tsx) has loaded or failed: its parts are live. */
+  const [laterSettled, setLaterSettled] = useState(false);
   /** 'loading' or 'ready' while a fetch is in flight or done, so loadAreas is idempotent. */
   const listRequest = useRef<'none' | 'loading' | 'ready'>('none');
 
@@ -191,12 +192,15 @@ export default function Calculator(props: CalculatorProps) {
     if (listRequest.current !== 'none') return;
     listRequest.current = 'loading';
     setAreaList((list) => ({ ...list, status: 'loading' }));
-    fetch(links.areaList, { credentials: 'same-origin' })
-      .then((response) => {
+    // The list's validator loads with the list (phase 6): the island never needs it before.
+    Promise.all([
+      fetch(links.areaList, { credentials: 'same-origin' }).then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json() as Promise<unknown>;
-      })
-      .then((json) => {
+      }),
+      import('../../lib/area-list'),
+    ])
+      .then(([json, { parseAreaList }]) => {
         const areas = parseAreaList(json);
         listRequest.current = 'ready';
         setAreaList({ status: 'ready', areas });
@@ -210,7 +214,13 @@ export default function Calculator(props: CalculatorProps) {
 
   // ---- Mount: read the URL, prefetch the list when idle ----
   useEffect(() => {
-    setHydrated(true);
+    // data-hydrated means every part is live, the deferred ones included, so tests and anything
+    // else waiting on it never act on a part that is still static.
+    const settle = () => {
+      setLaterSettled(true);
+      setHydrated(true);
+    };
+    loadLater().then(settle, settle);
     if (syncUrl && window.location.search !== '') {
       const decoded = decodeState(window.location.search, defaults, undefined, data.slugAliases);
       const slug = decoded.selection.areaSlug ?? initialArea?.slug ?? null;
@@ -231,8 +241,9 @@ export default function Calculator(props: CalculatorProps) {
   // ---- Resolve a slug from the URL once the list arrives ----
   useEffect(() => {
     if (pendingSlug === null) return;
-    if (areaList.status === 'ready') {
-      const found = findClientArea(areaList.areas, pendingSlug);
+    // Waits for the deferred chunk too, so the chart arrives with the answer and nothing moves.
+    if (areaList.status === 'ready' && laterSettled) {
+      const found = areaList.areas.find((candidate) => candidate.slug === pendingSlug) ?? null;
       setPendingSlug(null);
       if (found) {
         setArea(found);
@@ -257,7 +268,7 @@ export default function Calculator(props: CalculatorProps) {
     } else if (areaList.status === 'error') {
       setProblem('list-failed');
     }
-  }, [pendingSlug, areaList.status]);
+  }, [pendingSlug, areaList.status, laterSettled]);
 
   // ---- Actions ----
   const setSelection = (patch: Partial<Selection>) =>
@@ -401,25 +412,21 @@ export default function Calculator(props: CalculatorProps) {
             {announced}
           </p>
           <AnswerCard calc={calc} />
-          <Chart calc={calc} />
+          {status === 'ready' && result !== null && <LaterChart calc={calc} />}
           <KeyNumbers calc={calc} />
-          {waiting && <CardGhost />}
+          {waiting && <LaterCardGhost calc={calc} />}
         </section>
-        <ShareLink calc={calc} />
+        <LaterShareLink calc={calc} />
       </div>
 
       <div class="calc-layout__rest fields">
         <div class="fields__grid">
           <InputsPanel calc={calc} part="rest" />
-          <AdvancedPanel calc={calc} />
+          <LaterAdvancedPanel calc={calc} />
         </div>
       </div>
 
-      <div class={waiting ? 'calc-layout__more calc-layout__more--waiting' : 'calc-layout__more'}>
-        <Sensitivity calc={calc} />
-        <Breakdown calc={calc} />
-        <HowThisWorks calc={calc} />
-      </div>
+      <LaterMore calc={calc} />
     </div>
   );
 }
