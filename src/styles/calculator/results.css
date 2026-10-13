@@ -48,6 +48,11 @@
   align-items: last baseline;
 }
 
+/* A long place name wraps in even lines ("years in Bournemouth, / Christchurch and Poole"). */
+.answer__unit {
+  text-wrap: balance;
+}
+
 .answer__note {
   display: flex;
   flex-direction: column;
@@ -205,6 +210,13 @@
 
 .chart__marker-label--end {
   transform: translate(calc(-100% + 1px), -0.25rem);
+}
+
+/* The lower line's label when that line runs too close to the axis to hang below it
+   (src/lib/chart.ts, labelSides): over the line, right of the point, clear of the year labels. */
+.chart__series-label--above-right {
+  margin-bottom: var(--space-2);
+  transform: translateX(var(--space-1));
 }
 
 /* ---- Sections under the card ---- */

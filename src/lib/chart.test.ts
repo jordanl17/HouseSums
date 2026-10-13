@@ -4,6 +4,8 @@ import {
   areaPath,
   formatK,
   labelPlacement,
+  labelSides,
+  LOW_LABEL_LIMIT,
   niceStep,
   polylinePoints,
   responsiveXTicks,
@@ -145,5 +147,52 @@ describe('direct labels', () => {
 
   it('handle a one-year horizon', () => {
     expect(labelPlacement([1, 2], [3, 4], null).year).toBe(1);
+  });
+});
+
+describe('direct label sides', () => {
+  it('put the upper label above and the lower one below when there is room', () => {
+    expect(labelSides(true, 80, 40)).toEqual({ buy: 'above', rent: 'below' });
+    expect(labelSides(false, 30, 70)).toEqual({ buy: 'below', rent: 'above' });
+  });
+
+  it('never hang the rent label onto the axis when rent stays near £0', () => {
+    // Buying pulls ahead early and rent wealth stays small next to the axis maximum.
+    const buy = Array.from({ length: 26 }, (_, year) => 20000 + year * 30000);
+    const rent = Array.from({ length: 26 }, (_, year) => 5000 + year * 400);
+    const scale = yScale([...buy, ...rent]);
+    const placement = labelPlacement(buy, rent, 2);
+    const fromBottom = (value: number) => 100 - yPercent(value, scale);
+    const rentY = fromBottom(rent[placement.year] ?? 0);
+    expect(rentY).toBeLessThan(LOW_LABEL_LIMIT);
+    const sides = labelSides(placement.buyOnTop, fromBottom(buy[placement.year] ?? 0), rentY);
+    expect(sides).toEqual({ buy: 'above', rent: 'above' });
+    // Lines too close to stack the labels: rent's goes to the other side of the point.
+    expect(labelSides(true, 20, 10)).toEqual({ buy: 'above', rent: 'above-right' });
+  });
+
+  it('do the same for buy when buying stays near the bottom', () => {
+    expect(labelSides(false, 3, 60)).toEqual({ buy: 'above', rent: 'above' });
+    expect(labelSides(false, 3, 12)).toEqual({ buy: 'above-right', rent: 'above' });
+  });
+
+  it('never put a lower label below its line under the limit', () => {
+    fc.assert(
+      fc.property(
+        fc.boolean(),
+        fc.double({ min: 0, max: 100, noNaN: true }),
+        fc.double({ min: 0, max: 100, noNaN: true }),
+        (buyOnTop, buyY, rentY) => {
+          const sides = labelSides(buyOnTop, buyY, rentY);
+          const lowerSide = buyOnTop ? sides.rent : sides.buy;
+          const lowerY = buyOnTop ? rentY : buyY;
+          const upperY = buyOnTop ? buyY : rentY;
+          if (lowerY < LOW_LABEL_LIMIT) expect(lowerSide).not.toBe('below');
+          // Two labels on the same side of the point only when they can stack.
+          if (lowerSide === 'above') expect(upperY - lowerY).toBeGreaterThanOrEqual(16);
+          expect(buyOnTop ? sides.buy : sides.rent).toBe('above');
+        },
+      ),
+    );
   });
 });

@@ -175,3 +175,44 @@ export function labelPlacement(
   }
   return { year: best, buyOnTop: (buy[best] ?? 0) >= (rent[best] ?? 0) };
 }
+
+/**
+ * Which side of its line each direct label sits on. 'above' hangs left of the point, over the
+ * line; 'below' hangs right of the point, under it; 'above-right' sits over the line, right of
+ * the point.
+ */
+export type LabelSide = 'above' | 'below' | 'above-right';
+
+/**
+ * Lowest point (% of the plot height from its bottom) a label can hang below. A label under the
+ * line takes about 1.4rem (its line plus the gap); the plot is at least 11rem tall, so under 18%
+ * it would sit on the £0 axis line and the year labels.
+ */
+export const LOW_LABEL_LIMIT = 18;
+
+/** Gap between the lines (% of the plot height) that fits two labels one above the other. */
+export const LABEL_STACK_GAP = 16;
+
+/**
+ * Sides for the "Buy" and "Rent" labels at the placement year. The upper line's label goes
+ * above it. The lower line's goes below it, unless that line is too close to the bottom of the
+ * plot (rent staying near £0 while buying pulls ahead): then it goes above its line, left of the
+ * point when the upper label is far enough above, else right of the point, so it never covers
+ * the axis and never sits on the other label.
+ * `buyY` and `rentY` are % of the plot height from the bottom.
+ */
+export function labelSides(
+  buyOnTop: boolean,
+  buyY: number,
+  rentY: number,
+): { buy: LabelSide; rent: LabelSide } {
+  const lowerY = buyOnTop ? rentY : buyY;
+  const upperY = buyOnTop ? buyY : rentY;
+  let lower: LabelSide = 'below';
+  if (lowerY < LOW_LABEL_LIMIT) {
+    // Over its line, left of the point like the upper label (the right edge of a phone-width
+    // plot has no room for it), unless the lines are too close for two labels stacked there.
+    lower = upperY - lowerY >= LABEL_STACK_GAP ? 'above' : 'above-right';
+  }
+  return buyOnTop ? { buy: 'above', rent: lower } : { buy: lower, rent: 'above' };
+}

@@ -203,10 +203,10 @@ describe('labels', () => {
 
   it('names nations and their tax', () => {
     expect(NATION_NAMES.sco).toBe('Scotland');
-    expect(nationOptionLabel('eng', taxRules)).toBe('England: stamp duty (SDLT)');
-    expect(nationOptionLabel('sco', taxRules)).toBe('Scotland: LBTT');
-    expect(nationOptionLabel('wal', taxRules)).toBe('Wales: LTT');
-    expect(nationOptionLabel('ni', taxRules)).toBe('Northern Ireland: stamp duty (SDLT)');
+    expect(nationOptionLabel('eng', taxRules)).toBe('England (SDLT)');
+    expect(nationOptionLabel('sco', taxRules)).toBe('Scotland (LBTT)');
+    expect(nationOptionLabel('wal', taxRules)).toBe('Wales (LTT)');
+    expect(nationOptionLabel('ni', taxRules)).toBe('Northern Ireland (SDLT)');
   });
 
   it('gives a one-line area hint for each case', () => {
@@ -217,9 +217,11 @@ describe('labels', () => {
       'Stamp duty (SDLT) applies',
     );
     expect(areaHint({ status: 'ready', nation: 'sco', taxRules })).toBe(
-      "LBTT: Scotland's stamp duty",
+      'Scottish stamp duty (LBTT) applies',
     );
-    expect(areaHint({ status: 'ready', nation: 'wal', taxRules })).toBe("LTT: Wales's stamp duty");
+    expect(areaHint({ status: 'ready', nation: 'wal', taxRules })).toBe(
+      'Welsh stamp duty (LTT) applies',
+    );
     expect(areaHint({ status: 'error', nation: 'eng', taxRules, problem: 'unknown-area' })).toBe(
       "That link's place isn't on our list",
     );

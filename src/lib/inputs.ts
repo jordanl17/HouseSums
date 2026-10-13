@@ -71,16 +71,26 @@ export function areaHint(options: {
   }
   if (status === 'empty') return 'A local authority, such as Leeds';
   const regime = taxRules.regimes[taxRules.nations[nation]];
+  // Plain words before the acronym, in the same shape for every nation.
   if (regime.plainName === 'stamp duty') return `Stamp duty (${regime.shortName}) applies`;
-  return `${regime.shortName}: ${NATION_NAMES[nation]}'s stamp duty`;
+  return `${NATION_ADJECTIVES[nation]} stamp duty (${regime.shortName}) applies`;
 }
 
-/** "England: stamp duty (SDLT)", "Scotland: LBTT". For the tax rules control. */
+/** "Scottish stamp duty (LBTT) applies", "Welsh stamp duty (LTT) applies". */
+const NATION_ADJECTIVES: Record<Nation, string> = {
+  eng: 'English',
+  sco: 'Scottish',
+  wal: 'Welsh',
+  ni: 'Northern Irish',
+};
+
+/**
+ * "England (SDLT)", "Scotland (LBTT)". For the tax rules control: short enough not to be cut off
+ * in the advanced panel's narrow column at 1280px (its label already says "Tax rules").
+ */
 export function nationOptionLabel(nation: Nation, taxRules: TaxRules): string {
   const regime = taxRules.regimes[taxRules.nations[nation]];
-  const tax =
-    regime.plainName === 'stamp duty' ? `stamp duty (${regime.shortName})` : regime.shortName;
-  return `${NATION_NAMES[nation]}: ${tax}`;
+  return `${NATION_NAMES[nation]} (${regime.shortName})`;
 }
 
 // ---------------------------------------------------------------------------------------------

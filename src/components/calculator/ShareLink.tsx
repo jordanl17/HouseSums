@@ -1,7 +1,10 @@
 /**
  * "Copy link to these figures" (followups teammate).
  *
- * A secondary button, shown only when calc.status is 'ready'. On press it asks the island for the
+ * A secondary button, live only when calc.status is 'ready'. Before that it is rendered as an
+ * inert, invisible placeholder (aria-hidden, disabled, visibility: hidden in share.css) so the
+ * row's height is already there when a shared link's answer arrives and nothing under it moves;
+ * on a plain visit share.css drops the placeholder, like the compact empty card. On press it asks the island for the
  * link (calc.shareUrl(), at click time, so the link is always for what is on screen) and copies it
  * with the Clipboard API. Where that is missing or refused (an insecure origin, a browser
  * setting, an old browser), it shows the link in a read-only field, selected, so it can be copied
@@ -46,7 +49,23 @@ export default function ShareLink({ calc }: CalcProps) {
     if (current?.kind === 'manual') field.current?.select();
   }, [current?.kind, current?.kind === 'manual' ? current.url : null]);
 
-  if (calc.status !== 'ready') return null;
+  if (calc.status !== 'ready') {
+    return (
+      <div class="share-link share-link--waiting" aria-hidden="true">
+        <div class="share-link__row">
+          <button
+            type="button"
+            class="button button--secondary share-link__button"
+            disabled
+            tabIndex={-1}
+          >
+            {SHARE_COPY.button}
+          </button>
+          <p class="share-link__status" />
+        </div>
+      </div>
+    );
+  }
 
   const copy = async () => {
     const url = calc.shareUrl();

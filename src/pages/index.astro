@@ -9,6 +9,10 @@
  * Data: defaults, tax rules, rates and the nation figures are validated at build time and passed
  * as props (serialised into the HTML, not bundled as JS). The 361-area list is fetched from
  * data/area-list.json on our own origin when it is needed.
+ *
+ * The inline script runs before first paint: when the link names an area (?a=...), it marks the
+ * root so the empty card already reserves the answer's height (CardGhost.tsx), and the answer
+ * arriving with the area list moves nothing. A plain visit gets a compact empty card.
  */
 import Base from '../layouts/Base.astro';
 import Calculator from '../components/calculator/Calculator';
@@ -18,6 +22,9 @@ import { url } from '../lib/url';
 
 <Base description="Rent v buy: how long until buying beats renting? A plain-English UK calculator that starts from local figures.">
   <h1 class="calc-title">Rent v buy: how long until buying beats renting?</h1>
+  <script is:inline>
+    if (/[?&]a=[^&]/.test(location.search)) document.documentElement.dataset.calcLink = '';
+  </script>
   <Calculator
     client:load
     data={calculatorData()}

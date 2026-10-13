@@ -54,6 +54,12 @@
   min-height: calc(var(--size-xs) * var(--leading-body) + 0.125rem);
 }
 
+/* "Local figure" and "Typical figure" take the same width (the font is mono), so the info icon
+   stays put when a shared link's area arrives and a field's tag changes: no layout shift. */
+.calc-field__meta .tag__text {
+  min-width: 14ch;
+}
+
 /* The tag sits at the left of its field, so its bubble opens to the right. */
 .calc-field__meta .toggletip__bubble {
   right: auto;

@@ -72,6 +72,23 @@ export interface AnswerCopy {
   overtake: string | null;
 }
 
+/**
+ * The answer card's message before there is an answer: empty, loading a link's area, or an
+ * error (an unknown place in the link, or the list of places failing to load).
+ */
+export function messageText(
+  status: 'empty' | 'loading' | 'ready' | 'error',
+  problem: 'unknown-area' | 'list-failed' | null,
+): string {
+  if (status === 'loading') return 'Bringing the local numbers for this link.';
+  if (status === 'error') {
+    return problem === 'unknown-area'
+      ? "We couldn't find the place in that link. Pick a place and we'll bring its local numbers."
+      : "The list of places didn't load. Check your connection, then pick a place again.";
+  }
+  return "Pick a place. We'll bring the local numbers.";
+}
+
 /** True when the deposit covers the whole price (the model caps the deposit at the price). */
 export function hasNoMortgage(result: ModelResult): boolean {
   const start = result.series[0];

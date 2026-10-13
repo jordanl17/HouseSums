@@ -2,7 +2,15 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import defaultsJson from '../../data/defaults.json';
 import { parseDefaults } from './schema';
-import { INPUT_PARAMS, SELECTION_PARAMS, decodeState, encodeState } from './state';
+import { percentShownDecimals } from '../components/calculator/ui/units';
+import {
+  INPUT_PARAMS,
+  SELECTION_PARAMS,
+  canonicalInput,
+  decodeState,
+  encodeNumber,
+  encodeState,
+} from './state';
 import type { CalculatorState } from './state';
 import {
   BUYER_TYPES,
@@ -392,5 +400,60 @@ describe('round trip', () => {
       }),
       { numRuns: 1000 },
     );
+  });
+});
+
+describe('canonicalInput (typed values as the calculator keeps them)', () => {
+  const { fields } = defaults;
+
+  it('keeps two decimals of a percent, pence and whole years', () => {
+    expect(canonicalInput(0.0433333333, fields.mortgageRate)).toBe(0.0433);
+    expect(canonicalInput(0.0333333, fields.houseGrowth)).toBe(0.0333);
+    expect(canonicalInput(312345.678, fields.price)).toBe(312345.68);
+    expect(canonicalInput(1234.567, fields.rent)).toBe(1234.57);
+    expect(canonicalInput(25.4, fields.years)).toBe(25);
+  });
+
+  it('clamps to the field', () => {
+    expect(canonicalInput(5, fields.price)).toBe(fields.price.min);
+    expect(canonicalInput(1, fields.mortgageRate)).toBe(fields.mortgageRate.max);
+  });
+
+  it('survives the URL exactly, so a shared link computes the same figures', () => {
+    const keys = Object.keys(INPUT_PARAMS) as (keyof typeof INPUT_PARAMS)[];
+    fc.assert(
+      fc.property(
+        fc.constantFrom(...keys),
+        fc.double({ min: -1e7, max: 1e7, noNaN: true }),
+        (key, raw) => {
+          const field = fields[key];
+          const kept = canonicalInput(raw, field);
+          const state: CalculatorState = {
+            selection: {
+              areaSlug: null,
+              buyerType: defaults.defaultBuyerType,
+              outlook: defaults.defaultPreset,
+              nationOverride: null,
+            },
+            overrides: { [key]: kept },
+          };
+          // Against a base it can't equal, so the override is always written.
+          const base = Object.fromEntries(
+            Object.keys(fields).map((k) => [k, Number.NaN]),
+          ) as unknown as Parameters<typeof encodeState>[1];
+          const decoded = decodeState(`?${encodeState(state, base, defaults)}`, defaults);
+          expect(decoded.overrides[key]).toBe(kept);
+          expect(encodeNumber(kept, field)).not.toBeNull();
+        },
+      ),
+    );
+  });
+
+  it('matches what the field shows', () => {
+    // A local 10-year average shows its two decimals; a step value shows the step's.
+    expect(percentShownDecimals(0.0419, fields.houseGrowth.step)).toBe(2);
+    expect(percentShownDecimals(0.042, fields.houseGrowth.step)).toBe(1);
+    expect(percentShownDecimals(0.04, fields.houseGrowth.step)).toBe(1);
+    expect(percentShownDecimals(0.0433, fields.mortgageRate.step)).toBe(2);
   });
 });

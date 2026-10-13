@@ -48,3 +48,27 @@
   gap: var(--space-5);
   visibility: hidden;
 }
+
+/* A plain visit: no area is coming without an input, so the empty card stays compact. When the
+   page was opened with an area in its link, index.astro's inline script sets data-calc-link on
+   the root before first paint and the ghost keeps the answer's size from the first frame. */
+.calc-card--empty .calc-card__ghost {
+  display: none;
+}
+
+:root[data-calc-link] .calc-card--empty .calc-card__ghost {
+  display: flex;
+}
+
+/* While a link's area loads, the sections under the card wait too. Shown, "How this works"
+   would be pushed down when "What moves the answer" and the breakdown arrive above it, and the
+   footer would rise into view and drop again: shifts with no input. So nothing is shown there
+   yet, and the space holds at least a screen, which keeps the footer below the fold until the
+   sections arrive. */
+:root[data-calc-link] .calc-layout__more--waiting {
+  min-height: 100vh;
+}
+
+:root[data-calc-link] .calc-layout__more--waiting > * {
+  display: none;
+}

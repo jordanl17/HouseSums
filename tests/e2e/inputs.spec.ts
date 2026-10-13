@@ -343,7 +343,7 @@ test.describe('advanced panel', () => {
   test('Scotland shows the Home Report; the tax rules can be overridden', async ({ page }) => {
     await gotoCalculator(page, 'a=city-of-edinburgh');
     await expectStatus(page, 'ready');
-    await expect(field(page, 'area')).toContainText("LBTT: Scotland's stamp duty");
+    await expect(field(page, 'area')).toContainText('Scottish stamp duty (LBTT) applies');
     const advanced = page.getByTestId('advanced');
     await expect(advanced.locator('summary')).toHaveText('Adjust every assumption (18)');
     await openAdvanced(page);
@@ -355,7 +355,7 @@ test.describe('advanced panel', () => {
     await nation.selectOption('wal');
     await expect(field(page, 'homeReport')).toHaveCount(0);
     await expect(advanced.locator('summary')).toHaveText('Adjust every assumption (17)');
-    await expect(field(page, 'area')).toContainText("LTT: Wales's stamp duty");
+    await expect(field(page, 'area')).toContainText('Welsh stamp duty (LTT) applies');
     await expect.poll(() => params(page).get('n')).toBe('wal');
 
     await page.getByTestId('reset-nation').click();

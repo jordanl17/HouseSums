@@ -25,9 +25,16 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { track } from '../../lib/analytics';
 import { findClientArea, parseAreaList } from '../../lib/area-list';
+import { answerCopy, answerFacts, messageText } from '../../lib/copy';
 import { deriveInputs } from '../../lib/defaults';
 import { runModel } from '../../lib/model';
-import { decodeState, encodeNumber, encodeState, type CalculatorState } from '../../lib/state';
+import {
+  canonicalInput,
+  decodeState,
+  encodeNumber,
+  encodeState,
+  type CalculatorState,
+} from '../../lib/state';
 import type {
   BuyerType,
   ModelResult,
@@ -70,6 +77,9 @@ export const OUTLOOK_KEYS: readonly NumericInputKey[] = [
 
 /** Inputs that come from the area. Picking an area clears their overrides. */
 export const AREA_KEYS: readonly NumericInputKey[] = ['price', 'rent', 'houseGrowth', 'rentGrowth'];
+
+/** How long the answer must stay the same before the live region announces it, in ms. */
+const ANNOUNCE_DELAY = 600;
 
 interface Computed {
   /** Slug the result was computed for, so an area change never shows a stale headline. */
@@ -313,9 +323,12 @@ export default function Calculator(props: CalculatorProps) {
     setNationOverride(nation: Nation | null) {
       setSelection({ nationOverride: nation !== null && nation === area?.nation ? null : nation });
     },
-    setInput(key: NumericInputKey, value: number) {
-      if (typeof value !== 'number' || !Number.isFinite(value)) return;
+    setInput(key: NumericInputKey, typed: number) {
+      if (typeof typed !== 'number' || !Number.isFinite(typed)) return;
       const spec = defaults.fields[key];
+      // Kept at the precision the field shows and the URL carries, so a shared link reproduces
+      // exactly what this page computed (canonicalInput in state.ts).
+      const value = canonicalInput(typed, spec);
       const same = encodeNumber(value, spec) === encodeNumber(derived.base[key], spec);
       setState((current) => ({
         ...current,
@@ -333,9 +346,31 @@ export default function Calculator(props: CalculatorProps) {
     },
   };
 
-  // Until there is an answer the card holds an invisible copy of its structure, so it is
-  // already the answer's size (CardGhost.tsx).
+  // ---- The answer for screen readers ----
+  // One persistent polite region (always rendered, also on the server) carries the headline
+  // alone, e.g. "Buying pulls ahead after 2 years in Leeds", or an error message. It is written
+  // ANNOUNCE_DELAY after the last change, and only when the text changes, so a slider drag or
+  // typing announces once, after it settles, not every step.
+  let announcement = '';
+  if (status === 'ready' && result && area) {
+    announcement = answerCopy(answerFacts(result, result.series.length - 1, area.name)).headline;
+  } else if (status === 'error') {
+    announcement = messageText(status, calc.problem);
+  }
+  const [announced, setAnnounced] = useState('');
+  useEffect(() => {
+    if (announcement === announced) return undefined;
+    const timer = window.setTimeout(() => setAnnounced(announcement), ANNOUNCE_DELAY);
+    return () => window.clearTimeout(timer);
+  }, [announcement, announced]);
+
+  // Until there is an answer the card holds an invisible copy of its structure (CardGhost.tsx).
+  // It reserves the answer's size only for a link that names an area (layout.css); a plain
+  // visit's empty card stays compact.
   const waiting = status !== 'ready' || calc.result === null || calc.area === null;
+  let cardClass = 'card calc-card';
+  if (waiting) cardClass += ' calc-card--waiting';
+  if (status === 'empty') cardClass += ' calc-card--empty';
 
   return (
     <div
@@ -352,14 +387,13 @@ export default function Calculator(props: CalculatorProps) {
       </div>
 
       <div class="calc-layout__answer">
-        <section
-          class={waiting ? 'card calc-card calc-card--waiting' : 'card calc-card'}
-          aria-labelledby="calc-answer-title"
-          data-testid="answer-card"
-        >
+        <section class={cardClass} aria-labelledby="calc-answer-title" data-testid="answer-card">
           <h2 class="visually-hidden" id="calc-answer-title">
             Answer
           </h2>
+          <p class="visually-hidden" role="status" aria-atomic="true" data-testid="answer-live">
+            {announced}
+          </p>
           <AnswerCard calc={calc} />
           <Chart calc={calc} />
           <KeyNumbers calc={calc} />
@@ -375,7 +409,7 @@ export default function Calculator(props: CalculatorProps) {
         </div>
       </div>
 
-      <div class="calc-layout__more">
+      <div class={waiting ? 'calc-layout__more calc-layout__more--waiting' : 'calc-layout__more'}>
         <Sensitivity calc={calc} />
         <Breakdown calc={calc} />
         <HowThisWorks calc={calc} />

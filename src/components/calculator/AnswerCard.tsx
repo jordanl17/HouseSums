@@ -15,22 +15,16 @@
  * answer-flip, answer-empty.
  */
 import { useMemo } from 'preact/hooks';
-import { answerCopy, answerFacts, flipHint, hasNoMortgage } from '../../lib/copy';
+import { answerCopy, answerFacts, flipHint, hasNoMortgage, messageText } from '../../lib/copy';
 import { runModel } from '../../lib/model';
 import type { CalcProps } from './types';
 
 function Message({ calc }: CalcProps) {
-  let text = "Pick a place. We'll bring the local numbers.";
-  if (calc.status === 'loading') text = 'Bringing the local numbers for this link.';
-  if (calc.status === 'error') {
-    text =
-      calc.problem === 'unknown-area'
-        ? "We couldn't find the place in that link. Pick a place and we'll bring its local numbers."
-        : "The list of places didn't load. Check your connection, then pick a place again.";
-  }
+  // Not a live region itself: Calculator.tsx's persistent region announces errors and answers.
+  const text = messageText(calc.status, calc.problem);
   return (
     <div class="answer answer--message" data-testid="answer">
-      <p class="answer__lead" data-testid="answer-empty" role="status">
+      <p class="answer__lead" data-testid="answer-empty">
         {text}
       </p>
       {calc.status === 'empty' && (

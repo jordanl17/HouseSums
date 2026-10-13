@@ -271,6 +271,20 @@ describe('deriveInputs: clamps and nation specifics', () => {
     expect(low.inputs.rentGrowth).toBe(0.01); // only rent falls back, rent growth is local
   });
 
+  it('says in the source when a growth figure was held to the range, and stays local', () => {
+    const high = deriveInputs(options({ area: hot })).provenance;
+    expect(high.houseGrowth.kind).toBe('local');
+    expect(high.houseGrowth.source).toMatch(/10-year average of [\d.]+%, shown at the 6% ceiling$/);
+    const low = deriveInputs(
+      options({ area: cold, selection: selection({ areaSlug: 'cold-city' }) }),
+    ).provenance;
+    expect(low.houseGrowth.source).toMatch(/10-year average of −[\d.]+%, shown at the 0% floor$/);
+    // An unclamped figure keeps the plain source.
+    expect(deriveInputs(options()).provenance.houseGrowth.source).toBe(
+      'UK House Price Index, 10-year average',
+    );
+  });
+
   it('uses the nation figure for a field listed in fallbacks, tagged typical', () => {
     const { inputs, provenance } = deriveInputs(options({ area: cold }));
     expect(inputs.rent).toBe(950);

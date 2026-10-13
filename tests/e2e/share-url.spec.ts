@@ -167,6 +167,52 @@ test('a copied link reproduces the exact result in a fresh browser', async ({
   }
 });
 
+test('over-precise typed values are kept as shown, so the link still reproduces every figure', async ({
+  page,
+  browser,
+}) => {
+  await gotoCalculator(page, 'a=leeds');
+  await expectStatus(page, 'ready');
+  await enter(page, 'mortgageRate', '4.33333333');
+  await enter(page, 'price', '312345.678');
+  await enter(page, 'rent', '1234.567');
+  await enter(page, 'houseGrowth', '3.33333');
+  await enter(page, 'deposit', '33333.335');
+  await page.getByTestId('advanced').locator('summary').click();
+  await enter(page, 'investmentReturn', '6.66666');
+  await enter(page, 'insurance', '351.555');
+  await expect.poll(() => params(page).get('ins')).toBe('351.56');
+
+  // The fields show what the model uses, and the link carries exactly that.
+  await expect(input(page, 'mortgageRate')).toHaveValue('4.33');
+  await expect(input(page, 'houseGrowth')).toHaveValue('3.33');
+  expect(Object.fromEntries(params(page))).toMatchObject({
+    mr: '4.33',
+    g: '3.33',
+    ir: '6.67',
+    p: '312345.68',
+    r: '1234.57',
+  });
+
+  const link = page.url();
+  const figures = async (target: Page) => ({
+    ...(await snapshot(target)),
+    years: (await target.getByTestId('year-table').textContent())?.replace(/\s+/g, ' '),
+    chart: (await target.getByTestId('chart-table').textContent())?.replace(/\s+/g, ' '),
+  });
+  const before = await figures(page);
+  const fresh = await browser.newContext({ viewport: page.viewportSize() });
+  try {
+    const other = await fresh.newPage();
+    await other.goto(link);
+    await expect(calculator(other)).toHaveAttribute('data-hydrated', 'true');
+    await expectStatus(other, 'ready');
+    expect(await figures(other)).toEqual(before);
+  } finally {
+    await fresh.close();
+  }
+});
+
 test('a link with only defaults stays short', async ({ page }) => {
   await gotoCalculator(page, 'a=leeds');
   await expectStatus(page, 'ready');

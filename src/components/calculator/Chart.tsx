@@ -20,6 +20,7 @@ import {
   areaPath,
   formatK,
   labelPlacement,
+  labelSides,
   polylinePoints,
   responsiveXTicks,
   xPercent,
@@ -93,8 +94,10 @@ export default function Chart({ calc }: CalcProps) {
   const markerX = breakEven === null ? null : xPercent(breakEven, years);
   const activeX = year === null ? 0 : xPercent(year, years);
   const labelX = xPercent(labels.year, years);
-  const buyLabel = labels.buyOnTop ? 'above' : 'below';
-  const rentLabel = labels.buyOnTop ? 'below' : 'above';
+  const buyY = fromBottom(buy[labels.year] ?? 0);
+  const rentY = fromBottom(rent[labels.year] ?? 0);
+  // The lower label flips above its line near the bottom, so it never covers the axis.
+  const { buy: buyLabel, rent: rentLabel } = labelSides(labels.buyOnTop, buyY, rentY);
 
   return (
     <figure class="chart chart--live" data-testid="chart">
@@ -215,13 +218,13 @@ export default function Chart({ calc }: CalcProps) {
             )}
             <span
               class={`chart__series-label chart__series-label--buy chart__series-label--${buyLabel}`}
-              style={`--x: ${labelX}%; --y: ${fromBottom(buy[labels.year] ?? 0)}%`}
+              style={`--x: ${labelX}%; --y: ${buyY}%`}
             >
               Buy
             </span>
             <span
               class={`chart__series-label chart__series-label--rent chart__series-label--${rentLabel}`}
-              style={`--x: ${labelX}%; --y: ${fromBottom(rent[labels.year] ?? 0)}%`}
+              style={`--x: ${labelX}%; --y: ${rentY}%`}
             >
               Rent
             </span>

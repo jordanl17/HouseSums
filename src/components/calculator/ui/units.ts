@@ -62,12 +62,30 @@ export function formatFieldValue(value: number, spec: FieldSpec): string {
   switch (spec.unit) {
     case 'percent':
     case 'percentPerYear':
-      return formatPercentValue(value, percentDecimals(spec.step));
+      return formatPercentValue(value, percentShownDecimals(value, spec.step));
     case 'years':
       return formatYearsValue(value);
     default:
       return formatMoneyValue(value);
   }
+}
+
+/** Most decimal places of a percent a field shows (and keeps when typed, see canonicalInput). */
+const MAX_PERCENT_DECIMALS = 2;
+
+/**
+ * Decimal places to show for this value: the step's ("3.0"), or up to two when the value has
+ * them ("4.19" for a local 10-year average), so the field never hides the figure the model uses
+ * and matches the sensitivity table's "(now)" row.
+ */
+export function percentShownDecimals(value: number, step: number): number {
+  const min = percentDecimals(step);
+  const max = Math.max(min, MAX_PERCENT_DECIMALS);
+  const target = Number((value * 100).toFixed(max));
+  for (let decimals = min; decimals < max; decimals += 1) {
+    if (Number((value * 100).toFixed(decimals)) === target) return decimals;
+  }
+  return max;
 }
 
 /** Human value for aria-valuetext and tooltips: "£245,000", "4.30%", "3.0% a year", "30 years". */

@@ -5,6 +5,8 @@
  *   .share-link__row       the button and the status line, side by side, wrapping at 360px
  *   .share-link__status    polite live region; always one line tall so nothing below moves
  *   .share-link__manual    the read-only link field, shown only when the browser refused to copy
+ *   .share-link--waiting   the row's reserved space before an answer: invisible and inert, and
+ *                          laid out only when the page was opened with an area in its link
  */
 .share-link {
   display: flex;
@@ -36,6 +38,15 @@
 .share-link__manual .field__input {
   font-family: var(--font-mono);
   font-size: var(--size-sm);
+}
+
+.share-link--waiting {
+  display: none;
+  visibility: hidden;
+}
+
+:root[data-calc-link] .share-link--waiting {
+  display: flex;
 }
 
 @media print {

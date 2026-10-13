@@ -38,6 +38,17 @@ export function Tag({ variant = 'typical', children, info, about, id, testId }: 
     return () => document.removeEventListener('pointerdown', onPointer);
   }, [pinned]);
 
+  // Content shown by hover alone must be dismissable without moving the pointer (WCAG 1.4.13):
+  // Escape anywhere closes it while it is open by hover.
+  useEffect(() => {
+    if (!hover || pinned) return undefined;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setHover(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [hover, pinned]);
+
   const className = `tag tag--${variant}`;
   if (info === undefined) {
     return (
@@ -79,7 +90,7 @@ export function Tag({ variant = 'typical', children, info, about, id, testId }: 
         }}
         onBlur={() => setPinned(false)}
       >
-        {children}
+        <span class="tag__text">{children}</span>
         <span class="visually-hidden">{about ? `: source for ${about}` : ': source'}</span>
         <span class="tag__icon" aria-hidden="true">
           i

@@ -23,9 +23,10 @@
  * then each field's override (if any) replaces the derived value.
  *
  * Provenance: "local" only for an area's own figure (clamping to the brief's range keeps it
- * local). A nation figure, a fixed default, a Bank of England rate (a UK figure) or a value the
+ * local, and the source then gives the raw figure and the bound it was held to). A nation figure, a fixed default, a Bank of England rate (a UK figure) or a value the
  * Outlook preset changed is "typical". Sample placeholder figures say so in the source.
  */
+import { formatPercent } from './format';
 import {
   DERIVED_INPUT_KEYS,
   NUMERIC_INPUT_KEYS,
@@ -188,6 +189,12 @@ export function deriveInputs(options: DeriveOptions): DerivedInputs {
     return { value: nationFigures[field], provenance: typical(source, fileMonth) };
   };
 
+  /** "−2.15%", "6%", "1.5%": two decimals at most, no trailing zeros. */
+  const shortRate = (rate: number) =>
+    formatPercent(rate, { decimals: 2 })
+      .replace(/\.00%$/, '%')
+      .replace(/(\.\d)0%$/, '$1%');
+
   /** Clamp to the brief's range, apply the preset, clamp again. */
   const growth = (
     field: 'growth10y' | 'rentGrowth',
@@ -195,9 +202,20 @@ export function deriveInputs(options: DeriveOptions): DerivedInputs {
     dataset: string,
     monthKey: 'price' | 'rent',
   ) => {
-    const { value, provenance: origin } = areaFigure(field, dataset, monthKey);
+    const { value, provenance: figure } = areaFigure(field, dataset, monthKey);
     const { min, max } = defaults.areaClamps[key];
     const clamped = clamp(value, min, max);
+    // Say so when the brief's range held the figure: "..., 10-year average of −2.15%, shown at
+    // the 0% floor" (phase 4 review: a clamped figure must not pass as the raw local one).
+    const origin: Provenance =
+      clamped === value
+        ? figure
+        : {
+            ...figure,
+            source: `${figure.source} of ${shortRate(value)}, shown at the ${shortRate(clamped)} ${
+              clamped > value ? 'floor' : 'ceiling'
+            }`,
+          };
     const adjust = preset[key];
     const adjusted = tidy(clamp(Math.min(clamped + adjust.add, adjust.cap ?? Infinity), min, max));
     if (adjusted === clamped) return set(key, clamped, origin);
