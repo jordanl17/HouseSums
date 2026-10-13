@@ -1,1 +1,255 @@
-/* Results teammate: answer states, chart (tooltip, focus), key numbers, sensitivity, breakdown. */
+/*
+ * Results (phase 4, results teammate): the answer's states, the live chart's inspector and
+ * tooltip, the sensitivity tables, the breakdown and the small print under each section.
+ * Builds on the phase 2 primitives (answer.css, chart.css, key-number.css, data-table.css).
+ * Tokens only. Rent orange and hi-vis are never text colours.
+ *
+ *   .answer--message        empty, loading and error states: one calm sentence
+ *   .answer--rent           renting stays ahead: the numeral is the horizon, in ink
+ *   .answer__note           the explaining sentence plus the "catches up again" or "what would
+ *                           flip it" line, with lines reserved so the card never resizes
+ *   .answer__extra          that second line
+ *   .chart--live            the model-driven chart
+ *   .chart__plot--interactive  the plot as a focusable year inspector
+ *   .chart__cursor / __dot  the inspected year: an ink guide line and a dot on each line
+ *   .chart__tooltip         that year's figures, ink on surface with an ink edge (no shadow)
+ *   .chart__marker-label--end  "Year N" hung left of the marker near the right edge
+ *   .sensitivity__tables / .breakdown__tables  tables side by side when there is room
+ *   .breakdown__note        a short note under an item (relief, surcharge, agent fee basis)
+ *   .calc-section__intro / __small  a lead-in line and small print in a section
+ */
+
+/* ---- Answer ---- */
+
+.answer {
+  /* A little tighter than the primitive, so the key numbers stay above the fold at 1280x800. */
+  gap: var(--space-2);
+  /* Lines reserved for the explaining sentence and its second line, by width. Long enough for
+     every answer case at that width, so changing an input never moves the chart. */
+  --answer-note-lines: 6;
+}
+
+@media (min-width: 30rem) {
+  .answer {
+    --answer-note-lines: 4;
+  }
+}
+
+@media (min-width: 60rem) {
+  .answer {
+    --answer-note-lines: 3;
+  }
+}
+
+.answer__note {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-height: calc(var(--answer-note-lines) * var(--leading-body) * 1em + var(--space-1));
+}
+
+.answer__note p {
+  margin: 0;
+}
+
+.answer__extra {
+  font-weight: var(--weight-bold);
+}
+
+/* Renting stays ahead: the numeral is the horizon, so it is ink, not the buy colour. */
+.answer--rent .answer__numeral {
+  color: var(--color-ink);
+}
+
+/* "Renting comes out ahead for all" is longer than "Buying pulls ahead after"; at phone widths
+   a smaller lead keeps it on one line, so the headline keeps its height. */
+@media (max-width: 29.99rem) {
+  .answer--rent .answer__lead {
+    font-size: var(--size-lg);
+    /* The same line box as the usual lead, so the numeral does not move up. */
+    line-height: calc(var(--size-xl) * var(--leading-tight));
+  }
+}
+
+.answer--message .answer__lead {
+  font-weight: var(--weight-bold);
+  font-size: var(--size-xl);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-heading);
+}
+
+.answer--message p {
+  margin: 0;
+}
+
+/* ---- Chart ---- */
+
+.chart__plot--interactive {
+  cursor: crosshair;
+  /* Vertical scrolling still works on touch; a sideways drag picks the year. */
+  touch-action: pan-y;
+  border-radius: var(--space-1);
+}
+
+.chart__cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--x);
+  width: 0;
+  border-left: var(--border-thin) solid var(--color-ink);
+  pointer-events: none;
+}
+
+.chart__dot {
+  position: absolute;
+  left: var(--x);
+  bottom: var(--y);
+  width: 0.625rem;
+  height: 0.625rem;
+  border: 2px solid var(--color-surface);
+  border-radius: var(--radius-pill);
+  transform: translate(-50%, 50%);
+  pointer-events: none;
+}
+
+.chart__dot--buy {
+  background-color: var(--color-buy);
+}
+
+.chart__dot--rent {
+  background-color: var(--color-rent);
+}
+
+.chart__tooltip {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  z-index: 1;
+  display: grid;
+  gap: var(--space-1);
+  width: max-content;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-thin) solid var(--color-ink);
+  border-radius: var(--space-3);
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: var(--size-xs);
+  line-height: var(--leading-tight);
+  transform: translateX(var(--space-2));
+  pointer-events: none;
+}
+
+.chart__tooltip--left {
+  transform: translateX(calc(-100% - var(--space-2)));
+}
+
+.chart__tooltip p {
+  margin: 0;
+}
+
+.chart__tooltip-year {
+  font-weight: var(--weight-bold);
+}
+
+.chart__tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A key line in the series colour before the name (a border, so it prints). */
+.chart__tooltip-row > :first-child::before {
+  content: '';
+  display: inline-block;
+  width: var(--space-3);
+  margin-right: var(--space-1);
+  vertical-align: middle;
+  border-top: 3px solid currentColor;
+}
+
+.chart__tooltip-row--buy > :first-child::before {
+  border-top-color: var(--color-buy);
+}
+
+.chart__tooltip-row--rent > :first-child::before {
+  border-top-color: var(--color-rent);
+}
+
+/* Up to four x labels on a phone, up to six from 30rem (src/lib/chart.ts, responsiveXTicks). */
+@media (max-width: 29.99rem) {
+  .chart__tick--wide {
+    display: none;
+  }
+}
+
+@media (min-width: 30rem) {
+  .chart__tick--narrow {
+    display: none;
+  }
+}
+
+.chart__marker-label--end {
+  transform: translate(calc(-100% + 1px), -0.25rem);
+}
+
+/* ---- Sections under the card ---- */
+
+.calc-section__intro,
+.calc-section__small {
+  margin: 0;
+}
+
+.calc-section__small {
+  font-size: var(--size-sm);
+  color: var(--color-muted);
+}
+
+.calc-section p {
+  margin: 0;
+}
+
+.sensitivity__tables,
+.breakdown__tables {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: var(--space-4) var(--space-6);
+  align-items: start;
+}
+
+/* Compact two-column tables: let "Not within 25 years" wrap rather than widen the page. */
+.sensitivity .data-table tbody td,
+.breakdown__table tbody th {
+  white-space: normal;
+}
+
+.breakdown__note {
+  display: block;
+  white-space: normal;
+  font-size: var(--size-xs);
+  color: var(--color-muted);
+}
+
+.breakdown .disclosure .data-table-scroll {
+  margin-top: var(--space-2);
+}
+
+@media (forced-colors: active) {
+  .chart__cursor {
+    border-left-color: CanvasText;
+  }
+
+  .chart__dot {
+    background-color: CanvasText;
+  }
+}
+
+@media print {
+  .chart__tooltip,
+  .chart__cursor,
+  .chart__dot {
+    display: none;
+  }
+}
