@@ -10,11 +10,16 @@
  * - A query string or hash is kept and placed after the slash.
  */
 
-const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+// A scheme ("https:", "mailto:") or a protocol-relative URL ("//host"). A bare "//" or "///path"
+// has no host, so it is treated as an internal path with extra slashes.
+const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/[^/])/i;
 
-/** Ensure a base path starts and ends with a single "/". */
+/** Ensure a base path starts and ends with a single "/", with no repeated slashes inside. */
 export function normaliseBase(base: string): string {
-  const trimmed = base.trim().replace(/^\/+|\/+$/g, '');
+  const trimmed = base
+    .trim()
+    .replace(/\/{2,}/g, '/')
+    .replace(/^\/+|\/+$/g, '');
   return trimmed === '' ? '/' : `/${trimmed}/`;
 }
 
