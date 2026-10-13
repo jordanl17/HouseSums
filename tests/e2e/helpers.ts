@@ -22,6 +22,30 @@ export const PAGES: readonly { path: string; title: string; h1: string; island?:
   { path: 'sources/', title: 'Sources | House Sums', h1: 'Sources' },
   { path: 'about/', title: 'About | House Sums', h1: 'About House Sums' },
   { path: 'styleguide/', title: 'Style guide | House Sums', h1: 'Style guide' },
+  // Phase 5 pages. Titles come from src/lib/seo.ts (areaTitle, nationTitle); the h1s are the
+  // contract the areas teammate builds to.
+  {
+    path: 'rent-vs-buy/',
+    title: 'Rent v buy by nation | House Sums',
+    h1: 'Rent v buy by nation',
+  },
+  {
+    path: 'rent-vs-buy/scotland/',
+    title: 'Rent or buy in Scotland? Break-even years by area | House Sums',
+    h1: 'Rent v buy in Scotland',
+  },
+  {
+    path: 'rent-vs-buy/leeds/',
+    title: 'Rent or buy in Leeds? See your break-even year | House Sums',
+    h1: 'Rent v buy in Leeds: how long until buying beats renting?',
+    island: true,
+  },
+  {
+    path: 'rent-vs-buy/kingston-upon-hull/',
+    title: 'Rent or buy in Kingston upon Hull? See your break-even year | House Sums',
+    h1: 'Rent v buy in Kingston upon Hull: how long until buying beats renting?',
+    island: true,
+  },
 ];
 
 export const NOT_FOUND_PATH = 'this-page-does-not-exist/';
@@ -34,7 +58,10 @@ export async function expectNoHorizontalScroll(page: Page): Promise<void> {
   expect(scrollWidth).toBeLessThanOrEqual(innerWidth);
 }
 
-/** Load a page and assert it requested no scripts and contains no script tags. */
+/**
+ * Load a page and assert it requested no scripts and contains no script tags. JSON-LD blocks
+ * (`<script type="application/ld+json">`, phase 5) are data, not JavaScript, so they are allowed.
+ */
 export async function expectNoJavaScript(page: Page, path: string): Promise<void> {
   const scriptRequests: string[] = [];
   page.on('request', (request) => {
@@ -44,7 +71,7 @@ export async function expectNoJavaScript(page: Page, path: string): Promise<void
   });
   await page.goto(path, { waitUntil: 'networkidle' });
   expect(scriptRequests).toEqual([]);
-  await expect(page.locator('script')).toHaveCount(0);
+  await expect(page.locator('script:not([type="application/ld+json"])')).toHaveCount(0);
 }
 
 /** The base path the site is served under, e.g. '/HouseSums/'. */

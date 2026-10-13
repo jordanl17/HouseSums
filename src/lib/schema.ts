@@ -16,6 +16,7 @@ import {
   NUMERIC_INPUT_KEYS,
   PRESET_NAMES,
   type AreaFigures,
+  type AreaNamesFile,
   type AreasFile,
   type DefaultsFile,
   type RatesFile,
@@ -133,12 +134,60 @@ export function parseAreasFile(value: unknown, path = 'areas.json'): AreasFile {
       oneOf(f, AREA_FIELDS, `${p}.fallbacks[${j}]`),
     );
     if (slugs.has(slug)) throw new DataError(`${p}.slug`, `duplicate slug "${slug}"`);
+    if (NATION_SLUG_SET.has(slug)) {
+      throw new DataError(`${p}.slug`, `"${slug}" is a nation page slug`);
+    }
     if (codes.has(code)) throw new DataError(`${p}.code`, `duplicate code "${code}"`);
     slugs.add(slug);
     codes.add(code);
     optional(a, 'rentArea', str, p);
+    optional(a, 'onsName', str, p);
   });
   return o as unknown as AreasFile;
+}
+
+/** Nation page slugs (src/lib/nations.ts); repeated here so the schema has no other imports. */
+const NATION_SLUG_SET: ReadonlySet<string> = new Set([
+  'england',
+  'scotland',
+  'wales',
+  'northern-ireland',
+]);
+
+/**
+ * data/area-names.json (phase 5). Checks the shape, unique codes and slugs, and that aliases
+ * point at an entry's slug or at least look like slugs. Whether the targets exist in areas.json
+ * is checked against the areas file by scripts/data/area-names.ts (checkAreaNames).
+ */
+export function parseAreaNames(value: unknown, path = 'area-names.json'): AreaNamesFile {
+  const o = obj(value, path);
+  schemaVersion(o, path);
+  str(o['description'], `${path}.description`);
+  str(o['method'], `${path}.method`);
+  const codes = new Set<string>();
+  const slugs = new Set<string>();
+  arr(o['areas'], `${path}.areas`).forEach((item, i) => {
+    const p = `${path}.areas[${i}]`;
+    const a = obj(item, p);
+    const code = str(a['code'], `${p}.code`, /^[ENSW]\d{8}$/);
+    str(a['ons'], `${p}.ons`);
+    str(a['name'], `${p}.name`);
+    const slug = str(a['slug'], `${p}.slug`, SLUG);
+    if (codes.has(code)) throw new DataError(`${p}.code`, `duplicate code "${code}"`);
+    if (slugs.has(slug)) throw new DataError(`${p}.slug`, `duplicate slug "${slug}"`);
+    if (NATION_SLUG_SET.has(slug)) throw new DataError(`${p}.slug`, `"${slug}" is a nation slug`);
+    codes.add(code);
+    slugs.add(slug);
+  });
+  const aliases = obj(o['aliases'], `${path}.aliases`);
+  for (const [from, to] of Object.entries(aliases)) {
+    const p = `${path}.aliases.${from}`;
+    if (!SLUG.test(from)) throw new DataError(p, 'alias must look like a slug');
+    str(to, p, SLUG);
+    if (from === to) throw new DataError(p, 'alias points at itself');
+    if (NATION_SLUG_SET.has(from)) throw new DataError(p, 'alias is a nation slug');
+  }
+  return o as unknown as AreaNamesFile;
 }
 
 export function parseRatesFile(value: unknown, path = 'rates.json'): RatesFile {

@@ -50,6 +50,11 @@ export interface CalculatorData {
   rates: RatesFile;
   /** areas.json without the area list: the data months and the nation-level figures. */
   areasMeta: AreasMeta;
+  /**
+   * Phase 5: old area slug -> current slug (data/area-names.json), so a link with `a=` set to a
+   * slug from before the rename still opens the right area. Optional; absent means no aliases.
+   */
+  slugAliases?: Readonly<Record<string, string>>;
 }
 
 export interface CalculatorLinks {

@@ -1,0 +1,23 @@
+---
+/**
+ * The local summary under the calculator on an area page (phase 5). Skeleton by the lead; the
+ * areas teammate owns it. Built only from data: price and month, rent and month, 10-year growth
+ * (said plainly when negative, with the 0% floor), rent change, comparison with the nation, and
+ * the answer at typical assumptions from typicalAnswer() (src/lib/areas.ts), which is the same
+ * deriveInputs + runModel call the island makes.
+ */
+import { typicalAnswer } from '../lib/areas';
+import type { Area } from '../lib/types';
+
+interface Props {
+  area: Area;
+}
+
+const { area } = Astro.props;
+const answer = typicalAnswer(area);
+---
+
+<section class="prose" aria-labelledby="area-summary-heading" data-testid="area-summary">
+  <h2 id="area-summary-heading">{area.name} in figures</h2>
+  <p data-testid="area-summary-answer">{answer.sentence}</p>
+</section>

@@ -193,6 +193,17 @@ describe('decodeState', () => {
     );
   });
 
+  it('reads an old slug through the alias table (phase 5)', () => {
+    const aliases = { 'old-leeds': 'leeds' };
+    expect(decodeState('a=old-leeds', defaults, known, aliases).selection.areaSlug).toBe('leeds');
+    expect(decodeState('a=OLD-LEEDS', defaults, undefined, aliases).selection.areaSlug).toBe(
+      'leeds',
+    );
+    // Without the table the old slug is unknown; inherited keys never resolve.
+    expect(decodeState('a=old-leeds', defaults, known).selection.areaSlug).toBeNull();
+    expect(decodeState('a=constructor', defaults, known, aliases).selection.areaSlug).toBeNull();
+  });
+
   it('accepts URLSearchParams, a search without "?" and a whole URL', () => {
     const expected = state({ areaSlug: 'leeds' }, { price: 300000 });
     expect(decodeState(new URLSearchParams('a=leeds&p=300000'), defaults)).toEqual(expected);

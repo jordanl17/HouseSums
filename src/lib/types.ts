@@ -63,8 +63,13 @@ export interface Area extends AreaFigures {
   code: string;
   /** ONS name lowercased and hyphenated, unique across the file, e.g. "leeds". */
   slug: string;
-  /** ONS name, e.g. "Leeds". */
+  /**
+   * Display name. The ONS name, except for the few in the "X, City of" / "X, County of" form,
+   * which use the common form ("Bristol"); see data/area-names.json.
+   */
   name: string;
+  /** The ONS name, only when it differs from `name` (e.g. "Bristol, City of"). Phase 5. */
+  onsName?: string;
   nation: Nation;
   /** Fields that used the nation's figure instead of a local one. Empty when all are local. */
   fallbacks: AreaField[];
@@ -98,6 +103,30 @@ export interface AreasFile {
   >;
   /** Sorted by name. */
   areas: Area[];
+}
+
+/**
+ * data/area-names.json (phase 5, lead): hand-maintained display names and slugs for the areas
+ * whose ONS name is in the "X, City of" form, plus slug aliases so older links keep working.
+ */
+export interface AreaNameEntry {
+  /** ONS local authority code. */
+  code: string;
+  /** The ONS name the entry was written for, e.g. "Bristol, City of". */
+  ons: string;
+  /** Display name, e.g. "Bristol". */
+  name: string;
+  /** URL slug, e.g. "bristol". */
+  slug: string;
+}
+
+export interface AreaNamesFile {
+  schemaVersion: 1;
+  description: string;
+  method: string;
+  areas: AreaNameEntry[];
+  /** Old slug -> current slug. Never remove an alias once it has been live. */
+  aliases: Record<string, string>;
 }
 
 // ---------------------------------------------------------------------------------------------

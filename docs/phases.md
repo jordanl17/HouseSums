@@ -7,8 +7,8 @@ Each phase lands as one PR into `main`. The phase team appends its handoff notes
 | 1 | Scaffold, CI and deploy | `phase/1-scaffold` | Merged |
 | 2 | Brand and layout shell | `phase/2-brand` | Merged |
 | 3 | Engine and data pipeline | `phase/3-engine` | Merged |
-| 4 | Calculator UI | `phase/4-calculator` | In review |
-| 5 | Area, nation and content pages, SEO | `phase/5-pages` | Not started |
+| 4 | Calculator UI | `phase/4-calculator` | Merged |
+| 5 | Area, nation and content pages, SEO | `phase/5-pages` | In progress |
 | 6 | Accessibility, performance and end-to-end | `phase/6-hardening` | Not started |
 
 ## Handoff notes
@@ -189,3 +189,27 @@ Decisions: `docs/decisions.md`, "Calculator island (phase 4, lead)", "Inputs", "
 - `HowThisWorks.tsx` links to `/how-it-works/`; that page and `/sources/` are yours. The explainer should state the brief's assumptions plus the tax cases listed in the phase 3 notes.
 - Awkward ONS slugs (`kingston-upon-hull-city-of` and others) are still open; the picker shows the ONS names.
 
+
+### Phase 5: area, nation and content pages, SEO
+
+In progress. The lead laid the foundations below; three teammates (areas, content, seo) fill the templates in parallel. Decisions and file ownership: `docs/decisions.md`, "Pages and SEO (phase 5, lead)".
+
+#### Foundations (lead)
+- **Slugs.** `bristol`, `kingston-upon-hull`, `herefordshire` (display names without ", City of" / ", County of"; ONS name kept as `onsName`), from `data/area-names.json`, applied by the pipeline on every refresh and by `npm run data:names` to the committed file. Old slugs are aliases: `?a=bristol-city-of` opens Bristol. Area slugs never equal nation slugs (checked).
+- **`src/lib/nations.ts`** (pure): `NATION_NAMES`, `NATION_SLUGS` (`england`, `scotland`, `wales`, `northern-ireland`), `nationFromSlug`, `isNationSlug`.
+- **`src/lib/areas.ts`** (build time only; never import from client code): pure `sortByName`, `closestByPrice`, `areaMonths`, `nationMonths`, `onsName`, `isFallback`, `typicalAnswerSentence`; paths `areaPath`, `nationPath`, `nationsIndexPath`; over the committed data `allAreas`, `getArea`, `areasByNation`, `relatedAreas` (6, same nation, closest price), `nationFigures` (with months), `monthsFor`, `typicalSelection`, `typicalAnswer(area)` (`{ derived, result, copy, sentence }`, cached), `islandArea`, `rentVsBuyPaths`, `nationName`.
+- **`src/lib/seo.ts`** (pure): title, description, canonical, OG image path and JSON-LD builders (see decisions).
+- **Base.astro**: new optional props `ogImage`, `ogImageAlt`, `jsonLd`; OG and Twitter tags on every page.
+- **Routes (skeletons, now owned by areas):** `src/pages/rent-vs-buy/[slug].astro` (areas and nations), `src/pages/rent-vs-buy/index.astro`; stub components `AreaSummary.astro`, `RelatedAreas.astro`, `NationTable.astro`. The area skeleton already renders the island with `initialArea`, so the answer is in the static HTML.
+- **e2e `PAGES`** now includes `rent-vs-buy/`, `rent-vs-buy/scotland/`, `rent-vs-buy/leeds/` and `rent-vs-buy/kingston-upon-hull/` with their titles and h1s (the contract below).
+
+#### Contracts for the teammates
+- **Titles and h1s** (asserted by `PAGES` in `tests/e2e/helpers.ts`; keep them):
+  - Area: title `areaTitle(name)` ("Rent or buy in Leeds? See your break-even year | House Sums"), description `areaDescription({ answer: typicalAnswer(area).sentence, price, rent })`, h1 "Rent v buy in Leeds: how long until buying beats renting?".
+  - Nation: title `nationTitle(nation)`, description `nationDescription(nation, count)`, h1 "Rent v buy in Scotland".
+  - `/rent-vs-buy/`: title and h1 "Rent v buy by nation".
+  - `/how-it-works/` "How it works", `/sources/` "Sources", `/about/` "About House Sums" (h1s unchanged); content sets a unique description on each.
+- **Test hooks** on area pages: the island's `answer-headline`, `answer-numeral` (server-rendered); `area-summary` (the summary section) and `area-summary-answer` (holds exactly `typicalAnswer(area).sentence`); `related-areas`; on nation pages `nation-areas` (the table). The seo teammate's dist test reads `answer-numeral` / `answer-headline` and `area-summary-answer` and compares them with its own `runModel(deriveInputs(...))`.
+- **Island on area pages:** `<Calculator client:load data={calculatorData()} links={{ areaList: url('data/area-list.json'), howItWorks: url('how-it-works') }} initialArea={islandArea(area)} />`. One island per page; no other client JS on any page.
+- **OG images:** `og/default.png` and `og/{england,scotland,wales,northern-ireland}.png` under `public/`, 1200x630. Base already points at them (`ogImagePath(nation)` on area and nation pages).
+- **Links** always through `url()` or the path helpers in `areas.ts`. New pages that should get the shared e2e checks go in `PAGES` (tell the lead).

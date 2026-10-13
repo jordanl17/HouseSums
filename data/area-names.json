@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "description": "Display names and URL slugs for local authorities whose ONS name is in the 'X, City of' or 'X, County of' form. The pipeline (scripts/data/area-names.ts) applies these by ONS code on every refresh, so the slugs stay stable. The ONS name is kept in areas.json as onsName.",
+  "method": "Display name: the ONS name without the trailing ', City of' or ', County of'. Slug: that display name lowercased and hyphenated, by the same rule as every other slug. The slug the plain ONS rule would give is listed in aliases, so links using it keep working. A refresh fails if an area's ONS name has this form and no entry here.",
+  "areas": [
+    {
+      "code": "E06000023",
+      "ons": "Bristol, City of",
+      "name": "Bristol",
+      "slug": "bristol"
+    },
+    {
+      "code": "E06000019",
+      "ons": "Herefordshire, County of",
+      "name": "Herefordshire",
+      "slug": "herefordshire"
+    },
+    {
+      "code": "E06000010",
+      "ons": "Kingston upon Hull, City of",
+      "name": "Kingston upon Hull",
+      "slug": "kingston-upon-hull"
+    }
+  ],
+  "aliases": {
+    "bristol-city-of": "bristol",
+    "herefordshire-county-of": "herefordshire",
+    "kingston-upon-hull-city-of": "kingston-upon-hull"
+  }
+}

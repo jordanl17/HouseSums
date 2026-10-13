@@ -1,0 +1,115 @@
+---
+/**
+ * /rent-vs-buy/{slug}/: one page per local authority in data/areas.json and one per nation
+ * (england, scotland, wales, northern-ireland). Slugs never collide: the data checks fail on an
+ * area slug equal to a nation slug.
+ *
+ * Phase 5 skeleton by the lead; the areas teammate owns this file and fills in the templates.
+ * Area pages: heading, the calculator island pre-filled for the area (its answer is in the
+ * static HTML), then the local summary and links. Nation pages: heading, the nation's figures,
+ * its tax, and every area in a table.
+ */
+import Base from '../../layouts/Base.astro';
+import Calculator from '../../components/calculator/Calculator';
+import AreaSummary from '../../components/AreaSummary.astro';
+import NationTable from '../../components/NationTable.astro';
+import RelatedAreas from '../../components/RelatedAreas.astro';
+import {
+  areaPath,
+  areasByNation,
+  islandArea,
+  nationName,
+  nationPath,
+  nationsIndexPath,
+  rentVsBuyPaths,
+  typicalAnswer,
+  type RentVsBuyPage,
+} from '../../lib/areas';
+import { calculatorData } from '../../lib/calculator-data';
+import { formatMoney } from '../../lib/format';
+import {
+  absoluteUrl,
+  areaDescription,
+  areaTitle,
+  breadcrumbLd,
+  nationDescription,
+  nationTitle,
+  ogImageAlt,
+  ogImagePath,
+  webApplicationLd,
+} from '../../lib/seo';
+import { url } from '../../lib/url';
+
+export function getStaticPaths() {
+  return rentVsBuyPaths();
+}
+
+type Props = RentVsBuyPage;
+const page = Astro.props;
+const site = Astro.site ?? Astro.url;
+const abs = (path: string) => absoluteUrl(path, site);
+const nation = page.kind === 'area' ? page.area.nation : page.nation;
+const crumbs = [
+  { name: 'House Sums', url: abs(url()) },
+  { name: 'Rent v buy', url: abs(nationsIndexPath()) },
+  { name: nationName(nation), url: abs(nationPath(nation)) },
+  ...(page.kind === 'area' ? [{ name: page.area.name, url: abs(areaPath(page.area)) }] : []),
+];
+
+const answer = page.kind === 'area' ? typicalAnswer(page.area) : null;
+const title = page.kind === 'area' ? areaTitle(page.area.name) : nationTitle(page.nation);
+const description =
+  page.kind === 'area' && answer
+    ? areaDescription({
+        answer: answer.sentence,
+        price: formatMoney(page.area.price),
+        rent: formatMoney(page.area.rent),
+      })
+    : nationDescription(nation, areasByNation(nation).length);
+const jsonLd =
+  page.kind === 'area'
+    ? [
+        webApplicationLd({
+          name: `Rent v buy in ${page.area.name}`,
+          url: abs(areaPath(page.area)),
+          description,
+        }),
+        breadcrumbLd(crumbs),
+      ]
+    : [breadcrumbLd(crumbs)];
+---
+
+<Base
+  title={title}
+  description={description}
+  ogImage={ogImagePath(nation)}
+  ogImageAlt={ogImageAlt(nation)}
+  jsonLd={jsonLd}
+>
+  {page.kind === 'area' ? (
+    <>
+      <h1 class="calc-title">
+        Rent v buy in {page.area.name}: how long until buying beats renting?
+      </h1>
+      <Calculator
+        client:load
+        data={calculatorData()}
+        links={{ areaList: url('data/area-list.json'), howItWorks: url('how-it-works') }}
+        initialArea={islandArea(page.area)}
+      />
+      <AreaSummary area={page.area} />
+      <RelatedAreas area={page.area} />
+    </>
+  ) : (
+    <div class="prose">
+      <h1>Rent v buy in {nationName(page.nation)}</h1>
+      <NationTable nation={page.nation} />
+    </div>
+  )}
+</Base>
+
+<style>
+  .calc-title {
+    margin-block: var(--space-2) var(--space-5);
+  }
+</style>

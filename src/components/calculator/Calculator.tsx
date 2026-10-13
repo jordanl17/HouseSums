@@ -212,7 +212,7 @@ export default function Calculator(props: CalculatorProps) {
   useEffect(() => {
     setHydrated(true);
     if (syncUrl && window.location.search !== '') {
-      const decoded = decodeState(window.location.search, defaults);
+      const decoded = decodeState(window.location.search, defaults, undefined, data.slugAliases);
       const slug = decoded.selection.areaSlug ?? initialArea?.slug ?? null;
       setState({
         selection: { ...decoded.selection, areaSlug: slug },

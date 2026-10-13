@@ -1,0 +1,36 @@
+---
+/**
+ * Links from an area page (phase 5): the nation page, six related areas in the same nation
+ * (closest average price) and How it works and Sources. Skeleton by the lead; the areas
+ * teammate owns it.
+ */
+import { areaPath, nationName, nationPath, relatedAreas } from '../lib/areas';
+import type { Area } from '../lib/types';
+import { url } from '../lib/url';
+
+interface Props {
+  area: Area;
+}
+
+const { area } = Astro.props;
+const related = relatedAreas(area);
+---
+
+<nav class="prose" aria-label="More places" data-testid="related-areas">
+  <ul>
+    {related.map((other) => (
+      <li>
+        <a href={areaPath(other)}>{other.name}</a>
+      </li>
+    ))}
+    <li>
+      <a href={nationPath(area.nation)}>Every area in {nationName(area.nation)}</a>
+    </li>
+    <li>
+      <a href={url('how-it-works')}>How it works</a>
+    </li>
+    <li>
+      <a href={url('sources')}>Sources</a>
+    </li>
+  </ul>
+</nav>

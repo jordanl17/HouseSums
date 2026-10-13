@@ -1,0 +1,24 @@
+---
+/**
+ * Every area in a nation, alphabetical, with its average price, rent and break-even year at
+ * typical assumptions (phase 5). Skeleton by the lead; the areas teammate owns it and turns it
+ * into a DataTable-styled table (`.data-table` classes; area names link to their pages).
+ */
+import { areaPath, areasByNation } from '../lib/areas';
+import type { Nation } from '../lib/types';
+
+interface Props {
+  nation: Nation;
+}
+
+const { nation } = Astro.props;
+const areas = areasByNation(nation);
+---
+
+<ul data-testid="nation-areas">
+  {areas.map((area) => (
+    <li>
+      <a href={areaPath(area)}>{area.name}</a>
+    </li>
+  ))}
+</ul>

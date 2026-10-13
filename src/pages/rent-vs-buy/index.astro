@@ -1,0 +1,34 @@
+---
+/**
+ * /rent-vs-buy/: the four nation pages. Phase 5 skeleton by the lead; the areas teammate owns it.
+ */
+import Base from '../../layouts/Base.astro';
+import { areasByNation, nationName, nationPath, nationsIndexPath } from '../../lib/areas';
+import { absoluteUrl, breadcrumbLd } from '../../lib/seo';
+import { NATIONS } from '../../lib/types';
+import { url } from '../../lib/url';
+
+const site = Astro.site ?? Astro.url;
+const jsonLd = breadcrumbLd([
+  { name: 'House Sums', url: absoluteUrl(url(), site) },
+  { name: 'Rent v buy', url: absoluteUrl(nationsIndexPath(), site) },
+]);
+---
+
+<Base
+  title="Rent v buy by nation"
+  description="Rent v buy for every local authority in England, Scotland, Wales and Northern Ireland, from open government data."
+  jsonLd={jsonLd}
+>
+  <div class="prose">
+    <h1>Rent v buy by nation</h1>
+    <ul>
+      {NATIONS.map((nation) => (
+        <li>
+          <a href={nationPath(nation)}>{nationName(nation)}</a> ({areasByNation(nation).length}{' '}
+          areas)
+        </li>
+      ))}
+    </ul>
+  </div>
+</Base>
