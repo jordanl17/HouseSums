@@ -104,7 +104,7 @@ export default function AreaPicker({ calc }: CalcProps) {
   if (failed) message = "Couldn't load the list of places.";
   else if (!ready) message = 'Loading places';
   else if (matches.length === 0)
-    message = `No place called "${query ?? ''}". Try the council's name.`;
+    message = `No place called ‘${query ?? ''}’. Try the council's name.`;
 
   const inputAttrs: JSX.InputHTMLAttributes<HTMLInputElement> = {
     role: 'combobox',

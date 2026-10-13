@@ -163,7 +163,11 @@ export default function Calculator(props: CalculatorProps) {
       initialArea && state.selection.areaSlug === initialArea.slug
         ? { ...state.selection, areaSlug: null }
         : state.selection;
-    return encodeState({ selection, overrides: state.overrides }, derived.base, defaults);
+    // The Home Report only exists under Scotland's rules; a value set there and left behind by
+    // a switch to another nation has no control or Reset, so the link leaves it out.
+    const overrides =
+      derived.inputs.nation === 'sco' ? state.overrides : without(state.overrides, ['homeReport']);
+    return encodeState({ selection, overrides }, derived.base, defaults);
   }, [state, derived, defaults, initialArea]);
 
   useLayoutEffect(() => {
@@ -347,13 +351,15 @@ export default function Calculator(props: CalculatorProps) {
   };
 
   // ---- The answer for screen readers ----
-  // One persistent polite region (always rendered, also on the server) carries the headline
-  // alone, e.g. "Buying pulls ahead after 2 years in Leeds", or an error message. It is written
+  // One persistent polite region (always rendered, also on the server) carries the headline,
+  // e.g. "Buying pulls ahead after 2 years in Leeds", plus "Renting catches up again in year M."
+  // when that applies (so a change that only moves that year is heard), or an error message. It is written
   // ANNOUNCE_DELAY after the last change, and only when the text changes, so a slider drag or
   // typing announces once, after it settles, not every step.
   let announcement = '';
   if (status === 'ready' && result && area) {
-    announcement = answerCopy(answerFacts(result, result.series.length - 1, area.name)).headline;
+    const copy = answerCopy(answerFacts(result, result.series.length - 1, area.name));
+    announcement = copy.overtake ? `${copy.headline}. ${copy.overtake}` : copy.headline;
   } else if (status === 'error') {
     announcement = messageText(status, calc.problem);
   }

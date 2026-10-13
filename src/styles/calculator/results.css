@@ -243,7 +243,7 @@
   align-items: start;
 }
 
-/* Compact two-column tables: let "Not within 25 years" wrap rather than widen the page. */
+/* Compact two-column tables: let "None in 25 years" wrap rather than widen the page. */
 .sensitivity .data-table tbody td,
 .breakdown__table tbody th {
   white-space: normal;

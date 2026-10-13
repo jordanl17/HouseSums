@@ -105,7 +105,7 @@ test.describe('area picker', () => {
     await picker.click();
     await picker.pressSequentially('Nowhere');
     await expect(page.locator('.combo__message')).toHaveText(
-      'No place called "Nowhere". Try the council\'s name.',
+      "No place called ‘Nowhere’. Try the council's name.",
     );
     await picker.blur();
     await expect(picker).toHaveValue('Cardiff');

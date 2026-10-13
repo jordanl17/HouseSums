@@ -1,7 +1,8 @@
 /**
  * Preact port of Segmented.astro: native radios styled as joined pills (src/styles/ui/segmented.css).
  * Arrow keys move between options natively. When `value` matches no option (the Outlook's
- * "Custom" state), no radio is checked; pass `status` to say so in words.
+ * "Custom" state), no radio is checked; pass `status` to say so in words. Every radio is
+ * described by the status line (id `{name}-status`), so it is read out on entering the group.
  */
 import type { ComponentChildren } from 'preact';
 
@@ -23,6 +24,10 @@ export interface SegmentedProps<T extends string = string> {
 }
 
 export function Segmented<T extends string>(props: SegmentedProps<T>) {
+  const hasStatus = props.status !== undefined && props.status !== null;
+  // Each radio points at the status line, so a screen reader entering the group hears it (in
+  // the Custom state no radio is checked, and the status is what says so).
+  const statusId = `${props.name}-status`;
   return (
     <fieldset
       class={props.class ? `segmented ${props.class}` : 'segmented'}
@@ -38,14 +43,17 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
               name={props.name}
               value={option.value}
               checked={option.value === props.value}
+              aria-describedby={hasStatus ? statusId : undefined}
               onChange={() => props.onChange(option.value)}
             />
             <span class="segmented__label">{option.label}</span>
           </label>
         ))}
       </div>
-      {props.status !== undefined && props.status !== null && (
-        <p class="segmented__status">{props.status}</p>
+      {hasStatus && (
+        <p class="segmented__status" id={statusId}>
+          {props.status}
+        </p>
       )}
     </fieldset>
   );

@@ -11,13 +11,13 @@ import { MINUS } from './format';
 export const round2 = (value: number): number => Math.round(value * 100) / 100;
 
 export interface YScale {
-  /** Bottom of the axis, pounds (0, or a negative step multiple). */
+  /** Bottom of the axis, pounds (0, a negative step multiple, or just under a small dip). */
   min: number;
   /** Top of the axis, pounds. */
   max: number;
   /** Gap between gridlines, pounds. */
   step: number;
-  /** Gridline values from min to max. */
+  /** Gridline values from min (or £0, after a small dip) to max. */
   ticks: number[];
 }
 
@@ -38,17 +38,32 @@ export function niceStep(range: number, target = 5): number {
   return Math.max(MIN_STEP, 10 * power);
 }
 
-/** The y axis for these values: always includes £0, rounded out to whole steps. */
+/** A dip below £0 smaller than this share of a step gets no gridline of its own. */
+const SMALL_DIP = 0.25;
+/** Room left under the lowest value in that case, as a share of a step. */
+const DIP_ROOM = 0.04;
+
+/**
+ * The y axis for these values: always includes £0, rounded out to whole steps (except a small
+ * dip below £0, which ends just under the lowest value).
+ */
 export function yScale(values: readonly number[], target = 5): YScale {
   const finite = values.filter((value) => Number.isFinite(value));
   const low = Math.min(0, ...finite);
   const high = Math.max(0, ...finite);
   const step = niceStep(high - low, target);
-  const min = Math.floor(low / step + 1e-9) * step;
+  let min = Math.floor(low / step + 1e-9) * step;
+  // A small dip below £0 (a high loan-to-value's first year) next to a large top would take a
+  // whole step: a quarter of the plot for −£1k. Then the axis stops just under the lowest value
+  // instead, with no gridline below £0.
+  if (low < 0 && -low < step * SMALL_DIP) min = low - step * DIP_ROOM;
+  const first = Math.ceil(min / step - 1e-9) * step;
   let max = Math.ceil(high / step - 1e-9) * step;
-  if (max <= min) max = min + step;
+  if (max <= first) max = first + step;
   const ticks: number[] = [];
-  for (let value = min; value <= max + step / 2; value += step) ticks.push(Math.round(value));
+  // `|| 0` turns −0 into 0.
+  for (let value = first; value <= max + step / 2; value += step)
+    ticks.push(Math.round(value) || 0);
   return { min, max, step, ticks };
 }
 
@@ -142,16 +157,55 @@ export function yearAt(fraction: number, years: number): number {
 }
 
 export interface LabelPlacement {
-  /** Year at which both direct labels sit. */
+  /**
+   * Year at which both direct labels sit. Whole years, except on a 1 or 2-year horizon, where
+   * it can be a half year (the labels sit between two year-ends, on the straight line joining them).
+   */
   year: number;
+  /** Buy and rent values at that year (interpolated for a half year). */
+  buy: number;
+  rent: number;
   /** True when the buy line is on top there (its label goes above, rent's below). */
   buyOnTop: boolean;
 }
 
+/** Furthest along (fraction of the horizon) a label may sit: a label hanging right of its point
+ * then still ends inside the plot at 360px. */
+const LABEL_MAX_AT = 0.7;
+/** Where labels prefer to sit, and the wider range tried when the break-even year is in the way. */
+const LABEL_PREFERRED_FROM = 0.55;
+const LABEL_WIDE_FROM = 0.25;
+
+/** A series' value at a whole or half year. */
+function valueAt(values: readonly number[], at: number): number {
+  const low = Math.floor(at);
+  const high = Math.ceil(at);
+  const a = values[low] ?? 0;
+  const b = values[high] ?? a;
+  return a + (b - a) * (at - low);
+}
+
+/** Label positions between `from` and LABEL_MAX_AT of the horizon: whole years, or half years
+ * on a 1 or 2-year horizon (which has no whole year inside that range). */
+function labelCandidates(years: number, from: number): number[] {
+  const step = years <= 2 ? 0.5 : 1;
+  const out: number[] = [];
+  for (
+    let at = Math.ceil((years * from) / step - 1e-9) * step;
+    at <= years * LABEL_MAX_AT + 1e-9;
+    at += step
+  ) {
+    if (at > 0) out.push(at);
+  }
+  return out;
+}
+
 /**
- * Where the direct "Buy" and "Rent" labels go: between 55% and 75% of the way along (so the
- * label hanging right of its point stays inside the plot at 360px), off the break-even year so
- * they never sit on the marker, at the year where the lines are furthest apart.
+ * Where the direct "Buy" and "Rent" labels go: between 55% and 70% of the way along (so a label
+ * hanging right of its point stays inside the plot at 360px, and never past the right edge),
+ * off the break-even year so they never sit on the marker, at the place where the lines are
+ * furthest apart. When the break-even year blocks every place there, the range widens back to
+ * 25%. A 1 or 2-year horizon uses half years: on a 1-year horizon the labels sit half way.
  */
 export function labelPlacement(
   buy: readonly number[],
@@ -159,21 +213,31 @@ export function labelPlacement(
   breakEvenYear: number | null,
 ): LabelPlacement {
   const years = Math.min(buy.length, rent.length) - 1;
-  if (years <= 0) return { year: 0, buyOnTop: (buy[0] ?? 0) >= (rent[0] ?? 0) };
-  const from = Math.max(1, Math.round(years * 0.55));
-  const to = Math.max(from, Math.round(years * 0.75));
-  let best = Math.round(years * 0.75);
-  let bestGap = -1;
-  for (let year = from; year <= to; year++) {
-    if (breakEvenYear !== null && Math.abs(year - breakEvenYear) < Math.max(1, years / 10))
-      continue;
-    const gap = Math.abs((buy[year] ?? 0) - (rent[year] ?? 0));
-    if (gap > bestGap) {
-      bestGap = gap;
-      best = year;
+  const at = (year: number): LabelPlacement => {
+    const buyValue = valueAt(buy, year);
+    const rentValue = valueAt(rent, year);
+    return { year, buy: buyValue, rent: rentValue, buyOnTop: buyValue >= rentValue };
+  };
+  if (years <= 0) return at(0);
+  const step = years <= 2 ? 0.5 : 1;
+  const clearance = Math.max(step, years / 10);
+  const clear = (year: number) =>
+    breakEvenYear === null || Math.abs(year - breakEvenYear) >= clearance;
+  for (const from of [LABEL_PREFERRED_FROM, LABEL_WIDE_FROM]) {
+    let best: number | null = null;
+    let bestGap = -1;
+    for (const year of labelCandidates(years, from)) {
+      if (!clear(year)) continue;
+      const gap = Math.abs(valueAt(buy, year) - valueAt(rent, year));
+      if (gap > bestGap) {
+        bestGap = gap;
+        best = year;
+      }
     }
+    if (best !== null) return at(best);
   }
-  return { year: best, buyOnTop: (buy[best] ?? 0) >= (rent[best] ?? 0) };
+  // Unreachable in practice (the wide range always has a place clear of one year); stay inside.
+  return at(Math.max(step, Math.floor((years * LABEL_MAX_AT) / step) * step));
 }
 
 /**

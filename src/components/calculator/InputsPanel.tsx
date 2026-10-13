@@ -27,6 +27,7 @@ import {
   SLIDER_KEYS,
   sliderRange,
   surveyHint,
+  yearsHint,
 } from '../../lib/inputs';
 import { PRESET_NAMES, type BuyerType, type NumericInputKey } from '../../lib/types';
 import { OUTLOOK_KEYS } from './Calculator';
@@ -55,6 +56,7 @@ export interface FieldInputProps {
 function hintFor(calc: CalcApi, name: NumericInputKey): string | undefined {
   if (name === 'deposit') return depositHint(calc.inputs.deposit, calc.inputs.price);
   if (name === 'survey') return surveyHint(calc.nation);
+  if (name === 'years') return yearsHint(calc.data.defaults.fields.years);
   return FIELD_HINTS[name] ?? calc.data.defaults.fields[name].hint;
 }
 

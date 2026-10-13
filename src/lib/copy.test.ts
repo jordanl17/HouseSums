@@ -304,8 +304,8 @@ describe('sensitivity tables', () => {
     expect(table.current).toBe(0);
   });
 
-  it('no break-even reads "Not within N years"', () => {
-    expect(breakEvenText(null, 25)).toBe('Not within 25 years');
+  it('no break-even reads "None in N years"', () => {
+    expect(breakEvenText(null, 25)).toBe('None in 25 years');
     expect(breakEvenText(1, 25)).toBe('1 year');
   });
 });

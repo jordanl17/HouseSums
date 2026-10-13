@@ -168,8 +168,9 @@ Decisions: `docs/decisions.md`, "Calculator island (phase 4, lead)", "Inputs", "
 - **Analytics and sharing.** `src/lib/analytics.ts` (four events, no payload, GoatCounter count endpoint, off unless `PUBLIC_GOATCOUNTER_CODE`; the deploy build now passes `vars.GOATCOUNTER_CODE`). "Copy link to these figures" with a manual-copy fallback.
 - **Phase 3 follow-ups.** `NoMortgageRatesError`; relative 15% rate check with a 0.25-point floor; fallback switches reported as warnings; `refresh-data.yml` split so only the PR job has `pull-requests: write`; rent-up and selling-costs-up invariants over the full UI bounds.
 - **Review round 1 fixes.** Chart labels clear of the axis; compact empty card with no placeholder figures in the HTML; area's own data months in "How this works"; the "(now)" row and the growth field at the same precision; one polite, debounced live region for the answer; no shift on a shared-link load (share row reserved, sections under the card held until the answer); typed values kept at the precision shown, so links reproduce exactly. See `docs/decisions.md`, "Review round 1 (phase 4)".
-- **Tests.** About 450 unit tests. e2e (250 runs across 360 and 1280, plus `review.spec.ts`): inputs, keyboard-only flow, results copy, chart, share and URL round trip, the reference scenario on screen equal to `runModel`, nations (SDLT, LBTT with Home Report, LTT, override), and a per-frame layout-shift check through a long run of input changes and from the empty state to the first answer.
-- **Budget.** Total client JS about 83KB of 100KB; the island chunk about 59KB, over the 40KB aim (see decisions).
+- **Review round 2 fixes.** Chart labels stay inside the plot on 1 and 2-year horizons (half-year placement, at most 70% along, e2e on label bounds and `scrollWidth`); a small dip below £0 no longer costs a whole axis step; the live region adds "Renting catches up again in year M."; Segmented status lines describe their radios; links drop a Home Report left behind under another nation; flip-hint and years limits read from `defaults.json`; a light focus edge on hi-vis controls in dark; tidier copy. See `docs/decisions.md`, "Review round 2 (phase 4)".
+- **Tests.** About 450 unit tests. e2e (about 280 runs across 360 and 1280, including `review.spec.ts`): inputs, keyboard-only flow, results copy, chart, share and URL round trip, the reference scenario on screen equal to `runModel`, nations (SDLT, LBTT with Home Report, LTT, override), and a per-frame layout-shift check through a long run of input changes and from the empty state to the first answer.
+- **Budget.** Total client JS about 84KB of 100KB; the island chunk about 60KB, over the 40KB aim (see decisions).
 
 #### Deferred (phase 4)
 - **Island size** over the 40KB aim; phase 6 can lazy-load the breakdown and sensitivity or trim copy.
@@ -179,6 +180,7 @@ Decisions: `docs/decisions.md`, "Calculator island (phase 4, lead)", "Inputs", "
 - Lighthouse runs are phase 6.
 - **Live regions that unhide and fill in one render** (Field notes, the toggletip bubble) may not be announced by every screen reader; the note joins `aria-describedby`, so it is heard on return to the field. Phase 6 can keep them always present and hide them with CSS (tests rely on `toBeHidden`, so update them together).
 - **Forced colours** (Windows High Contrast): slider tracks and the two chart line colours need `@media (forced-colors: active)` rules (phase 6).
+- **Not taken from review round 2:** see the last item of "Review round 2 (phase 4)" in `docs/decisions.md`.
 - **Not taken from review round 1:** a second chart marker at the year renting catches up again, spanning the sections under the card across both columns at wide widths, a surface behind the tables, a visible "Custom" outlook segment, keeping a price typed before the first area pick, and a "scroll sideways" hint on the year table at 360.
 
 #### For phase 5

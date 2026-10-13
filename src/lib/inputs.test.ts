@@ -123,7 +123,7 @@ describe('rangeNote', () => {
   it('names the limit in the field unit', () => {
     expect(rangeNote('min', spec('price'))).toBe('The lowest this takes is £10,000');
     expect(rangeNote('max', spec('price'))).toBe('The highest this takes is £10,000,000');
-    expect(rangeNote('max', spec('mortgageRate'))).toBe('The highest this takes is 15.00%');
+    expect(rangeNote('max', spec('mortgageRate'))).toBe('The highest this takes is 15%');
     expect(rangeNote('max', spec('years'))).toBe('The highest this takes is 40 years');
     expect(rangeNote('min', spec('rent'))).toBe('The lowest this takes is £100 a month');
   });

@@ -34,9 +34,9 @@ export function shortPercent(rate: number): string {
     .replace(/(\.\d)0%$/, '$1%');
 }
 
-/** A whole year count as the sensitivity tables show it: "11 years", or "Not within 25 years". */
+/** A whole year count as the sensitivity tables show it: "11 years", or "None in 25 years". */
 export function breakEvenText(year: number | null, horizon: number): string {
-  return year === null ? `Not within ${years(horizon)}` : years(year);
+  return year === null ? `None in ${years(horizon)}` : years(year);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -173,14 +173,22 @@ export interface FlipHint {
   text: string;
 }
 
-/** Highest house price growth the hint tries: the brief's cap for local growth. */
+/** Highest house price growth the hint tries by default: the brief's cap for local growth. The
+ * island passes defaults.json's `areaClamps.houseGrowth.max` (FlipLimits). */
 export const FLIP_GROWTH_MAX = 0.06;
 /** Growth steps of half a point. */
 export const FLIP_GROWTH_STEP = 0.005;
 /** Rent tries up to half as much again, in 5% steps, rounded to £10. */
 export const FLIP_RENT_MAX = 1.5;
-/** The longest comparison the calculator allows. */
+/** The longest comparison the calculator allows, by default. The island passes defaults.json's
+ * `fields.years.max` (FlipLimits). */
 export const FLIP_YEARS_MAX = 40;
+
+/** Limits the hint tries up to, read from defaults.json by the island so they never drift. */
+export interface FlipLimits {
+  growthMax: number;
+  yearsMax: number;
+}
 /** Mortgage rate tries up to 3 points lower, in quarter-point steps, never below 0. */
 export const FLIP_RATE_MAX_CUT = 0.03;
 
@@ -197,10 +205,16 @@ const tidy = (value: number) => Math.round(value * 1e10) / 1e10;
  *      only when there is a mortgage.
  * Plain conditional copy, never advice.
  */
-export function flipHint(inputs: Inputs, run: BreakEvenRunner, noMortgage = false): FlipHint {
+export function flipHint(
+  inputs: Inputs,
+  run: BreakEvenRunner,
+  noMortgage = false,
+  limits: FlipLimits = { growthMax: FLIP_GROWTH_MAX, yearsMax: FLIP_YEARS_MAX },
+): FlipHint {
+  const { growthMax, yearsMax } = limits;
   // 1. House price growth.
   const startGrowth = Math.floor(inputs.houseGrowth / FLIP_GROWTH_STEP + 1e-9) + 1;
-  for (let step = startGrowth; tidy(step * FLIP_GROWTH_STEP) <= FLIP_GROWTH_MAX; step++) {
+  for (let step = startGrowth; tidy(step * FLIP_GROWTH_STEP) <= growthMax + 1e-9; step++) {
     const houseGrowth = tidy(step * FLIP_GROWTH_STEP);
     const year = run({ ...inputs, houseGrowth });
     if (year !== null) {
@@ -213,13 +227,13 @@ export function flipHint(inputs: Inputs, run: BreakEvenRunner, noMortgage = fals
   }
 
   // 2. A longer comparison.
-  if (inputs.years < FLIP_YEARS_MAX) {
-    const year = run({ ...inputs, years: FLIP_YEARS_MAX });
+  if (inputs.years < yearsMax) {
+    const year = run({ ...inputs, years: yearsMax });
     if (year !== null) {
       return {
         key: 'years',
         breakEvenYear: year,
-        text: `Compared over ${FLIP_YEARS_MAX} years, buying would pull ahead after ${years(year)}.`,
+        text: `Compared over ${yearsMax} years, buying would pull ahead after ${years(year)}.`,
       };
     }
   }

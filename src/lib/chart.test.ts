@@ -39,6 +39,15 @@ describe('y axis', () => {
     expect(yPercent(-12000, scale)).toBeLessThanOrEqual(100);
   });
 
+  it('does not spend a whole step on a small dip below £0', () => {
+    const scale = yScale([-1000, 20000, 480000]);
+    expect(scale.step).toBe(100000);
+    expect(scale.min).toBeLessThan(-1000);
+    expect(scale.min).toBeGreaterThan(-10000);
+    expect(scale.ticks[0]).toBe(0);
+    expect(yPercent(-1000, scale)).toBeLessThanOrEqual(100);
+  });
+
   it('every value fits in the plot, for any series', () => {
     fc.assert(
       fc.property(
@@ -129,10 +138,12 @@ describe('direct labels', () => {
   const buy = Array.from({ length: 26 }, (_, year) => 10000 + year * 9000);
   const rent = Array.from({ length: 26 }, (_, year) => 30000 + year * 5000);
 
-  it('sit between 55% and 75% along, off the break-even year, on the right sides', () => {
+  it('sit between 55% and 70% along, off the break-even year, on the right sides', () => {
     const placement = labelPlacement(buy, rent, 5);
     expect(placement.year).toBeGreaterThanOrEqual(14);
-    expect(placement.year).toBeLessThanOrEqual(19);
+    expect(placement.year).toBeLessThanOrEqual(17);
+    expect(placement.buy).toBe(buy[placement.year]);
+    expect(placement.rent).toBe(rent[placement.year]);
     expect(placement.buyOnTop).toBe(true);
   });
 
@@ -145,8 +156,40 @@ describe('direct labels', () => {
     expect(labelPlacement(rent, buy, null).buyOnTop).toBe(false);
   });
 
-  it('handle a one-year horizon', () => {
-    expect(labelPlacement([1, 2], [3, 4], null).year).toBe(1);
+  it('sit half way along a one-year horizon, on the line joining the two year-ends', () => {
+    for (const breakEven of [null, 1]) {
+      const placement = labelPlacement([-10000, 30000], [20000, 24000], breakEven);
+      expect(placement.year).toBe(0.5);
+      expect(placement.buy).toBe(10000);
+      expect(placement.rent).toBe(22000);
+      expect(placement.buyOnTop).toBe(false);
+    }
+  });
+
+  it('never sit at the right edge of a two-year horizon, nor on its break-even marker', () => {
+    const twoBuy = [-10000, 50000, 80000];
+    const twoRent = [20000, 24000, 28000];
+    expect(labelPlacement(twoBuy, twoRent, 1).year).toBe(0.5);
+    expect(labelPlacement(twoBuy, twoRent, 2).year).toBe(1);
+    expect(labelPlacement(twoBuy, twoRent, null).year).toBe(1);
+  });
+
+  it('never sit past 70% of the horizon or on the break-even year, for any horizon', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 1, max: 40 }),
+        fc.option(fc.integer({ min: 1, max: 40 }), { nil: null }),
+        (years, breakEvenRaw) => {
+          const breakEven = breakEvenRaw === null ? null : Math.min(breakEvenRaw, years);
+          const b = Array.from({ length: years + 1 }, (_, year) => -5000 + year * 9000);
+          const r = Array.from({ length: years + 1 }, (_, year) => 20000 + year * 4000);
+          const { year } = labelPlacement(b, r, breakEven);
+          expect(year).toBeGreaterThan(0);
+          expect(year / years).toBeLessThanOrEqual(0.7 + 1e-9);
+          if (breakEven !== null) expect(year).not.toBe(breakEven);
+        },
+      ),
+    );
   });
 });
 

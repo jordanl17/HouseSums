@@ -56,6 +56,10 @@ export default function AnswerCard({ calc }: CalcProps) {
       inputs,
       (changed) => runModel(changed, taxRules, { sensitivity: false }).breakEvenYear,
       hasNoMortgage(result),
+      {
+        growthMax: calc.data.defaults.areaClamps.houseGrowth.max,
+        yearsMax: calc.data.defaults.fields.years.max,
+      },
     );
     // `inputs` is read at the moment `result` changes, which is the frame it was computed for.
   }, [result, taxRules]);

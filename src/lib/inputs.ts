@@ -118,7 +118,10 @@ export function clampToSpec(value: number, spec: FieldSpec): Clamped {
   return { value: whole, hit: null };
 }
 
-/** A value with its unit, for notes: "£10,000", "£100 a month", "15.00%", "40 years". */
+/** A percentage limit without trailing zeros: "15%", "0.5%", "2.25% a year". */
+const trimPercent = (text: string) => text.replace(/\.0+%/, '%').replace(/(\.\d*[1-9])0+%/, '$1%');
+
+/** A value with its unit, for notes: "£10,000", "£100 a month", "15%", "40 years". */
 export function describeLimit(value: number, spec: FieldSpec): string {
   switch (spec.unit) {
     case 'gbp':
@@ -128,9 +131,11 @@ export function describeLimit(value: number, spec: FieldSpec): string {
     case 'gbpPerYear':
       return `${formatMoney(value)} a year`;
     case 'percent':
-      return formatPercent(value, { decimals: spec.step < 0.001 ? 2 : 1 });
+      return trimPercent(formatPercent(value, { decimals: spec.step < 0.001 ? 2 : 1 }));
     case 'percentPerYear':
-      return formatPercent(value, { decimals: spec.step < 0.001 ? 2 : 1, perYear: true });
+      return trimPercent(
+        formatPercent(value, { decimals: spec.step < 0.001 ? 2 : 1, perYear: true }),
+      );
     case 'years':
       return `${Math.round(value)} ${Math.round(value) === 1 ? 'year' : 'years'}`;
   }
@@ -231,8 +236,12 @@ export const FIELD_HINTS: Partial<Record<NumericInputKey, string>> = {
   inflation: 'Uprates buildings insurance and the service charge',
   agentFeeRate: 'Of the sale price, including VAT',
   homeReport: 'Scotland only: the survey pack the seller pays for',
-  years: 'How long you might stay, from 1 to 40 years',
 };
+
+/** The years-to-compare hint, with its range from defaults.json. */
+export function yearsHint(spec: FieldSpec): string {
+  return `How long you might stay, from ${spec.min} to ${spec.max} years`;
+}
 
 /** Survey hint depends on the nation: in Scotland the seller's Home Report replaces it. */
 export function surveyHint(nation: Nation): string | undefined {

@@ -94,8 +94,8 @@ export default function Chart({ calc }: CalcProps) {
   const markerX = breakEven === null ? null : xPercent(breakEven, years);
   const activeX = year === null ? 0 : xPercent(year, years);
   const labelX = xPercent(labels.year, years);
-  const buyY = fromBottom(buy[labels.year] ?? 0);
-  const rentY = fromBottom(rent[labels.year] ?? 0);
+  const buyY = fromBottom(labels.buy);
+  const rentY = fromBottom(labels.rent);
   // The lower label flips above its line near the bottom, so it never covers the axis.
   const { buy: buyLabel, rent: rentLabel } = labelSides(labels.buyOnTop, buyY, rentY);
 

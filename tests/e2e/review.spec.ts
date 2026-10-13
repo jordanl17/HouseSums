@@ -7,6 +7,13 @@ import { expectStatus, gotoCalculator, input, pickArea } from './calculator-help
  * matching the field, and no placeholder figures in the home page's HTML.
  */
 
+type Box = { x: number; y: number; width: number; height: number };
+const overlaps = (a: Box, b: Box) =>
+  a.x < b.x + b.width - 0.5 &&
+  b.x < a.x + a.width - 0.5 &&
+  a.y < b.y + b.height - 0.5 &&
+  b.y < a.y + a.height - 0.5;
+
 async function open(page: Page, query: string) {
   await gotoCalculator(page, query);
   await expectStatus(page, 'ready');
@@ -51,6 +58,51 @@ for (const slug of ['glasgow-city', 'belfast', 'leeds']) {
       expect(box.x).toBeGreaterThanOrEqual(plot.x - 0.5);
       expect(box.x + box.width).toBeLessThanOrEqual(plot.x + plot.width + 0.5);
     }
+  });
+}
+
+// Review round 2: on a 1 or 2-year horizon the labels used to sit at the last year, at the
+// right edge, and hang off the card (horizontal scroll at 360) or onto the "Year 1" marker.
+for (const query of [
+  'a=glasgow-city&y=1',
+  'a=leeds&y=1&g=6',
+  'a=leeds&y=1&g=0',
+  'a=belfast&y=1',
+  'a=westminster&y=1',
+  'a=leeds&y=2&g=0',
+  'a=leeds&y=2&g=6',
+  'a=glasgow-city&y=2',
+  'a=city-of-edinburgh&y=2',
+  'a=leeds&y=3',
+  'a=leeds&y=6',
+]) {
+  test(`direct labels stay inside the plot and off the marker (${query})`, async ({ page }) => {
+    await open(page, query);
+    const chart = page.getByTestId('chart');
+    const plot = await chart.locator('.chart__plot').boundingBox();
+    if (!plot) throw new Error('chart missing');
+    const marker = page.getByTestId('chart-marker');
+    const markerBox = (await marker.count()) > 0 ? await marker.boundingBox() : null;
+    const labels = await chart.locator('.chart__series-label').all();
+    expect(labels).toHaveLength(2);
+    const boxes = [];
+    for (const label of labels) {
+      await expect(label).toBeVisible();
+      const box = await label.boundingBox();
+      if (!box) throw new Error('label missing');
+      boxes.push(box);
+      expect(box.x).toBeGreaterThanOrEqual(plot.x - 0.5);
+      expect(box.x + box.width).toBeLessThanOrEqual(plot.x + plot.width + 0.5);
+      expect(box.y).toBeGreaterThanOrEqual(plot.y - 0.5);
+      expect(box.y + box.height).toBeLessThanOrEqual(plot.y + plot.height + 0.5);
+      if (markerBox) expect(overlaps(box, markerBox)).toBe(false);
+    }
+    expect(overlaps(boxes[0]!, boxes[1]!)).toBe(false);
+    const scroll = await page.evaluate(() => ({
+      scroll: document.documentElement.scrollWidth,
+      client: document.documentElement.clientWidth,
+    }));
+    expect(scroll.scroll).toBeLessThanOrEqual(scroll.client);
   });
 }
 

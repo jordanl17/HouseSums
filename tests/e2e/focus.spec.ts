@@ -32,6 +32,8 @@ for (const theme of ['light', 'dark'] as const) {
     test.use({ colorScheme: theme });
     const edge = toCssRgb(resolveToken(tokens[theme], '--color-focus-edge'));
     const ring = toCssRgb(resolveToken(tokens[theme], '--color-focus-ring'));
+    // Hi-vis controls (the skip link) take their own edge: light ink in dark.
+    const hiVisEdge = toCssRgb(resolveToken(tokens[theme], '--color-focus-edge-hi-vis'));
 
     test('the first tab stop is a visible skip link with the focus ring', async ({ page }) => {
       await page.goto('./');
@@ -48,7 +50,7 @@ for (const theme of ['light', 'dark'] as const) {
       expect(style.left).toBeGreaterThanOrEqual(0);
       expect(style.outlineStyle).toBe('solid');
       expect(style.outlineWidth).toBe('2px');
-      expect(style.outlineColor).toBe(edge);
+      expect(style.outlineColor).toBe(hiVisEdge);
       expect(style.boxShadow).toContain(ring);
     });
 

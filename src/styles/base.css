@@ -151,6 +151,14 @@ a:hover {
   box-shadow: var(--focus-shadow);
 }
 
+/* On a hi-vis control the hi-vis ring merges with the fill; in dark the usual dark edge then
+   disappears into dark concrete, so these take --color-focus-edge-hi-vis (light ink in dark). */
+.tag--local:focus-visible,
+.button--primary:focus-visible,
+.skip-link:focus-visible {
+  outline-color: var(--color-focus-edge-hi-vis);
+}
+
 /* ---- Utilities ---- */
 
 /* Hidden visually, still read by screen readers. */
