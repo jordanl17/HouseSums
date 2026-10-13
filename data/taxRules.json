@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "note": "UNVERIFIED skeleton: figures copied from docs/brief.md by the phase 3 lead. The tax teammate replaces this note after checking every figure against GOV.UK, Revenue Scotland and the Welsh Revenue Authority (see docs/decisions.md, 'Tax rules verification').",
+  "note": "Residential rates in force from 1 April 2025 (England and NI), from 1 April 2021 with ADS at 8% from 5 December 2024 (Scotland), and from 10 October 2022 with higher rates from 11 December 2024 (Wales); all confirmed unchanged for 2026/27. Checked 2026-10-13 against GOV.UK, Revenue Scotland, gov.scot and gov.wales via search-engine copies of the official pages (the pages could not be fetched directly from the build container). Out of scope: the 2% SDLT non-UK resident surcharge, companies, shared ownership and other reliefs. See docs/decisions.md, 'Tax rules verification (phase 3)'.",
   "effectiveFrom": "2026-04-01",
   "taxYear": "2026/27",
   "nations": {
@@ -50,11 +50,6 @@
           },
           {
             "from": 300000,
-            "to": 500000,
-            "rate": 0.05
-          },
-          {
-            "from": 500000,
             "to": null,
             "rate": 0.05
           }
@@ -66,7 +61,23 @@
         "rate": 0.05,
         "minPrice": 40000
       },
-      "sources": []
+      "sources": [
+        {
+          "title": "GOV.UK: Stamp Duty Land Tax, residential property rates",
+          "url": "https://www.gov.uk/stamp-duty-land-tax/residential-property-rates",
+          "checked": "2026-10-13"
+        },
+        {
+          "title": "GOV.UK: Higher rates of Stamp Duty Land Tax",
+          "url": "https://www.gov.uk/guidance/stamp-duty-land-tax-buying-an-additional-residential-property",
+          "checked": "2026-10-13"
+        },
+        {
+          "title": "GOV.UK: Stamp Duty Land Tax relief for land or property transactions",
+          "url": "https://www.gov.uk/guidance/stamp-duty-land-tax-relief-for-land-or-property-transactions",
+          "checked": "2026-10-13"
+        }
+      ]
     },
     "lbtt": {
       "name": "Land and Buildings Transaction Tax",
@@ -134,7 +145,23 @@
         "rate": 0.08,
         "minPrice": 40000
       },
-      "sources": []
+      "sources": [
+        {
+          "title": "Revenue Scotland: LBTT residential property rates and bands",
+          "url": "https://revenue.scot/taxes/land-buildings-transaction-tax/residential-property",
+          "checked": "2026-10-13"
+        },
+        {
+          "title": "gov.scot: Land and Buildings Transaction Tax (all rates and bands, including ADS, unchanged for 2026-27)",
+          "url": "https://www.gov.scot/policies/taxes/land-and-buildings-transaction-tax/",
+          "checked": "2026-10-13"
+        },
+        {
+          "title": "gov.scot: Scottish Budget 2026 to 2027, chapter 2 tax policy",
+          "url": "https://www.gov.scot/publications/scottish-budget-2026-2027/pages/4/",
+          "checked": "2026-10-13"
+        }
+      ]
     },
     "ltt": {
       "name": "Land Transaction Tax",
@@ -204,7 +231,23 @@
         ],
         "minPrice": 40000
       },
-      "sources": []
+      "sources": [
+        {
+          "title": "gov.wales: Land Transaction Tax rates and bands",
+          "url": "https://www.gov.wales/land-transaction-tax-rates-and-bands",
+          "checked": "2026-10-13"
+        },
+        {
+          "title": "gov.wales: Higher rates for purchases of residential property, technical guidance",
+          "url": "https://www.gov.wales/higher-rates-purchases-residential-property-technical-guidance",
+          "checked": "2026-10-13"
+        },
+        {
+          "title": "gov.wales: Written statement, Draft Budget 2026-27, Welsh taxes (LTT rates unchanged)",
+          "url": "https://www.gov.wales/written-statement-draft-budget-2026-27-welsh-taxes",
+          "checked": "2026-10-13"
+        }
+      ]
     }
   }
 }

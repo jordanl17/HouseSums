@@ -223,7 +223,11 @@ export function parseTaxRules(value: unknown, path = 'taxRules.json'): TaxRules 
     num(a['minPrice'], `${p}.additional.minPrice`, 0);
     if (kind === 'wholePriceSurcharge') num(a['rate'], `${p}.additional.rate`, 0, 1);
     else bands(a['bands'], `${p}.additional.bands`);
-    arr(r['sources'], `${p}.sources`).forEach((s, i) => {
+    const sources = arr(r['sources'], `${p}.sources`);
+    if (sources.length === 0) {
+      throw new DataError(`${p}.sources`, 'expected at least one official source');
+    }
+    sources.forEach((s, i) => {
       const q = `${p}.sources[${i}]`;
       const so = obj(s, q);
       str(so['title'], `${q}.title`);
