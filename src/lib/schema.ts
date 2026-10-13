@@ -96,6 +96,16 @@ function figures(value: unknown, path: string): AreaFigures {
     (v, p) => arr(v, p).map((f, i) => oneOf(f, AREA_FIELDS, `${p}[${i}]`)),
     path,
   );
+  optional(
+    o,
+    'asOf',
+    (v, q) => {
+      const m = obj(v, q);
+      optional(m, 'price', (x, r) => str(x, r, MONTH), q);
+      optional(m, 'rent', (x, r) => str(x, r, MONTH), q);
+    },
+    path,
+  );
   return o as unknown as AreaFigures;
 }
 
@@ -125,16 +135,6 @@ export function parseAreasFile(value: unknown, path = 'areas.json'): AreasFile {
     if (codes.has(code)) throw new DataError(`${p}.code`, `duplicate code "${code}"`);
     slugs.add(slug);
     codes.add(code);
-    optional(
-      a,
-      'asOf',
-      (v, q) => {
-        const m = obj(v, q);
-        optional(m, 'price', (x, r) => str(x, r, MONTH), q);
-        optional(m, 'rent', (x, r) => str(x, r, MONTH), q);
-      },
-      p,
-    );
     optional(a, 'rentArea', str, p);
   });
   return o as unknown as AreasFile;
@@ -148,11 +148,16 @@ export function parseRatesFile(value: unknown, path = 'rates.json'): RatesFile {
   str(o['source'], `${path}.source`);
   const rates = arr(o['rates'], `${path}.rates`);
   if (rates.length === 0) throw new DataError(`${path}.rates`, 'expected at least one rate');
+  const bands = new Set<string>();
   rates.forEach((item, i) => {
     const p = `${path}.rates[${i}]`;
     const r = obj(item, p);
-    num(r['fixYears'], `${p}.fixYears`, 1, 10);
-    oneOf(r['ltv'], LTV_BANDS, `${p}.ltv`);
+    const fix = num(r['fixYears'], `${p}.fixYears`, 1, 10);
+    const ltv = oneOf(r['ltv'], LTV_BANDS, `${p}.ltv`);
+    if (bands.has(`${fix}/${ltv}`)) {
+      throw new DataError(p, `duplicate rate for ${fix} years at ${ltv} LTV`);
+    }
+    bands.add(`${fix}/${ltv}`);
     num(r['rate'], `${p}.rate`, 0, 0.25);
     str(r['series'], `${p}.series`);
     optional(r, 'asOf', (x, q) => str(x, q, MONTH), p);
@@ -167,8 +172,21 @@ export function parseSourcesFile(value: unknown, path = 'sources.json'): Sources
   arr(o['sources'], `${path}.sources`).forEach((item, i) => {
     const p = `${path}.sources[${i}]`;
     const s = obj(item, p);
-    for (const key of ['id', 'dataset', 'publisher', 'url', 'licence']) str(s[key], `${p}.${key}`);
+    for (const key of ['id', 'dataset', 'publisher', 'licence']) str(s[key], `${p}.${key}`);
+    str(s['url'], `${p}.url`, /^https:\/\//);
     str(s['asOf'], `${p}.asOf`, MONTH);
+    optional(s, 'licenceUrl', (v, q) => str(v, q, /^https:\/\//), p);
+    optional(
+      s,
+      'series',
+      (v, q) =>
+        arr(v, q).forEach((x, j) => {
+          const e = obj(x, `${q}[${j}]`);
+          str(e['code'], `${q}[${j}].code`);
+          str(e['description'], `${q}[${j}].description`);
+        }),
+      p,
+    );
   });
   return o as unknown as SourcesFile;
 }

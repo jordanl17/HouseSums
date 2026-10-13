@@ -18,6 +18,7 @@ import type { AreaField, AreasFile, RatesFile, SourcesFile } from '../../src/lib
 import { AREA_FIELDS, NATIONS } from '../../src/lib/types.ts';
 import { parseAreasFile, parseRatesFile, parseSourcesFile } from '../../src/lib/schema.ts';
 import { QUOTED_RATE_SERIES } from './boe.ts';
+import type { BrmaMap } from './brma.ts';
 
 export const MAX_MOVE = {
   price: 0.15,
@@ -203,6 +204,32 @@ export function checkSources(next: SourcesFile): CheckResult {
     if (!next.sources.some((s) => s.id === id)) errors.push(`sources: ${id} missing`);
   }
   return { errors, warnings: [] };
+}
+
+/**
+ * data/brma-map.json covers every Scottish and NI area, and each area's rentArea is the one the
+ * map gives. Map entries for codes no longer in areas.json are warnings.
+ */
+export function checkBrmaMap(areas: AreasFile, map: BrmaMap): CheckResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const entries = new Map(map.areas.map((e) => [e.code, e]));
+  for (const a of areas.areas) {
+    if (a.nation !== 'sco' && a.nation !== 'ni') continue;
+    const entry = entries.get(a.code);
+    if (!entry) errors.push(`${a.name} (${a.code}): no entry in data/brma-map.json`);
+    else if (a.rentArea !== undefined && a.rentArea !== entry.rentArea) {
+      errors.push(
+        `${a.name}: rentArea "${a.rentArea}" differs from brma-map.json "${entry.rentArea}"`,
+      );
+    }
+  }
+  const codes = new Set(areas.areas.map((a) => a.code));
+  for (const e of map.areas) {
+    if (!codes.has(e.code) && !areas.sample)
+      warnings.push(`brma-map.json: ${e.code} (${e.name}) is not in areas.json`);
+  }
+  return { errors, warnings };
 }
 
 export function mergeResults(...results: CheckResult[]): CheckResult {

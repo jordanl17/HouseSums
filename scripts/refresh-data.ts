@@ -32,6 +32,7 @@ import { buildSources, serviceMonth } from './data/sources.ts';
 import { renderSummary } from './data/summary.ts';
 import {
   checkAreas,
+  checkBrmaMap,
   checkRates,
   checkSources,
   mergeResults,
@@ -133,6 +134,7 @@ async function main(): Promise<number> {
       checkAreas(built.areas, prevAreas, options),
       checkRates(built.rates, prevRates, options),
       checkSources(built.sources),
+      checkBrmaMap(built.areas, brmaMap),
     );
   } catch (error) {
     const failure = error instanceof Error ? error.message : String(error);
