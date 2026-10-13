@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "sample": true,
+  "generatedAt": "2026-10-13T00:00:00Z",
+  "asOf": "2026-09",
+  "source": "Bank of England, quoted household interest rates (SAMPLE placeholder figures)",
+  "rates": [
+    {
+      "fixYears": 2,
+      "ltv": 0.6,
+      "rate": 0.04,
+      "series": "sample",
+      "sample": true
+    },
+    {
+      "fixYears": 2,
+      "ltv": 0.75,
+      "rate": 0.045,
+      "series": "sample",
+      "sample": true
+    },
+    {
+      "fixYears": 2,
+      "ltv": 0.85,
+      "rate": 0.05,
+      "series": "sample",
+      "sample": true
+    },
+    {
+      "fixYears": 2,
+      "ltv": 0.9,
+      "rate": 0.05,
+      "series": "sample",
+      "sample": true
+    },
+    {
+      "fixYears": 2,
+      "ltv": 0.95,
+      "rate": 0.055,
+      "series": "sample",
+      "sample": true
+    },
+    {
+      "fixYears": 5,
+      "ltv": 0.6,
+      "rate": 0.04,
+      "series": "sample",
+      "sample": true
+    },
+    {
+      "fixYears": 5,
+      "ltv": 0.75,
+      "rate": 0.045,
+      "series": "sample",
+      "sample": true
+    },
+    {
+      "fixYears": 5,
+      "ltv": 0.85,
+      "rate": 0.05,
+      "series": "sample",
+      "sample": true
+    },
+    {
+      "fixYears": 5,
+      "ltv": 0.9,
+      "rate": 0.05,
+      "series": "sample",
+      "sample": true
+    },
+    {
+      "fixYears": 5,
+      "ltv": 0.95,
+      "rate": 0.055,
+      "series": "sample",
+      "sample": true
+    }
+  ]
+}

@@ -105,3 +105,43 @@ Users asked to be able to choose between more cautious and more optimistic outlo
 - **Chart direct labels** hang to the left of the point when above the line and to the right when below, since both series rise to the right. Centred labels collided with the steep buy line at 360px.
 - **Styleguide tidy-ups.** Specimens are plain `div`s (they were 14 regions with duplicate names), the disabled "Reset all" button is gone (the brief asks for a per-input "Reset" link, which is phase 4), negatives in the example table use a true minus sign (U+2212), and the chart caption reads "in £ thousands" with a no-break space. `Button` documents that `disabled` is ignored when `href` is set.
 - **Not changed:** the logo's sun outline (1.5 units reads at 32px because of the ink horizon and rays), the dark-theme focus edge (the hi-vis ring already gives 14.7:1 against dark concrete), and `.prose p` (already `text-wrap: pretty`, not balance). The brief mock's "Local figures · Leeds, Aug 2026" tag is left for phase 4, where it will carry a real area and month.
+
+## Engine contracts (phase 3)
+Set by the phase 3 lead before the work split four ways. The types are in `src/lib/types.ts`; this is the summary and the reasoning.
+
+- **Units.** Money in pounds, rates and percentages as decimals (4.3% is `0.043`), years as whole numbers, months as `"YYYY-MM"`. That holds in the engine and in every JSON file under `data/`. Only `format.ts` and the URL (`state.ts`) show percentages as percentages.
+- **The engine is pure.** `src/lib/tax.ts`, `model.ts`, `defaults.ts`, `format.ts`, `state.ts` and `schema.ts` have no DOM access, import no JSON and hold no figures. The caller loads `data/*.json`, validates it with `src/lib/schema.ts` and passes it in, so phase 4's island and phase 5's pre-rendered pages share one engine.
+- **Calculator state = Selection + Overrides.** `Selection` is `{ areaSlug, buyerType, outlook, nationOverride }`; `Overrides` is the partial set of numeric inputs the user changed. `deriveInputs({ area, areas, rates, defaults, selection, overrides })` turns that into the full `Inputs`, plus `base` (what each field's "Reset" restores) and `provenance` (Local or Typical, with source and month). The URL stores only the selection and overrides, so a shared link re-derives the same result. This replaces the positional `deriveInputs(area, rates, defaults, preset, buyerType, nationOverride?)` sketched in the phase brief: an options object was needed to pass the nation-level figures (for no area or a fallback) and the overrides that the mortgage rate depends on (changing the deposit changes the loan-to-value band, so a link with only `d=` must re-pick the same rate).
+- **Derivation order** (documented in `src/lib/defaults.ts`): nation, then price and rent, growth and rent growth (area clamp, then preset), deposit (10% of the final price), fixed defaults and per-nation defaults (survey, Home Report), mortgage rate (from the final loan-to-value and fix length), rate after fix (rate plus the preset's delta), investment return (preset). Each step uses the final, possibly overridden, value of the steps before it.
+- **Outlook.** `OutlookPreset` includes `'custom'` for the UI only. The engine and URL carry a `PresetName` (`cautious`, `typical`, `optimistic`). "Custom" shows when any of the four preset-controlled inputs is overridden.
+- **Presets as data.** Each preset has `houseGrowth` and `rentGrowth` adjustments `{ add, cap }` applied after the area clamp (growth 0-6%, rent growth 1-6%) and clamped again, a fixed `investmentReturn`, and a `rateAfterFixDelta`. With the table in "Defaults and outlook presets": Cautious growth `{ add: 0, cap: 0.015 }`, rent `{ add: 0, cap: 0.02 }`; Typical both `{ add: 0, cap: null }`; Optimistic growth `{ add: 0.01, cap: 0.06 }`. So Cautious uses the clamped area figure, never a negative one.
+- **Mortgage rate pick.** The smallest published LTV band at or above the loan-to-value (60% band for 60% and below, 95% band above 95%), and the nearest published fix length, ties to the shorter fix. `pickMortgageRate` is exported so the UI can show which band was used.
+- **Tax result.** `propertyTax({ nation, buyerType, price }, rules)` returns `{ regime, total, bands, reliefApplied, surcharge }`. `bands` is the table actually applied (main, first-time buyer or the Welsh higher-rates table) with the tax per slice. `surcharge` is total minus what a moving buyer would pay, so it reads the same for the English and Scottish whole-price surcharges and the Welsh higher-rates table. `total` is whole pounds.
+- **Model result.** `runModel(inputs, taxRules, { sensitivity })` returns `breakEvenYear` (first year-end 1..years with buy wealth strictly above rent wealth), `rentingOvertakesAgainYear`, `series` (year 0 = day one, to `years`), `firstMonth`, `upfront`, `tax`, `selling` (at the horizon) and `sensitivity` (growth 0-5%, then the rate and rate after fix both -1 and +1 point). The model applies the Home Report only when the nation is Scotland, whatever the input holds.
+- **areas.json** extends the brief's shape with `schemaVersion`, `generatedAt`, `nations` (nation-level figures for fallbacks and for no area), optional per-area `asOf` (NI prices are quarterly), `rentArea` (the Broad Rental Market Area used in Scotland and NI) and `sample`. Raw figures are stored unclamped; clamping is the engine's job, so the data stays true to the source.
+- **Sample data.** Until the first pipeline run lands, `data/areas.json`, `rates.json` and `sources.json` are labelled samples: `"sample": true` at the top, per-field `sample` lists on every area and nation, obviously round figures, and series code `"sample"`. The six sample areas (Belfast, Cardiff, Glasgow City, Isles of Scilly with a rent fallback, Leeds, Westminster) exist to exercise each nation and a fallback. None of these figures is real.
+- **Generated JSON is not Prettier-formatted.** The pipeline writes `areas.json`, `rates.json` and `sources.json` with `JSON.stringify(value, null, 2)` and they are in `.prettierignore`. Hand-edited `taxRules.json` and `defaults.json` stay formatted.
+- **Scripts are TypeScript run with tsx** (devDependency), so the pipeline imports the same types and validators: `npm run data:refresh` (`scripts/refresh-data.ts`) and `npm run data:validate` (`scripts/validate-data.ts`). tsconfig already allows `.ts` import extensions.
+- **Validators are hand-written** (`src/lib/schema.ts`), with no runtime dependency, and throw a `DataError` naming the JSON path. `src/lib/schema.test.ts` validates every committed data file.
+
+### Phase 3 file ownership
+| Teammate | Owns (may create and edit) | Must not touch |
+|---|---|---|
+| tax | `data/taxRules.json`, `src/lib/tax.ts`, `src/lib/tax.test.ts`, `parseTaxRules` in `schema.ts`, the "Tax rules verification" section below | other engine modules, other data files |
+| model | `data/defaults.json`, `src/lib/model.ts`, `src/lib/defaults.ts`, `src/lib/model.test.ts`, `src/lib/model.property.test.ts`, `src/lib/defaults.test.ts`, `parseDefaults` in `schema.ts`, the "Model conventions" section below | `tax.ts` (use it through its contract), data pipeline files |
+| format-state | `src/lib/format.ts`, `src/lib/state.ts`, `src/lib/format.test.ts`, `src/lib/state.test.ts`, the "URL state keys" section below | `defaults.json` (read it, use test fixtures for edge cases) |
+| data | `scripts/refresh-data.ts`, `scripts/validate-data.ts`, `scripts/data/**` (modules, tests, fixtures), `data/areas.json`, `data/rates.json`, `data/sources.json`, `data/brma-map.json`, `.github/workflows/refresh-data.yml`, `parseAreasFile` / `parseRatesFile` / `parseSourcesFile` in `schema.ts`, devDependencies needed for parsing, the "Data pipeline" section below | the existing `scripts/check-*.mjs`, `ci.yml`, `deploy.yml`, engine modules |
+
+Shared files: `src/lib/types.ts` and `schema.ts` belong to the lead; teammates make only small additive changes in their own section and list them in their handoff. `docs/phases.md` is written by the lead from the teammates' reports.
+
+## Tax rules verification (phase 3)
+To be written by the tax teammate.
+
+## Model conventions (phase 3)
+To be written by the model teammate.
+
+## URL state keys (phase 3)
+To be written by the format-state teammate.
+
+## Data pipeline (phase 3)
+To be written by the data teammate.

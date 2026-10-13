@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "sample": true,
+  "generatedAt": "2026-10-13T00:00:00Z",
+  "sources": [
+    {
+      "id": "uk-hpi",
+      "dataset": "UK House Price Index",
+      "publisher": "HM Land Registry with ONS",
+      "url": "https://www.gov.uk/government/collections/uk-house-price-index-reports",
+      "licence": "Open Government Licence v3.0",
+      "licenceUrl": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+      "asOf": "2026-07",
+      "notes": "Sample: the first pipeline run replaces this file."
+    },
+    {
+      "id": "ons-pipr",
+      "dataset": "Price Index of Private Rents",
+      "publisher": "Office for National Statistics",
+      "url": "https://www.ons.gov.uk/economy/inflationandpriceindices",
+      "licence": "Open Government Licence v3.0",
+      "licenceUrl": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+      "asOf": "2026-08",
+      "notes": "Sample: the first pipeline run replaces this file."
+    },
+    {
+      "id": "boe-quoted-rates",
+      "dataset": "Quoted household interest rates",
+      "publisher": "Bank of England",
+      "url": "https://www.bankofengland.co.uk/boeapps/database/",
+      "licence": "Bank of England terms of use (to check)",
+      "asOf": "2026-09",
+      "notes": "Sample: the first pipeline run replaces this file, with the series codes used."
+    },
+    {
+      "id": "ons-la-codes",
+      "dataset": "Local authority names and codes",
+      "publisher": "ONS Open Geography Portal",
+      "url": "https://geoportal.statistics.gov.uk/",
+      "licence": "Open Government Licence v3.0",
+      "licenceUrl": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+      "asOf": "2026-07",
+      "notes": "Sample: the first pipeline run replaces this file."
+    }
+  ]
+}

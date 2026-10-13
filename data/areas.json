@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "sample": true,
+  "generatedAt": "2026-10-13T00:00:00Z",
+  "asOf": {
+    "price": "2026-07",
+    "rent": "2026-08"
+  },
+  "nations": {
+    "eng": {
+      "price": 300000,
+      "growth10y": 0.03,
+      "rent": 1300,
+      "rentGrowth": 0.04,
+      "sample": [
+        "price",
+        "growth10y",
+        "rent",
+        "rentGrowth"
+      ]
+    },
+    "sco": {
+      "price": 200000,
+      "growth10y": 0.03,
+      "rent": 1000,
+      "rentGrowth": 0.04,
+      "sample": [
+        "price",
+        "growth10y",
+        "rent",
+        "rentGrowth"
+      ]
+    },
+    "wal": {
+      "price": 200000,
+      "growth10y": 0.03,
+      "rent": 900,
+      "rentGrowth": 0.04,
+      "sample": [
+        "price",
+        "growth10y",
+        "rent",
+        "rentGrowth"
+      ]
+    },
+    "ni": {
+      "price": 200000,
+      "growth10y": 0.03,
+      "rent": 900,
+      "rentGrowth": 0.04,
+      "sample": [
+        "price",
+        "growth10y",
+        "rent",
+        "rentGrowth"
+      ]
+    }
+  },
+  "areas": [
+    {
+      "code": "N09000003",
+      "slug": "belfast",
+      "name": "Belfast",
+      "nation": "ni",
+      "price": 200000,
+      "growth10y": 0.04,
+      "rent": 1000,
+      "rentGrowth": 0.05,
+      "fallbacks": [],
+      "rentArea": "Belfast",
+      "asOf": {
+        "price": "2026-06"
+      },
+      "sample": [
+        "price",
+        "growth10y",
+        "rent",
+        "rentGrowth"
+      ]
+    },
+    {
+      "code": "W06000015",
+      "slug": "cardiff",
+      "name": "Cardiff",
+      "nation": "wal",
+      "price": 250000,
+      "growth10y": 0.03,
+      "rent": 1200,
+      "rentGrowth": 0.04,
+      "fallbacks": [],
+      "sample": [
+        "price",
+        "growth10y",
+        "rent",
+        "rentGrowth"
+      ]
+    },
+    {
+      "code": "S12000049",
+      "slug": "glasgow-city",
+      "name": "Glasgow City",
+      "nation": "sco",
+      "price": 200000,
+      "growth10y": 0.03,
+      "rent": 1100,
+      "rentGrowth": 0.05,
+      "fallbacks": [],
+      "rentArea": "Greater Glasgow",
+      "sample": [
+        "price",
+        "growth10y",
+        "rent",
+        "rentGrowth"
+      ]
+    },
+    {
+      "code": "E06000053",
+      "slug": "isles-of-scilly",
+      "name": "Isles of Scilly",
+      "nation": "eng",
+      "price": 400000,
+      "growth10y": 0.03,
+      "rent": 1300,
+      "rentGrowth": 0.04,
+      "fallbacks": [
+        "rent",
+        "rentGrowth"
+      ],
+      "sample": [
+        "price",
+        "growth10y",
+        "rent",
+        "rentGrowth"
+      ]
+    },
+    {
+      "code": "E08000035",
+      "slug": "leeds",
+      "name": "Leeds",
+      "nation": "eng",
+      "price": 250000,
+      "growth10y": 0.03,
+      "rent": 1200,
+      "rentGrowth": 0.04,
+      "fallbacks": [],
+      "sample": [
+        "price",
+        "growth10y",
+        "rent",
+        "rentGrowth"
+      ]
+    },
+    {
+      "code": "E09000033",
+      "slug": "westminster",
+      "name": "Westminster",
+      "nation": "eng",
+      "price": 1000000,
+      "growth10y": 0.02,
+      "rent": 3000,
+      "rentGrowth": 0.05,
+      "fallbacks": [],
+      "sample": [
+        "price",
+        "growth10y",
+        "rent",
+        "rentGrowth"
+      ]
+    }
+  ]
+}
