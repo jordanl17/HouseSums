@@ -162,6 +162,19 @@ describe('pickMortgageRate', () => {
     expect(pickMortgageRate(partial, 0.9, 2)?.ltv).toBe(0.75);
   });
 
+  it('skips a band the Bank does not publish for that fix (no 5-year 85%)', () => {
+    const gap = {
+      ...rates,
+      rates: rates.rates.filter((q) => !(q.fixYears === 5 && q.ltv === 0.85)),
+    };
+    // 75-85% loan-to-value on a 5-year fix takes the 5-year 90% rate, never the 2-year 85%.
+    expect(pickMortgageRate(gap, 0.8, 5)).toMatchObject({ fixYears: 5, ltv: 0.9, rate: 0.046 });
+    expect(pickMortgageRate(gap, 0.85, 5)).toMatchObject({ fixYears: 5, ltv: 0.9 });
+    expect(pickMortgageRate(gap, 0.8, 2)).toMatchObject({ fixYears: 2, ltv: 0.85 });
+    const real = parseRatesFile(ratesJson);
+    expect(pickMortgageRate(real, 0.8, 5)).toMatchObject({ fixYears: 5, ltv: 0.9 });
+  });
+
   it('returns null with no rates', () => {
     expect(pickMortgageRate({ ...rates, rates: [] }, 0.9, 5)).toBeNull();
   });
@@ -303,18 +316,40 @@ describe('deriveInputs: clamps and nation specifics', () => {
   });
 
   it('marks sample figures in the source', () => {
-    const sampleAreas = parseAreasFile(areasJson);
-    const sampleRates = parseRatesFile(ratesJson);
-    const first = sampleAreas.areas[0] ?? null;
-    const { provenance } = deriveInputs({
-      area: first,
-      areas: sampleAreas,
-      rates: sampleRates,
-      defaults,
-      selection: selection({ areaSlug: first?.slug ?? null }),
-    });
+    const sampleArea: Area = { ...leeds, sample: ['price'] };
+    const sampleRates: RatesFile = {
+      ...rates,
+      sample: true,
+      rates: rates.rates.map((quoted) => ({ ...quoted, sample: true })),
+    };
+    const { provenance } = deriveInputs(
+      options({
+        area: sampleArea,
+        areas: { ...areas, areas: [cold, hot, sampleArea] },
+        rates: sampleRates,
+      }),
+    );
     expect(provenance.price.source).toMatch(/sample/i);
+    expect(provenance.rent.source).not.toMatch(/sample/i);
     expect(provenance.mortgageRate.source).toMatch(/sample/i);
+  });
+
+  it('never calls the committed real data a sample', () => {
+    const realAreas = parseAreasFile(areasJson);
+    const realRates = parseRatesFile(ratesJson);
+    for (const area of realAreas.areas) {
+      const { inputs, provenance } = deriveInputs({
+        area,
+        areas: realAreas,
+        rates: realRates,
+        defaults,
+        selection: selection({ areaSlug: area.slug }),
+      });
+      for (const key of NUMERIC_INPUT_KEYS) {
+        expect(Number.isFinite(inputs[key]), `${area.slug} ${key}`).toBe(true);
+        expect(provenance[key].source).not.toMatch(/sample/i);
+      }
+    }
   });
 });
 
