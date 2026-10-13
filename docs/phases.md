@@ -30,7 +30,7 @@ What shipped:
 - README covering the project, commands, configuration and how deploys work.
 
 Deferred or blocked:
-- **GitHub Pages is not switched on yet.** It needs Jordan (repo admin) to set Settings, Pages, Source: GitHub Actions, and, because the repo is private, either a paid plan or making the repo public. Until then the deploy workflow fails at "Configure Pages" on the first push to `main`. See README, "Turning on GitHub Pages".
+- **GitHub Pages was not switched on** when phase 1 was written. Resolved: the repository is public, Pages is switched on and the site is live at <https://jordanl17.github.io/HouseSums/>. Every deploy since the phase 1 merge has deployed and then run the whole e2e suite against the live site (fact updated in phase 6).
 - The budget script has no unit tests, because Vitest only includes `src/**/*.test.ts`. If that matters, move its sum and table logic into `src/lib` or widen the Vitest include.
 - CI does not cache the Playwright browser download. Add a cache for `~/.cache/ms-playwright` if the install step gets slow.
 
@@ -47,7 +47,7 @@ What the next phase must know:
 
 ### Phase 2: brand and layout shell
 
-In review. The whole visual identity is HTML and CSS only; no page ships client JS. Decisions are in `docs/decisions.md` under "Design system (phase 2)", "Page shell (phase 2)", "UI primitives (phase 2, primitives)", "Integration (phase 2)" and "Review round 1 (phase 2)".
+Merged (PR #2). The whole visual identity is HTML and CSS only; no page ships client JS. Decisions are in `docs/decisions.md` under "Design system (phase 2)", "Page shell (phase 2)", "UI primitives (phase 2, primitives)", "Integration (phase 2)" and "Review round 1 (phase 2)".
 
 What shipped:
 - **Tokens** (`src/styles/tokens.css`): every brief colour for light and dark (`prefers-color-scheme`), plus `--color-control-edge` for input edges, spacing (`--space-*`, 4px base), radius (`--radius-card` 26px, `--radius-pill` 999px), type families and scale (`--size-answer` for the answer numeral only), focus and layout tokens, and `--contour-background` (circle at 85% 12%, 1.5px lines every 26px, ink at 9% light and light ink at 10% dark), fixed to the body. `scripts/check-tokens.mjs` (in `npm run lint`) fails on any colour literal outside tokens.css.
@@ -63,7 +63,7 @@ What shipped:
 - **e2e** (`tests/e2e/`): every page in `PAGES` (home, how it works, sources, about, styleguide) returns 200 with its h1, header and footer, has no horizontal scroll at 360 and 1280, loads no JS, and has no em-dashes or exclamation marks; every header and footer link resolves; light and dark backgrounds match the tokens (dark asserted as the dark concrete token); the first tab stop shows the focus ring; the styleguide's first screen fits at 1280x800 and stacks answer-after-area-and-price at 360. All relative paths, so the suite runs against the live site too.
 
 Deferred:
-- The e2e suite has run only against `astro preview` locally and in CI; the live run happens after the merge deploys (and needs GitHub Pages switched on, see phase 1).
+- The e2e suite had run only against `astro preview` when phase 2 was written. Resolved: the deploy's `live` job ran it against the live site after the phase 2 merge, and does after every deploy (fact updated in phase 6).
 - Chart hover tooltip, a scroll wrapper for a wider year-by-year table, a "Reset" link style, and the Outlook "Custom" state: phase 4.
 - Real copy for the stub pages, and leaving `/styleguide/` out of the sitemap: phase 5.
 
@@ -93,7 +93,7 @@ Deferred: a scroll wrapper for wide tables (the year-by-year table may need `ove
 
 ### Phase 3: engine and data pipeline
 
-In review. A pure TypeScript engine (no DOM, no JSON imports, no figures in code) plus the monthly data pipeline, which has run green in GitHub Actions and produced the first real data snapshot. No page imports the engine yet, so client JS is unchanged (22,904 bytes). Decisions are in `docs/decisions.md` under "Engine contracts (phase 3)", "Tax rules verification (phase 3)", "Model conventions (phase 3)", "URL state keys (phase 3)" (with "Formatting"), "Data pipeline (phase 3)" and "Integration (phase 3)".
+Merged (PR #3). A pure TypeScript engine (no DOM, no JSON imports, no figures in code) plus the monthly data pipeline, which has run green in GitHub Actions and produced the first real data snapshot. No page imports the engine yet, so client JS is unchanged (22,904 bytes). Decisions are in `docs/decisions.md` under "Engine contracts (phase 3)", "Tax rules verification (phase 3)", "Model conventions (phase 3)", "URL state keys (phase 3)" (with "Formatting"), "Data pipeline (phase 3)" and "Integration (phase 3)".
 
 What shipped:
 - **Tax** (`src/lib/tax.ts`, `data/taxRules.json`): `propertyTax({ nation, buyerType, price }, rules)` returns `{ regime, total, bands, reliefApplied, surcharge }`; `regimeFor(nation, rules)`. 2026/27 SDLT, LBTT and LTT, first-time buyer relief, surcharges and the £40k threshold, all from the rules file (`schemaVersion`, `effectiveFrom: 2026-04-01`, `taxYear: 2026/27`, official source URLs per regime). Totals round down to whole pounds. Checked against official pages through domain-restricted search on 13 October 2026; no official source contradicts the brief. 59 tests: the brief's 10 cases, band edges, £40k, England's £500,000/£500,001 cliff, the WRA's worked example, zero/negative/NaN prices and fast-check invariants.
@@ -127,7 +127,7 @@ What the next phases must know:
 
 ### Phase 4: calculator UI
 
-In review. The lead set up the island, its contracts and stubs; three teammates (inputs, results, followups) filled them in parallel and the branches were merged without conflicts. Decisions: `docs/decisions.md`, "Calculator island (phase 4, lead)".
+Merged (PR #4). The lead set up the island, its contracts and stubs; three teammates (inputs, results, followups) filled them in parallel and the branches were merged without conflicts. Decisions: `docs/decisions.md`, "Calculator island (phase 4, lead)".
 
 #### Island props (for phase 5 area pages)
 `src/components/calculator/Calculator.tsx`, default export, props in `src/components/calculator/types.ts` (`CalculatorProps`):
@@ -192,7 +192,7 @@ Decisions: `docs/decisions.md`, "Calculator island (phase 4, lead)", "Inputs", "
 
 ### Phase 5: area, nation and content pages, SEO
 
-In review. The lead laid the foundations below; three teammates (areas, content, seo) filled the templates in parallel and the branches merged without conflicts. Decisions and file ownership: `docs/decisions.md`, "Pages and SEO (phase 5, lead)".
+Merged (PR #5). The lead laid the foundations below; three teammates (areas, content, seo) filled the templates in parallel and the branches merged without conflicts. Decisions and file ownership: `docs/decisions.md`, "Pages and SEO (phase 5, lead)".
 
 #### Foundations (lead)
 - **Slugs.** `bristol`, `kingston-upon-hull`, `herefordshire` (display names without ", City of" / ", County of"; ONS name kept as `onsName`), from `data/area-names.json`, applied by the pipeline on every refresh and by `npm run data:names` to the committed file. Old slugs are aliases: `?a=bristol-city-of` opens Bristol. Area slugs never equal nation slugs (checked).
@@ -227,10 +227,10 @@ Decisions: `docs/decisions.md`, "Pages and SEO (phase 5, lead)", "Area and natio
 - **Numbers**: 581 unit tests, 22 page-quality tests, 395 e2e runs passed (5 skipped) at 360 and 1280. Build: 372 pages in about 6.5 s. Client JS 85,816 bytes of 102,400 (no new JS; area pages share the island bundle).
 
 #### Deferred (phase 5)
-- **The e2e suite has not run against the live site**: GitHub Pages is still not switched on (see phase 1). Run `npm run test:live` once it is.
+- **Live e2e.** This note said the suite had not run against the live site. It had and it does: Pages is live, and every deploy's `live` job runs `npm run test:live` against it (green for the phase 5 merge, deploy run 38463338695). Fact updated in phase 6.
 - **robots.txt only works at a host root**, so it does nothing until the custom domain (`BASE_PATH=/`). Submit the sitemap to search consoles by hand until then.
 - **Attribution wording and tax pages** were written from memory and search extracts, since gov hosts are unreachable from the container. Check the statements on /sources/ against each publisher and re-read the six tax pages in `taxRules.json` before launch.
-- **The issues link** on /about/ 404s for visitors until the repo is public.
+- **The issues link** on /about/: resolved, the repository is public, so the link works for visitors (fact updated in phase 6).
 - **OG cards** are checked for names, size and that they are not empty, not pixel by pixel. Re-run `npm run og` after any logo, token or nation-name change.
 - The nation index note names England's and NI's months; it reads them from data but assumes those are the only two month sets.
 
