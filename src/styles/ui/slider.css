@@ -84,3 +84,40 @@
     margin-top: calc(-1 * (var(--slider-thumb) + var(--slider-track)) / 2);
   }
 }
+
+/*
+ * Forced colours (Windows contrast themes, phase 6): the track is a background, which the
+ * browser would paint over with Canvas, leaving a floating thumb. Draw the track and the thumb
+ * in system colours instead; focus still gets the Highlight outline from base.css.
+ */
+@media (forced-colors: active) {
+  .slider {
+    forced-color-adjust: none;
+  }
+
+  .slider::-webkit-slider-runnable-track {
+    background-color: CanvasText;
+  }
+
+  .slider::-moz-range-track {
+    background-color: CanvasText;
+  }
+
+  .slider::-webkit-slider-thumb {
+    border-color: CanvasText;
+    background-color: Canvas;
+  }
+
+  .slider::-moz-range-thumb {
+    border-color: CanvasText;
+    background-color: Canvas;
+  }
+
+  .slider:focus-visible::-webkit-slider-thumb {
+    background-color: Highlight;
+  }
+
+  .slider:focus-visible::-moz-range-thumb {
+    background-color: Highlight;
+  }
+}

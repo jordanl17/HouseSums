@@ -94,3 +94,86 @@ export async function expectNoSeriousViolations(
     .join('\n');
   expect(failing, `axe found serious or critical violations:\n${message}`).toEqual([]);
 }
+
+// ---------------------------------------------------------------------------------------------
+// Added by the a11y-ux teammate (phase 6): calculator states the page scans don't open, shared by
+// a11y.spec.ts and forced-colors.spec.ts. Each `open` leaves the state showing and returns the
+// selector of the part it opened (for a focused scan or a screenshot).
+// ---------------------------------------------------------------------------------------------
+
+/** Open a <details> by its test id (if it is closed) and wait for it to be open. */
+export async function openDisclosure(page: Page, testId: string): Promise<void> {
+  const details = page.getByTestId(testId);
+  if ((await details.getAttribute('open')) === null) await details.locator('summary').click();
+  await expect(details).toHaveAttribute('open', '');
+}
+
+export interface CalculatorScene {
+  name: string;
+  /** Page to open first (relative to baseURL); the calculator is ready there. */
+  path: string;
+  open: (page: Page) => Promise<string>;
+}
+
+/** States inside the calculator: panels, a toggletip, the picker's list, the chart inspector. */
+export const CALCULATOR_STATES: readonly CalculatorScene[] = [
+  {
+    name: 'advanced panel open',
+    path: 'rent-vs-buy/leeds/',
+    open: async (page) => {
+      await openDisclosure(page, 'advanced');
+      await expect(page.locator('#calc-termYears')).toBeVisible();
+      return '[data-testid="advanced"]';
+    },
+  },
+  {
+    name: 'a source tooltip open',
+    path: 'rent-vs-buy/leeds/',
+    open: async (page) => {
+      const tag = page.getByTestId('tag-price');
+      await tag.focus();
+      await tag.press('Enter');
+      await expect(page.locator('#calc-price-source')).toContainText('UK House Price Index');
+      return '[data-testid="field-calc-price"]';
+    },
+  },
+  {
+    name: 'year-by-year table open',
+    path: 'rent-vs-buy/leeds/',
+    open: async (page) => {
+      await openDisclosure(page, 'year-table');
+      await expect(page.getByTestId('year-table').locator('tbody tr').first()).toBeVisible();
+      return '[data-testid="year-table"]';
+    },
+  },
+  {
+    name: 'area list open',
+    path: './',
+    open: async (page) => {
+      const area = page.locator('#calc-area');
+      await area.click();
+      await area.fill('Le');
+      await expect(page.getByRole('option', { name: /^Leeds,/ })).toBeVisible();
+      return '[data-testid="field-calc-area"]';
+    },
+  },
+  {
+    name: 'chart year inspector',
+    path: 'rent-vs-buy/leeds/',
+    open: async (page) => {
+      const plot = page.getByRole('slider', { name: 'Year shown on the chart' });
+      await plot.focus();
+      await plot.press('ArrowRight');
+      await expect(page.getByTestId('chart-tooltip')).toBeVisible();
+      return '[data-testid="chart"]';
+    },
+  },
+  {
+    name: 'link to an unknown area',
+    path: './?a=nowhere-at-all',
+    open: async (page) => {
+      await expect(page.getByTestId('calculator')).toHaveAttribute('data-status', 'error');
+      return '[data-testid="answer-card"]';
+    },
+  },
+];

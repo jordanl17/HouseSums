@@ -75,6 +75,19 @@ describe('every page', () => {
     expect(dupes).toEqual([]);
   });
 
+  it('gives every area page a title of 65 characters or fewer that names the area', () => {
+    const long: string[] = [];
+    for (const page of site.pages) {
+      const area = areaOf(page);
+      if (!area) continue;
+      const title = page.title ?? '';
+      expect(title).toContain(area.name);
+      expect(title.endsWith(' | House Sums')).toBe(true);
+      if (title.length > 65) long.push(`${title} (${title.length})`);
+    }
+    expect(long).toEqual([]);
+  });
+
   it('has a meta description, and no two pages share one', () => {
     const descriptions = site.pages.map((p) => p.meta.get('description') ?? '');
     expect(site.pages.filter((p) => !p.meta.get('description')).map((p) => p.rel)).toEqual([]);

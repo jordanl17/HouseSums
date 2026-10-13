@@ -151,6 +151,11 @@ export interface CalcApi {
   loadAreas(): void;
   /** The picked area, or null. */
   area: ClientArea | null;
+  /**
+   * Phase 6: on an area page, the area whose page is opening after a pick (the picker shows its
+   * name until the page changes). Null or missing otherwise.
+   */
+  leavingFor?: ClientArea | null;
   /** Set when status is 'error'. */
   problem: AreaProblem;
 

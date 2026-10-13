@@ -261,6 +261,13 @@
 }
 
 @media (forced-colors: active) {
+  /* The numeral's line box rises into the lead's line (leading 0.9), and the backplate the
+     browser draws behind forced-colour text would hide "Buying pulls ahead after". Phase 6. */
+  .answer__numeral {
+    forced-color-adjust: none;
+    color: CanvasText;
+  }
+
   .chart__cursor {
     border-left-color: CanvasText;
   }

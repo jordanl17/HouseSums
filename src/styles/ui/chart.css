@@ -225,7 +225,18 @@
   }
 }
 
+/*
+ * Forced colours (Windows contrast themes, phase 6). The SVG opts out of the browser's own
+ * adjustment and is drawn in system colours: both lines in CanvasText, the rent line dashed (as
+ * in print) so the two differ by more than colour, no buy fill, faint gridlines in GrayText and
+ * the break-even marker as a Highlight dash over a CanvasText edge. The key lines in the direct
+ * labels follow: solid for buy, dashed for rent.
+ */
 @media (forced-colors: active) {
+  .chart__svg {
+    forced-color-adjust: none;
+  }
+
   .chart__line--buy,
   .chart__line--rent,
   .chart__baseline,
@@ -233,7 +244,28 @@
     stroke: CanvasText;
   }
 
+  .chart__line--rent {
+    stroke-dasharray: 6 3;
+  }
+
+  .chart__area--buy {
+    fill: none;
+  }
+
+  .chart__grid line {
+    stroke: GrayText;
+    stroke-opacity: 1;
+  }
+
   .chart__marker {
-    stroke: Canvas;
+    stroke: Highlight;
+  }
+
+  .chart__series-label::before {
+    border-top-color: CanvasText;
+  }
+
+  .chart__series-label--rent::before {
+    border-top-style: dashed;
   }
 }

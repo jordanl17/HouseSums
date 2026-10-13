@@ -388,6 +388,19 @@ export interface Provenance {
   source: string;
   /** Month of the data, or null for a fixed default. */
   month: Month | null;
+  /**
+   * Set when the brief's range held an area's growth figure (phase 6): the raw figure and the
+   * bound it was held to, e.g. Aberdeen City's 10-year average of -0.0215 shown at the 0 floor.
+   * The tag then says "Floored at 0%" or "Capped at 6%", never "Local figure".
+   */
+  held?: HeldFigure;
+}
+
+/** A figure clamped to the brief's range: the raw value, the bound used and which side it is. */
+export interface HeldFigure {
+  raw: number;
+  bound: number;
+  side: 'floor' | 'ceiling';
 }
 
 export interface DerivedInputs {

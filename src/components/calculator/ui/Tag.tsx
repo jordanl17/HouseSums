@@ -3,9 +3,9 @@
  * (tag-alt), same `.tag` classes as phase 2.
  *
  * With `info`, the whole tag is a button. Pressing it (click, tap, Enter or Space) shows the
- * source in a bubble that is also a polite live region, so screen readers hear it; Escape, a
- * second press, moving focus away or tapping elsewhere closes it. Mouse hover also shows it,
- * but nothing depends on hover.
+ * source in a bubble that is a standing polite live region (always rendered, empty while closed),
+ * so screen readers hear it; Escape, a second press, moving focus away or tapping elsewhere
+ * closes it. Mouse hover also shows it, but nothing depends on hover.
  */
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
@@ -69,6 +69,11 @@ export function Tag({ variant = 'typical', children, info, about, id, testId }: 
         ref={button}
         type="button"
         class={`${className} tag--button`}
+        aria-label={
+          typeof children === 'string'
+            ? `${children}${about ? `: source for ${about}` : ': source'}`
+            : undefined
+        }
         aria-expanded={open ? 'true' : 'false'}
         aria-controls={bubbleId}
         data-testid={testId}
@@ -91,13 +96,20 @@ export function Tag({ variant = 'typical', children, info, about, id, testId }: 
         onBlur={() => setPinned(false)}
       >
         <span class="tag__text">{children}</span>
-        <span class="visually-hidden">{about ? `: source for ${about}` : ': source'}</span>
+        {/* A plain-text tag names the button in one piece, "Local figure: source for Property
+            price" (phase 6: assembled from the spans, browsers read "Local figure : source").
+            Other content keeps the hidden suffix. */}
+        {typeof children !== 'string' && (
+          <span class="visually-hidden">{about ? `: source for ${about}` : ': source'}</span>
+        )}
         <span class="tag__icon" aria-hidden="true">
           i
         </span>
       </button>
-      <span class="toggletip__bubble" id={bubbleId} role="status" hidden={!open}>
-        {open ? info : ''}
+      {/* Always rendered and never `hidden` (phase 6): screen readers hear the source when it
+          is written into this standing live region. Empty, it has no size (primitives.css). */}
+      <span class="toggletip__bubble" id={bubbleId} role="status">
+        {open ? info : null}
       </span>
     </span>
   );
