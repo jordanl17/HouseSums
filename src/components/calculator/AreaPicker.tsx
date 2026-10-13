@@ -210,6 +210,8 @@ export default function AreaPicker({ calc }: CalcProps) {
                 onClick={() => pick(area)}
               >
                 <span class="combo__name">{area.name}</span>
+                {/* A word break between the two (invisible in the flex row), so the visible text
+                    reads "Leeds England" and sits inside the name "Leeds, England" (WCAG 2.5.3). */}{' '}
                 <span class="combo__nation">{NATION_NAMES[area.nation]}</span>
               </li>
             ))}

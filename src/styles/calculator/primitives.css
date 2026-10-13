@@ -74,6 +74,12 @@
   line-height: 1;
 }
 
+/* Generated, with empty alternative text, so it is never part of the button's text or name. */
+.tag__icon::before {
+  content: 'i';
+  content: 'i' / '';
+}
+
 .toggletip__bubble {
   position: absolute;
   top: calc(100% + var(--space-1));

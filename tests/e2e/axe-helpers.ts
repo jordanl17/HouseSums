@@ -64,7 +64,12 @@ export async function axeViolations(
   page: Page,
   options: { include?: string; exclude?: string[]; label?: string } = {},
 ): Promise<AxeViolationSummary[]> {
-  let builder = new AxeBuilder({ page }).withTags([...AXE_TAGS]);
+  // label-content-name-mismatch (WCAG 2.5.3, Label in Name) is marked experimental in axe and
+  // off by default; turned on here because Lighthouse reported it on the source tags (phase 6
+  // integration).
+  let builder = new AxeBuilder({ page })
+    .withTags([...AXE_TAGS])
+    .options({ rules: { 'label-content-name-mismatch': { enabled: true } } });
   if (options.include) builder = builder.include(options.include);
   for (const selector of options.exclude ?? []) builder = builder.exclude(selector);
   const results = await builder.analyze();

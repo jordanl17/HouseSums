@@ -102,9 +102,9 @@ export function Tag({ variant = 'typical', children, info, about, id, testId }: 
         {typeof children !== 'string' && (
           <span class="visually-hidden">{about ? `: source for ${about}` : ': source'}</span>
         )}
-        <span class="tag__icon" aria-hidden="true">
-          i
-        </span>
+        {/* The "i" is drawn by CSS (primitives.css), not a text node, so the visible text is
+            exactly the tag's words and stays inside the accessible name (WCAG 2.5.3). */}
+        <span class="tag__icon" aria-hidden="true" />
       </button>
       {/* Always rendered and never `hidden` (phase 6): screen readers hear the source when it
           is written into this standing live region. Empty, it has no size (primitives.css). */}
