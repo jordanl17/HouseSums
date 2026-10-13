@@ -48,3 +48,18 @@ What the next phase must know:
 ### Phase 2: brand and layout shell
 
 In progress. Lead foundation (tokens, base styles, token lint guard, primitive stubs and prop contracts) is on `phase/2-brand`. See `docs/decisions.md`, "Design system (phase 2)", for files, load order, class naming and the focus ring. Full handoff notes for phase 4 follow when the phase lands.
+
+#### Primitives (for phase 4)
+Files: `src/components/ui/*.astro` (Astro reference markup), `src/components/ui/types.ts` (prop contracts), `src/styles/ui/*.css` (one file per primitive, imported by `src/styles/ui.css`). All classes are global, so Preact components only need the same markup and class names. `/styleguide/` (`src/pages/styleguide.astro`) shows each one, in both themes, plus a static first screen of the calculator. Its example data is in `src/components/styleguide/example-data.ts` and is not model output.
+
+How to build the calculator page from them:
+- Layout: `.calc-layout` with `__primary` (Area, Property price), `__answer` (a `.card` holding `.answer`, the chart and `<dl class="key-numbers">`) and `__rest` (Buyer, Deposit, Monthly rent, Mortgage rate, House price growth, Outlook, then the "Adjust every assumption (18)" disclosure). Put fields in `<div class="fields"><div class="fields__grid">`; give segmented controls and the disclosure `fields__wide`.
+- Field: `.field` > `.field__head` (`.field__label` + optional `.tag`), `.field__control` (`.field__affix--prefix`, `.field__input`, `.field__affix--suffix`), then an optional `.slider`, `.field__hint` and `.field__error`. Set `aria-invalid="true"` and `aria-describedby` on the input for errors; the pill draws the focus ring with `:focus-within`. Use `.field__input--text` for the area name.
+- Segmented: `fieldset.segmented` > `legend.segmented__legend` + `.segmented__options` > `label.segmented__option` > `input.segmented__input[type=radio]` + `span.segmented__label`. Native radios, so arrow keys work with no JS. Add a "Custom" option or label for the Outlook when a value is edited.
+- Tag: `.tag--local` (hi-vis) / `.tag--typical` (tag-alt); put the source and month in `title` or an adjacent hint, never in upper case. In a half-width field the tag wraps under the label; if that misaligns a row, move the tag to the hint line.
+- Answer: `.answer__sentence` with `__lead`, `__numeral`, `__unit`; `.answer__note` for the one explaining sentence. For "Renting comes out ahead for all 25 years" there is no numeral: render the sentence in `.answer__lead` only.
+- Chart: port `src/components/ui/ExampleChart.astro` (markup documented in its header) and keep `chart.css`. The hover tooltip is new work; keep the frame `role="img"` with a summary, and the year-by-year `DataTable` (with `rowHeader`) in a `.disclosure` as the table alternative.
+- Key numbers: `dl.key-numbers` > `.key-number` (dt label, dd with `__figure` and `__unit`). Each is a two-row subgrid so figures line up across a row.
+- Buttons: `.button--primary` at most once per view.
+
+Deferred: a scroll wrapper for wide tables (the year-by-year table may need `overflow-x: auto` with a focusable region at 360px once it has more columns); the chart tooltip; a "Reset" link style next to changed inputs (a plain `a` or `.button--secondary` at small size is enough).

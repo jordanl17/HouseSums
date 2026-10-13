@@ -191,4 +191,6 @@ export interface DataTableProps extends WithClass {
   columns: DataTableColumn[];
   /** Rows keyed by column key, values pre-formatted. */
   rows: Record<string, string>[];
+  /** Render the first column as row headers (<th scope="row">). Default false. */
+  rowHeader?: boolean;
 }

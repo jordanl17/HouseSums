@@ -1,1 +1,50 @@
-/* .answer: see src/components/ui and docs/decisions.md, "Design system (phase 2)". */
+/*
+ * .answer: the answer sentence around the giant numeral. The numeral is the only
+ * oversized element on the site and the only text in the buy colour.
+ *
+ *   .answer__sentence  grid: the lead on its own line, then the numeral with the unit beside it
+ *   .answer__lead      "Buying pulls ahead after"
+ *   .answer__numeral   "6": mono, bold, --size-answer, buy colour
+ *   .answer__unit      "years", on the numeral's baseline
+ *   .answer__note      one plain sentence explaining it
+ */
+.answer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.answer__sentence {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: var(--space-3);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-heading);
+}
+
+.answer__lead {
+  grid-column: 1 / -1;
+  font-size: var(--size-xl);
+  line-height: var(--leading-tight);
+}
+
+.answer__numeral {
+  font-family: var(--font-mono);
+  font-size: var(--size-answer);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--leading-numeral);
+  letter-spacing: var(--tracking-heading);
+  color: var(--color-buy);
+}
+
+.answer__unit {
+  font-size: var(--size-xl);
+  line-height: var(--leading-tight);
+}
+
+.answer__note {
+  max-width: 38rem;
+  color: var(--color-ink);
+}
