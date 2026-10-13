@@ -1,5 +1,195 @@
 /*
  * Page shell: skip link, header, logo, nav and footer. Owned by the shell teammate in phase 2.
- * Plain global classes (BEM-lite): .skip-link, .site-header, .site-header__inner, .site-nav,
- * .site-nav__link, .site-footer, .logo, .logo__mark, .logo__word. Tokens only, no colour literals.
+ * Plain global classes (BEM-lite): .site, .skip-link, .site-header, .site-header__inner,
+ * .site-header__home, .site-nav, .site-nav__list, .site-nav__link, .site-main, .site-footer,
+ * .site-footer__inner, .site-footer__about, .site-footer__links, .site-footer__link,
+ * .site-footer__tagline, .logo, .logo__mark, .logo__sun, .logo__ray, .logo__horizon, .logo__word.
+ * Tokens only, no colour literals. Markup lives in src/layouts/Base.astro and
+ * src/components/Logo.astro.
  */
+
+/* ---- Page frame: header, main, footer; the footer sits at the bottom on short pages ---- */
+.site {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.site-main {
+  flex: 1 0 auto;
+  padding-block: var(--space-6) var(--space-12);
+}
+
+/* The skip link moves focus here; main is not a control, so it gets no ring. */
+.site-main:focus,
+.site-main:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+@media (min-width: 48rem) {
+  .site-main {
+    padding-block: var(--space-8) var(--space-16);
+  }
+}
+
+/* ---- Skip link: hidden until focused, then a hi-vis pill with ink text, top left ---- */
+.skip-link {
+  position: absolute;
+  z-index: 10;
+  top: var(--space-2);
+  left: var(--layout-gutter);
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  padding-inline: var(--space-5);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-hi-vis);
+  color: var(--color-on-hi-vis);
+  font-weight: var(--weight-bold);
+  text-decoration: none;
+}
+
+.skip-link:not(:focus) {
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- Logo ---- */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-ink);
+}
+
+.logo__mark {
+  flex: none;
+  overflow: visible;
+}
+
+.logo__horizon {
+  fill: var(--color-ink);
+}
+
+.logo__sun {
+  fill: var(--color-hi-vis);
+  stroke: var(--color-logo-sun-edge);
+  stroke-width: 1.5;
+}
+
+.logo__ray {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.logo__word {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-bold);
+  font-size: calc(var(--logo-size, 32px) * var(--logo-word-ratio));
+  line-height: 1;
+  letter-spacing: var(--tracking-heading);
+  white-space: nowrap;
+}
+
+/* Forced colours: draw the mark in the system text colour so it stays visible. */
+@media (forced-colors: active) {
+  .logo__horizon,
+  .logo__sun {
+    fill: CanvasText;
+  }
+
+  .logo__sun,
+  .logo__ray {
+    stroke: CanvasText;
+  }
+}
+
+/* ---- Header ---- */
+.site-header__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-6);
+  padding-block: var(--space-4);
+}
+
+.site-header__home {
+  display: inline-flex;
+  /* A little room inside the focus ring, taken back with a negative margin so the logo still aligns. */
+  margin: calc(-1 * var(--space-1));
+  padding: var(--space-1);
+  border-radius: var(--space-1);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.site-nav__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-6);
+}
+
+.site-nav__link {
+  display: inline-block;
+  margin-inline: calc(-1 * var(--space-1));
+  padding: var(--space-2) var(--space-1);
+  border-radius: var(--space-1);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.site-nav__link:hover,
+.site-nav__link[aria-current='page'] {
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+}
+
+/* ---- Footer ---- */
+.site-footer {
+  color: var(--color-muted);
+  font-size: var(--size-sm);
+}
+
+.site-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-8);
+  padding-block: var(--space-6) var(--space-8);
+  border-top: var(--border-thin) solid var(--color-rule);
+}
+
+.site-footer__about {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.site-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-5);
+}
+
+.site-footer__link {
+  color: inherit;
+}
+
+.site-footer__link:hover {
+  color: var(--color-ink);
+}
+
+.site-footer__tagline {
+  font-family: var(--font-mono);
+}

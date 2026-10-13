@@ -101,6 +101,9 @@
   --control-height: 2.75rem; /* 44px pill inputs and buttons, comfortable touch target */
 
   /* ======== shell additions (append below, do not edit above) ======== */
+  /* Ink outline keeps the hi-vis sun legible on light concrete. */
+  --color-logo-sun-edge: var(--color-ink);
+  --logo-word-ratio: 0.5625; /* wordmark size relative to the mark: 18px next to a 32px mark */
 
   /* ======== primitives additions (append below, do not edit above) ======== */
 }
@@ -130,6 +133,7 @@
     --color-focus-edge: #1a1a1a;
 
     /* ======== shell dark additions ======== */
+    --color-logo-sun-edge: var(--color-hi-vis); /* hi-vis already stands out on dark concrete */
 
     /* ======== primitives dark additions ======== */
   }

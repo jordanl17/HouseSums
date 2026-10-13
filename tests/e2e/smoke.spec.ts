@@ -1,37 +1,39 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import {
+  basePathOf,
+  expectNoHorizontalScroll,
+  expectNoJavaScript,
+  NOT_FOUND_PATH,
+} from './helpers';
 
 /**
- * Smoke tests for the phase 1 placeholder site. They run once per project
+ * Smoke tests for the home page and the 404 page. They run once per project
  * (mobile-360 and desktop-1280) against the built site under its base path.
  * Paths are relative to baseURL, which ends in the base path and a slash.
  */
 
-async function expectNoHorizontalScroll(page: Page): Promise<void> {
-  const { scrollWidth, innerWidth } = await page.evaluate(() => ({
-    scrollWidth: (document.scrollingElement ?? document.documentElement).scrollWidth,
-    innerWidth: window.innerWidth,
-  }));
-  expect(scrollWidth).toBeLessThanOrEqual(innerWidth);
-}
-
-/** The base path the site is served under, e.g. '/HouseSums/'. */
-function basePathOf(baseURL: string | undefined): string {
-  if (!baseURL) {
-    throw new Error('baseURL is not set in playwright.config.ts');
-  }
-  return new URL(baseURL).pathname;
-}
-
 test.describe('home page', () => {
-  test('loads with the heading, the placeholder line and the footer', async ({ page }) => {
+  test('is a branded placeholder: the real heading, one plain line, no hero', async ({ page }) => {
     const response = await page.goto('./');
     expect(response?.status()).toBe(200);
 
     await expect(page).toHaveTitle('House Sums');
-    await expect(page.getByRole('heading', { level: 1, name: 'House Sums' })).toBeVisible();
     await expect(
-      page.getByText('Rent v buy calculator. Coming soon.', { exact: true }),
+      page.getByRole('heading', {
+        level: 1,
+        name: 'Rent v buy: how long until buying beats renting?',
+      }),
     ).toBeVisible();
+    await expect(
+      page.getByText(
+        'The calculator for this question is being built and will appear on this page.',
+        { exact: true },
+      ),
+    ).toBeVisible();
+    // No call to action and no fake calculator in production.
+    await expect(page.getByRole('main').getByRole('button')).toHaveCount(0);
+    await expect(page.getByRole('main').getByRole('link')).toHaveCount(0);
+    await expect(page.getByRole('main').locator('input, form')).toHaveCount(0);
     await expect(page.getByRole('contentinfo')).toContainText(
       'This is a model, not financial advice.',
     );
@@ -43,17 +45,7 @@ test.describe('home page', () => {
   });
 
   test('loads no JavaScript', async ({ page }) => {
-    const scriptRequests: string[] = [];
-    page.on('request', (request) => {
-      if (request.resourceType() === 'script') {
-        scriptRequests.push(request.url());
-      }
-    });
-
-    await page.goto('./', { waitUntil: 'networkidle' });
-
-    expect(scriptRequests).toEqual([]);
-    await expect(page.locator('script')).toHaveCount(0);
+    await expectNoJavaScript(page, './');
   });
 });
 
@@ -64,7 +56,7 @@ test.describe('404 page', () => {
   }) => {
     const basePath = basePathOf(baseURL);
 
-    const response = await page.goto('this-page-does-not-exist/');
+    const response = await page.goto(NOT_FOUND_PATH);
     expect(response?.status()).toBe(404);
 
     await expect(
@@ -80,6 +72,15 @@ test.describe('404 page', () => {
 
     await homeLink.click();
     await expect(page).toHaveURL(new URL(basePath, baseURL).href);
-    await expect(page.getByRole('heading', { level: 1, name: 'House Sums' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        level: 1,
+        name: 'Rent v buy: how long until buying beats renting?',
+      }),
+    ).toBeVisible();
+  });
+
+  test('loads no JavaScript', async ({ page }) => {
+    await expectNoJavaScript(page, NOT_FOUND_PATH);
   });
 });
