@@ -14,6 +14,8 @@
  *   .chart__cursor / __dot  the inspected year: an ink guide line and a dot on each line
  *   .chart__tooltip         that year's figures, ink on surface with an ink edge (no shadow)
  *   .chart__marker-label--end  "Year N" hung left of the marker near the right edge
+ *   .chart__marker-label--start  "Year N" hung right of the marker near the left edge, so it
+ *                           never covers the top y-axis label (phase 6)
  *   .sensitivity__tables / .breakdown__tables  tables side by side when there is room
  *   .breakdown__note        a short note under an item (relief, surcharge, agent fee basis)
  *   .calc-section__intro / __small  a lead-in line and small print in a section
@@ -215,6 +217,10 @@
 
 .chart__marker-label--end {
   transform: translate(calc(-100% + 1px), -0.25rem);
+}
+
+.chart__marker-label--start {
+  transform: translate(-1px, -0.25rem);
 }
 
 /* The lower line's label when that line runs too close to the axis to hang below it

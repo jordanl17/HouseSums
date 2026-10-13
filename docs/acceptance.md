@@ -1,13 +1,12 @@
 # Acceptance
 
-The brief's "Acceptance criteria and test cases" (`docs/brief.md`) says v1 is done when every box is ticked and every test case passes in CI. This file maps each box, each tax case and each model case to the test or evidence that proves it, with its status. Written in phase 6 (docs-acceptance) on 13 October 2026.
+The brief's "Acceptance criteria and test cases" (`docs/brief.md`) says v1 is done when every box is ticked and every test case passes in CI. This file maps each box, each tax case and each model case to the test or evidence that proves it, with its status. Written in phase 6 (docs-acceptance) on 13 October 2026 and updated at the phase 6 integration, once the perf and a11y-ux branches had merged.
 
 **How to read the evidence.** `file > describe > test` is a test name exactly as the runner prints it. Unit tests run in `npm test` (Vitest); page-quality tests in `npm run check:pages`; end-to-end tests in `npm run test:e2e` (Playwright) at both widths, `mobile-360` and `desktop-1280`. All three run in the CI job "Check, lint, test, build and e2e" (`.github/workflows/ci.yml`) on every pull request, and again in the deploy workflow before anything ships. The e2e suite also runs against the live site after every deploy (`deploy.yml`, job "Test the live site", `npm run test:live`); the last one before phase 6 was green (deploy run 38463338695, phase 5 merge).
 
 **Statuses.**
 - **Met**: proved by the evidence named, in CI.
 - **Met, limit noted**: proved, with a documented limit or reading of the brief.
-- **Phase 6**: the evidence is added by another phase 6 branch (perf or a11y-ux); the integrator confirms the test names when the branches merge.
 - **Partly met** and **Needs Jordan**: not done; the row says exactly why and what is needed.
 
 ## Summary
@@ -22,8 +21,8 @@ The brief's "Acceptance criteria and test cases" (`docs/brief.md`) says v1 is do
 | 6 | No break-even, renting overtakes again and deposit equals price have their own copy | Met |
 | 7 | SDLT, LBTT and LTT apply from the area's nation; the nation can be overridden | Met |
 | 8 | Area pages pre-rendered for every local authority, unique title and summary | Met |
-| 9 | Works at 360px with no horizontal scroll, in both themes, keyboard only | Met (more checks in phase 6) |
-| 10 | Lighthouse 95+ for performance and accessibility on / and one area page | Met locally; CI gate in phase 6 |
+| 9 | Works at 360px with no horizontal scroll, in both themes, keyboard only | Met |
+| 10 | Lighthouse 95+ for performance and accessibility on / and one area page | Met (asserted in CI) |
 | 11 | Data workflow runs green on a manual trigger and opens a pull request | Partly met, needs Jordan |
 | 12 | Every screen passes the slop check, reviewed by Jordan from screenshots | Needs Jordan |
 | | 10 tax test cases | Met (all 10) |
@@ -37,7 +36,7 @@ The brief's "Acceptance criteria and test cases" (`docs/brief.md`) says v1 is do
 - `tests/e2e/inputs.spec.ts > fields > picking an area fills the local figures, each tagged with its source`: picks Leeds, price becomes £247,695, the price, rent, growth and rent growth tags read "Local figure", and the price tag opens a source line matching "UK House Price Index, Mon YYYY".
 - `src/lib/defaults.test.ts > deriveInputs: an area with local figures, Typical outlook > tags the area figures local, with source and month`, `> tags everything else typical`, and `deriveInputs: clamps and nation specifics > uses the nation figure for a field listed in fallbacks, tagged typical` (Isles of Scilly, City of London).
 - `tests/e2e/review.spec.ts > 'How this works' gives the area's own data months`.
-- Phase 6 (a11y-ux): a growth figure floored at 0% (Westminster, Aberdeen City) stops claiming the raw local figure; its tooltip states the real 10-year average and the floor. The 13 October screenshots still show "Local figure" on Westminster's 0.0% (see box 12).
+- A growth figure held to the brief's range no longer claims to be the raw local figure (phase 6): the tag reads "Floored at 0%" or "Capped at 6%" and the tooltip gives the real 10-year average and the floor. `tests/e2e/area-navigation.spec.ts > a floored growth figure says so, with the real 10-year average`, `> a capped growth figure says so too`; `src/lib/defaults.test.ts > deriveInputs: clamps and nation specifics > marks a growth figure held to the range with the raw figure and the bound`, `> keeps `held` when the outlook then adjusts a held figure`. The final screenshot set shows Westminster's 0.0% tagged "Floored at 0%".
 
 ### 2. With only area and price entered, the answer card, chart and key numbers render
 **Status: Met.**
@@ -83,20 +82,27 @@ The brief's "Acceptance criteria and test cases" (`docs/brief.md`) says v1 is do
 - `tests/built/answers.test.ts > area page answers at typical assumptions > covers every area in data/areas.json`, `> match an independent runModel(deriveInputs(...)) on every page`: each page's numeral, headline, summary sentence (`area-summary-answer`, which names the area) and the start of its meta description equal an independent engine run.
 - `tests/e2e/area-pages.spec.ts > with JavaScript disabled > leeds: the answer and the summary are in the static HTML` (and Glasgow City, Cardiff, Belfast), `> the island hydrates over the static answer and the calculator still works`.
 - `tests/built/sitemap.test.ts > sitemap.xml > lists every indexable page once and nothing else`.
-- Phase 6 (a11y-ux): area titles shortened to about 65 characters including " | House Sums", still unique (`src/lib/seo.test.ts`, `PAGES` in `tests/e2e/helpers.ts`).
+- Area titles are 65 characters or fewer including " | House Sums" (phase 6), and still unique: `tests/built/pages.test.ts > every page > gives every area page a title of 65 characters or fewer that names the area`; `src/lib/seo.test.ts > titles > keeps area titles to about 65 characters with the site name, dropping words for long names`; the titles in `PAGES` (`tests/e2e/helpers.ts`), asserted by `tests/e2e/pages.spec.ts`.
 
 ### 9. Works at 360px with no horizontal scroll, in both themes, and with keyboard only
-**Status: Met, with more checks added in phase 6.**
+**Status: Met.**
 - No horizontal scroll: `tests/e2e/pages.spec.ts > page {path} > has no horizontal scroll` for every page in `PAGES` (home, area pages, nation page, index, How it works, Sources, About, style guide) at 360 and 1280; `tests/e2e/smoke.spec.ts > home page > has no horizontal scroll`; `tests/e2e/results.spec.ts > layout > no horizontal scroll with every results section open`; `tests/e2e/inputs.spec.ts > advanced panel > holds every other input, counted, with plain hints` (panel open); `tests/e2e/review.spec.ts` direct-label checks on short horizons.
 - Both themes: `tests/e2e/theme.spec.ts > light scheme > ...`, `> dark scheme > ...` (background, text, contours and logo from the tokens); `tests/e2e/focus.spec.ts > light scheme / dark scheme > ...` (focus ring); `tests/e2e/styleguide.spec.ts > styleguide page > has no horizontal scroll in light or dark`; contrast of every token pair in both themes, `scripts/check-contrast.test.ts` and `npm run lint`.
 - Keyboard only: `tests/e2e/keyboard.spec.ts > keyboard only: pick an area, change values, reset one, reach the answer`, `> keyboard only: the tags open their source and close with Escape`, `> keyboard only: the outlook and buyer use arrow keys`; `tests/e2e/results.spec.ts > chart > keyboard: focus shows a year, arrows move it, Escape hides it`; `tests/e2e/focus.spec.ts > ... > the first tab stop is a visible skip link with the focus ring`.
 - First screen: `tests/e2e/acceptance.spec.ts > the first screen holds area, price and the answer, with no scrolling (./?a=leeds)` and `(rent-vs-buy/leeds/)`: at 360x780 the area, price and answer headline are in view on load; at 1280x800 the whole answer card is.
-- Phase 6 (a11y-ux): axe scans of every page type in light and dark at 360 and 1280 with no serious or critical violations, plus the advanced panel, a tooltip and the year table open (`tests/e2e/a11y.spec.ts`); keyboard-only journeys on the home and area pages in both themes; forced-colours screenshots (`tests/e2e/forced-colors.spec.ts`); reduced motion.
+- Accessibility in both themes (phase 6), all at 360 and 1280, in CI and against the live site after every deploy:
+  - axe: `tests/e2e/a11y.spec.ts > light theme > {page}: no serious or critical axe findings` and `> dark theme > ...` for the nine page types in `A11Y_PAGES` (home empty, home with an area, area page, nation page, rent v buy index, how it works, sources, about, 404), plus the six `CALCULATOR_STATES` (advanced panel open, a source tooltip open, year-by-year table open, area list open, chart year inspector, link to an unknown area).
+  - Keyboard journeys: `tests/e2e/keyboard-journey.spec.ts > light theme > home page: pick an area by keyboard, then every stop to the footer`, `> area page: picking another area opens it with focus in the Area field` (and `> dark theme > ...`), `> "Try again" keeps focus in the Area field when the list loads`.
+  - Screen reader: `tests/e2e/screen-reader.spec.ts > the answer live region > a slider drag is announced once, with the settled headline`, `> a change undone within the delay announces nothing`, `> an area page does not read its answer out on load`, `> picking an area on the home page is announced once`; `> standing live regions > ...`; `> names and roles > ...`.
+  - Reduced motion: `tests/e2e/reduced-motion.spec.ts > no motion on the area page (prefers-reduced-motion: reduce)`, `> the reduced-motion rule turns off any transition a later style might add`.
+  - Forced colours (Windows high contrast, emulated): `tests/e2e/forced-colors.spec.ts > forced colours, light system palette > the area page keeps its chart lines, marker, tags and slider tracks`, `> focus stays visible on every kind of control`, `> the advanced panel and the home page read in forced colours` (and the dark system palette). Screenshots are attached to the Playwright report, or written to a folder with `FORCED_COLORS_SHOTS=<dir>`; the integration set is listed in the phase 6 pull request.
+  - A real NVDA or VoiceOver pass is not automated; see "Other launch items".
 
 ### 10. Lighthouse scores 95+ for performance and accessibility on / and on one area page
-**Status: Met when measured locally; the CI gate lands in phase 6 (perf).**
+**Status: Met, asserted in CI.**
 - Baseline, `docs/decisions.md` "Phase 6 baseline (lead)": `npm run lighthouse` (Lighthouse 13.5, median of 3 runs, `astro preview` on `dist/`) scored 100 for performance, accessibility, best practices and SEO on `/` and `/rent-vs-buy/leeds/`, mobile and desktop.
-- Phase 6 (perf): `npm run lighthouse` runs in `ci.yml` after the e2e tests and fails below 95 in any category or past the LCP, TBT and CLS limits in `scripts/lighthouse.mjs` (`THRESHOLDS`); the deploy's live job runs it once against the live site, report only. Scores go in the phase 6 pull request.
+- CI: the step "Lighthouse" in `.github/workflows/ci.yml` (job "Check, lint, test, build and e2e", after the e2e tests) runs `npm run lighthouse`: `/` and `/rent-vs-buy/leeds/`, mobile and desktop, median of 3 runs on `astro preview`, failing below 95 in performance, accessibility, best practices or SEO, or past the LCP, TBT and CLS limits in `THRESHOLDS` (`scripts/lighthouse.mjs`). Reports: the `lighthouse` artifact and the job summary. The first CI run with the gate (run 38474069676, perf branch) scored 100 in all four categories on both pages and both form factors; the phase 6 pull request carries the scores of its own final CI run.
+- Live site: the deploy workflow's `live` job runs it once against <https://jordanl17.github.io/HouseSums/> with `--report-only` (never fails the deploy; `lighthouse-live` artifact). Scores for the live site are in the phase 6 pull request.
 - Variance note: one single run of the area page on mobile scored 94 (TBT 241 ms) during the baseline, which is why the gate uses the median of 3 runs and the stable metrics.
 
 ### 11. The data workflow runs green on a manual trigger and opens a pull request with refreshed data
@@ -113,6 +119,7 @@ The brief's "Acceptance criteria and test cases" (`docs/brief.md`) says v1 is do
 **Status: Needs Jordan.**
 - The set: `npm run screenshots -- --out <dir>` (`scripts/screenshots.mjs`, unit-tested in `scripts/screenshots.test.ts`) shoots 12 page types (home empty, home with Leeds, area pages for Leeds, Glasgow City, Cardiff, Belfast and Westminster, the Scotland nation page, How it works, Sources, About, 404) at 360 and 1280 in light and dark: 48 full-page PNGs named `<page>-<width>-<theme>.png`. Run it on the final phase 6 build and attach it to the phase 6 pull request.
 - First pass by the build (13 October, before the phase 6 perf and a11y-ux changes): nothing reads as a generic AI page. No hero, no gradients beyond the contour circles, no shadows, no emoji, nothing centred; inputs and the whole answer card are in the first 800px at 1280 on every calculator page; numbers have units and right-aligned columns. Small things for Jordan to judge are listed in `docs/decisions.md`, "Docs and acceptance (phase 6, docs-acceptance)".
+- Integration pass (13 October, final phase 6 build): the set was shot again and is listed in the phase 6 pull request, along with 24 forced-colours screenshots. Westminster's growth now reads "Floored at 0%". The "Year 1" and "Year 2" chart labels at 360 no longer cover the top axis label (fixed at integration; `tests/e2e/review.spec.ts > direct labels stay inside the plot and off the marker (...)` now also checks the marker label). The other items in the docs-acceptance list are still for Jordan to judge.
 - Print in black and white (slop check 5) was checked on the style guide in phase 2 (PDF with background graphics off, converted to grey; `docs/decisions.md`, "Review round 1 (phase 2)"); the screenshots do not cover print.
 - What is needed: **Jordan** reviews the 48 screenshots against the brief's five slop-check questions and signs off, or lists what to change.
 
@@ -165,11 +172,12 @@ Reference scenario (brief): England, first-time buyer, £300k price, £30k depos
 | Item | Status | What is needed |
 |---|---|---|
 | Copy rules site-wide: no em-dashes, British English, no advice language, no exclamation marks | Met | `tests/built/pages.test.ts > every page > has no em-dashes in its visible text, title or descriptions`, `> is in British English`; `tests/e2e/pages.spec.ts > page {path} > copy has no em-dashes or exclamation marks`; `tests/e2e/results.spec.ts > answer copy > no advice language, em-dashes or exclamation marks in any result`; `src/lib/copy.test.ts > answerCopy > every case keeps to the house style`. |
-| Under 100KB of JavaScript | Met | `npm run budget` (`scripts/check-budget.mjs`) in CI and in the deploy; 85,816 bytes at the phase 6 baseline. Phase 6 (perf) adds a 45KB limit on the island chunk. |
+| Under 100KB of JavaScript | Met | `npm run budget` (`scripts/check-budget.mjs`, unit-tested in `scripts/check-budget.test.ts`) in CI and in the deploy: 82,177 of 102,400 bytes after phase 6 (85,816 at the baseline). It also holds the calculator island to 45KB of our own code before hydration: 43,650 bytes after phase 6 (61,805 before). The 40KB aim is missed; see `docs/decisions.md`, "Integration (phase 6)". |
 | No runtime third-party calls | Met | `tests/e2e/pages.spec.ts > page {path} > loads JavaScript only for the calculator, only from our own origin` and `> loads no JavaScript`; `tests/e2e/smoke.spec.ts > home page > loads scripts only from our own origin`; `tests/e2e/calculator.spec.ts > the area list is fetched as JSON from our own origin, not bundled`. |
 | Live site | Met | Public repository, GitHub Pages on, <https://jordanl17.github.io/HouseSums/>; every deploy runs the e2e suite against it (deploy runs 1 to 5 all green). |
 | Custom domain (housesums.co.uk, housesums.uk) | Needs Jordan | Register the domains (open question in the brief). Then set `SITE_URL` and `BASE_PATH=/` in `deploy.yml`, add the domain in Settings, Pages, and HTTPS. CI already builds and link-checks at `BASE_PATH=/`. robots.txt only takes effect at a host root, so it starts working then. |
 | Source attribution wording on /sources/ | Needs Jordan (or anyone with access to the publisher sites) | Written from each publisher's usual statement; the publisher pages could not be fetched from the build container (`docs/decisions.md`, "Content pages (phase 5, content teammate)"). Check against HM Land Registry, ONS and the Bank of England before launch. |
+| Real screen reader pass (NVDA, VoiceOver) | Needs a person | The automated specs check the DOM and accessibility tree screen readers read (`screen-reader.spec.ts`, axe). One manual pass with NVDA and VoiceOver before launch is recommended (`docs/decisions.md`, "Accessibility and UX (phase 6, a11y-ux)"). |
 | Analytics | Off, by choice | GoatCounter is wired but off until Jordan creates a site and sets the `GOATCOUNTER_CODE` repository variable. Not a "Done means" box. |
 
 ## Keeping this current

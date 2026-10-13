@@ -1,0 +1,51 @@
+name: Lighthouse against the live site (one-off)
+
+# Phase 6 integration, temporary: runs the deploy workflow's report-only Lighthouse step against
+# the live site once from this branch, so the phase 6 pull request can quote live scores before
+# the first deploy that carries the step. The live site is still the phase 5 build at this point.
+# Removed again in the next commit; from then on deploy.yml's live job does this on every deploy.
+on:
+  push:
+    branches: [phase/6-hardening]
+    paths: [.github/workflows/lighthouse-live-once.yml]
+
+permissions:
+  contents: read
+
+env:
+  ASTRO_TELEMETRY_DISABLED: 1
+
+jobs:
+  lighthouse-live:
+    name: Lighthouse against the live site (report only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node from .nvmrc
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Lighthouse against the live site (report only)
+        run: npm run lighthouse -- --url "https://jordanl17.github.io/HouseSums/" --report-only
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-live
+          path: lighthouse/
+          if-no-files-found: ignore
+          retention-days: 14

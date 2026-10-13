@@ -9,7 +9,7 @@ Each phase lands as one PR into `main`. The phase team appends its handoff notes
 | 3 | Engine and data pipeline | `phase/3-engine` | Merged |
 | 4 | Calculator UI | `phase/4-calculator` | Merged |
 | 5 | Area, nation and content pages, SEO | `phase/5-pages` | Merged |
-| 6 | Accessibility, performance and end-to-end | `phase/6-hardening` | In progress |
+| 6 | Accessibility, performance and end-to-end | `phase/6-hardening` | In review |
 
 ## Handoff notes
 
@@ -243,3 +243,33 @@ Decisions: `docs/decisions.md`, "Pages and SEO (phase 5, lead)", "Area and natio
 - **Review round 1 fixes** (decisions.md, "Review round 1 (phase 5)"): fallback figures labelled in meta, OG, Twitter and JSON-LD descriptions; "Price in years of rent" marked when either figure is the nation's; Isles of Scilly's related-areas heading; "Renting catches up again" moved next to the answer (hook `area-summary-overtake`); "all N of" spread copy; softer tax-check wording; trimmed "Why" column plus Tax rules and Buyer type rows; exact About privacy line; OG card tags; shorter content-page descriptions.
 - **Left for phase 6 from the review:** picking another area on an area page keeps the Leeds h1 and summary while the island shows the new area (navigate to that area's page, or add the home page's `data-calc-link` script); the island tags a floored negative growth (Aberdeen City) as "Local figure"; area titles reach about 90 characters with the suffix; area pages are about 88 KB of HTML, mostly repeated island props.
 - **Build time** is about 7 s for 372 pages; `typicalAnswer` and `nationSpreadFor` are cached per build, so new per-area work should reuse them rather than re-running the model.
+
+
+### Phase 6: accessibility, performance and end-to-end hardening
+
+In review. The lead measured a baseline and set up shared tooling (`docs/decisions.md`, "Phase 6 baseline (lead)" and "Phase 6 ownership (lead)"); three teammates (perf, a11y-ux, docs-acceptance) worked on their own branches and the integrator merged them without textual conflicts. Decisions: "Performance (phase 6, perf)", "Accessibility and UX (phase 6, a11y-ux)", "Docs and acceptance (phase 6, docs-acceptance)" and "Integration (phase 6)". The acceptance checklist with evidence for every box and test case is `docs/acceptance.md`.
+
+#### What shipped (phase 6)
+- **Island JS** (`npm run budget`): the island needs 43,650 bytes of our code before it hydrates (61,805 before), held to 45KB in CI by `scripts/check-budget.mjs`; total client JS 82,177 of 102,400 bytes (85,816 before). The chart, share row, advanced panel, waiting card and the sections under the card load in a second chunk (`later.ts`, `deferred.tsx`, `Hold`) as soon as the island starts; they stay server-rendered until it arrives. The unused `@preact/signals` chunk is stubbed out, analytics code drops out when it is off, and Preact has its own chunk. The 40KB aim is missed by about 3.6KB (see "Integration (phase 6)").
+- **HTML** (`tests/built/weight.test.ts`): shared island data (defaults, tax rules, rates, nation figures, aliases) is one hashed, preloaded `data/calculator.json` instead of 12.7KB of props on every page. The advanced panel's body and the year-by-year table render on first open; the chart's hidden table renders once the chart is live. Leeds 87,220 to about 38.5KB; every area page under 45KB (max about 40KB); `dist/` 32.8MB to about 15MB. The answer, key numbers, chart, summary, sensitivity and breakdown are still in the static HTML.
+- **CSS and fonts**: one shared stylesheet instead of two render-blocking ones (critical CSS not inlined: it would be most of the 32KB and push area pages back over 45KB); the four woff2 faces are declared in `fonts.css` and preloaded; desktop CLS from the font swap is gone.
+- **Lighthouse in CI**: `npm run lighthouse` after e2e in `ci.yml` (median of 3, mobile and desktop, `/` and `/rent-vs-buy/leeds/`, 95+ in all four categories plus LCP, TBT and CLS limits); report-only against the live site in `deploy.yml`'s `live` job.
+- **Accessibility tests**: `a11y.spec.ts` (axe, nine page types and six calculator states, light and dark, 360 and 1280), `keyboard-journey.spec.ts`, `screen-reader.spec.ts`, `reduced-motion.spec.ts`, `forced-colors.spec.ts` (emulated, screenshots attached or written to `FORCED_COLORS_SHOTS`). All run in CI and against the live site.
+- **UX fixes**: picking another area on an area page opens that area's page with the buyer type, outlook, tax nation and non-local overrides in the query, focus back in the Area field and one announcement (`area-navigation.spec.ts`); old `?a=` links on area pages redirect. Growth held to the brief's range is tagged "Floored at 0%" or "Capped at 6%" with the real figure in the tooltip. Area titles are 65 characters or fewer with " | House Sums". The answer live region announces once per settled change and never on load; field notes and the toggletip are standing regions. Forced-colours rules for chart lines, marker, sliders, tags, cards and focus; a reduced-motion rule in `base.css`.
+- **Integration fix**: the chart's "Year N" label near the left edge hangs right of the marker, so it no longer covers the top y-axis label at 360 (slop item from the docs-acceptance pass; asserted in `review.spec.ts`).
+- **Docs**: `docs/acceptance.md`, README rewritten (live URL, commands, deploys, data refresh, where decisions live), stale statements about a private repo and Pages being off fixed. `npm run screenshots -- --out <dir>` produces the 48-image slop-review set.
+
+#### Deferred (phase 6)
+- **Needs Jordan**: slop sign-off from the final screenshot set (listed in the phase 6 PR); "Allow GitHub Actions to create and approve pull requests" and a check of the first refresh PR (acceptance box 11; scheduled run 20 October 06:17 UTC); re-reading the tax pages and the /sources/ attribution wording before launch (gov hosts unreachable from the build); registering the domains; GoatCounter if wanted.
+- **Island 40KB aim** missed by about 3.6KB: what remains is the engine, inputs and answer card the first render and first change need.
+- **With JavaScript off**, the advanced panel and year-by-year table open empty and the chart's hidden table is absent (trade-off for the 45KB HTML target; the answer and everything else is still static).
+- **Re-deferred by a11y-ux, with reasons in decisions.md**: long names at 360px (card 7px taller on that pick), the phase 4 review items not taken, the nation index month note, and a real NVDA/VoiceOver pass before launch.
+- **Slop items for Jordan to judge** ("Docs and acceptance (phase 6, docs-acceptance)"): at 360 Cardiff's "Rent" key line touches the buy line where they cross; tables wrap "None in 25 years"; the reserved blank lines in the answer card at 360; the empty left column at 1280; B612's brackets.
+
+#### What the next phase must know
+- **Pages render `CalculatorIsland`**, not `Calculator`: `<CalculatorIsland client:load links={calculatorLinks()} initialArea={...} />`. It fetches `links.data` (`data/calculator.json?v=<hash>`) and passes it to `Calculator`, whose props are unchanged. Pass `preloads={calculatorPreloads()}` to `Base` on island pages. The phase 4 and 5 notes above that show `<Calculator data={calculatorData()} ...>` describe the old wiring.
+- **Deferred parts** (chart, share row, advanced panel, card ghost, `More`) must each render exactly one root element whenever they are on the page, or hydration breaks. A static import of `later.ts` pulls it back into the island and fails the budget. `data-hydrated="true"` means the deferred parts are live too.
+- **Tests that read inside the advanced panel or year table must open them first** (`openDisclosure()` in `tests/e2e/calculator-helpers.ts`).
+- **Headroom**: island 43,650 of 46,080 bytes; area pages about 40KB of 45KB. Both are checked in CI.
+- **Lighthouse** scores: the PR body has the CI table and the live-site run. If runner variance ever fails the performance median, the documented next step is five runs, not a lower bar.
+- **e2e ports**: give each worktree its own `E2E_PORT`; screenshots use `SCREENSHOTS_PORT` (4340) and Lighthouse its own preview.

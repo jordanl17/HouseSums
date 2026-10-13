@@ -215,7 +215,9 @@ export default function Chart({ calc }: CalcProps) {
                 class={
                   markerX > 85
                     ? 'chart__marker-label chart__marker-label--end'
-                    : 'chart__marker-label'
+                    : markerX < 15
+                      ? 'chart__marker-label chart__marker-label--start'
+                      : 'chart__marker-label'
                 }
                 style={`--x: ${markerX}%`}
                 data-testid="chart-marker"

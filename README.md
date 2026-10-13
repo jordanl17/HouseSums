@@ -40,7 +40,7 @@ The dev server prints a local address. The site lives under the base path, so op
 | `npm run lint` | ESLint, Prettier check, colour tokens and contrast checks (changes nothing) |
 | `npm run format` | Fix formatting with Prettier and apply ESLint autofixes |
 | `npm test` | Unit tests with Vitest (`src/**/*.test.ts`, `scripts/**/*.test.ts`): engine, tax, state, copy, data pipeline |
-| `npm run budget` | Fail if the client JavaScript in `dist/` is over 100KB |
+| `npm run budget` | Fail if the client JavaScript in `dist/` is over 100KB, or if the calculator island needs more than 45KB of our own code before it hydrates |
 | `npm run check:links` | Crawl `dist/` and fail on any broken internal link or asset, or a page no link reaches |
 | `npm run check:pages` | Page-quality tests over `dist/`: titles, descriptions, one h1, canonical, no em-dashes, JSON-LD, sitemap, every area's static answer against the engine |
 | `npm run test:e2e` | Playwright end-to-end tests at 360px and 1280px against the built site (served by `astro preview`) |
@@ -91,8 +91,8 @@ docs/               product brief, build decisions, phase notes and the acceptan
 
 ## How deploys work
 
-- **CI** (`.github/workflows/ci.yml`) runs on every pull request and every push to a branch other than `main`: type check, lint, unit tests, build, JavaScript budget, link check and page-quality tests (at `/HouseSums` and again at `BASE_PATH=/`), then the Playwright suite at 360px and 1280px, including the axe accessibility scans, then Lighthouse. If a step fails, the Playwright report is uploaded with the run.
-- **Deploy** (`.github/workflows/deploy.yml`) runs on every push to `main` and by hand. It runs the whole CI suite first and deploys only if that passes. It builds with `BASE_PATH=/HouseSums` and `SITE_URL=https://jordanl17.github.io`, checks the budget and links again, and publishes `dist/` to GitHub Pages. Then the `live` job waits until the live site serves the new commit (`scripts/wait-for-deploy.mjs` reads `<meta name="hs-build">`) and runs the whole e2e suite against <https://jordanl17.github.io/HouseSums/> (`npm run test:live`). A red deploy run means production is broken. Only one deploy runs at a time, and a deploy in progress is never cancelled.
+- **CI** (`.github/workflows/ci.yml`) runs on every pull request and every push to a branch other than `main`: type check, lint, unit tests, build, JavaScript budget, link check and page-quality tests (at `/HouseSums` and again at `BASE_PATH=/`), then the Playwright suite at 360px and 1280px, including the axe accessibility scans, then Lighthouse (`npm run lighthouse`: median of 3 runs on `/` and `/rent-vs-buy/leeds/`, mobile and desktop, failing below 95 in any category or past the LCP, TBT and CLS limits). If a step fails, the Playwright report is uploaded with the run; Lighthouse reports are always uploaded.
+- **Deploy** (`.github/workflows/deploy.yml`) runs on every push to `main` and by hand. It runs the whole CI suite first and deploys only if that passes. It builds with `BASE_PATH=/HouseSums` and `SITE_URL=https://jordanl17.github.io`, checks the budget and links again, and publishes `dist/` to GitHub Pages. Then the `live` job waits until the live site serves the new commit (`scripts/wait-for-deploy.mjs` reads `<meta name="hs-build">`) and runs the whole e2e suite against <https://jordanl17.github.io/HouseSums/> (`npm run test:live`), then runs Lighthouse once against it for the record (report only, never fails the deploy; scores in the job summary and the `lighthouse-live` artifact). A red deploy run means production is broken. Only one deploy runs at a time, and a deploy in progress is never cancelled.
 - The repository is public and GitHub Pages is switched on (Settings, Pages, Source: GitHub Actions). That setting is the one thing the workflow cannot do with its own token.
 
 Work happens on short-lived branches merged into `main` by pull request once CI passes.
