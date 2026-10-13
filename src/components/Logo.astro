@@ -1,23 +1,47 @@
 ---
 /**
- * "Sun on the sill" logo: inline SVG mark plus the "House Sums" wordmark.
- * Stub from the phase 2 lead; the shell teammate owns and designs it.
- * Colours come from tokens via classes in src/styles/shell.css (no colour literals here).
+ * "Sun on the sill": a hi-vis half sun rising from an ink horizon line, with three
+ * short ink rays, plus the "House Sums" wordmark in B612 Bold.
+ *
+ * Drawn on a 24-unit grid with whole-unit strokes, so it is pixel-crisp at 24px and 48px
+ * (and close enough at the default 32). The sun has an ink outline so the hi-vis stays
+ * legible on light concrete; in dark mode the outline turns hi-vis (see shell.css).
+ * Colours come from tokens through classes in src/styles/shell.css, never from attributes.
+ *
+ * The mark is decorative (aria-hidden). When the logo stands alone without the wordmark,
+ * pass `label` so it still has an accessible name.
  */
 interface Props {
-  /** Height of the mark in px. Default 32. Must stay crisp at 24 and 48. */
+  /** Height of the mark in px. Default 32. Crisp at 24 and 48. */
   size?: number;
   /** Show the wordmark next to the mark. Default true. */
   wordmark?: boolean;
+  /** Accessible name when the wordmark is hidden. */
+  label?: string;
   class?: string;
 }
 
-const { size = 32, wordmark = true, class: className } = Astro.props;
+const { size = 32, wordmark = true, label, class: className } = Astro.props;
+const named = !wordmark && label;
 ---
 
-<span class:list={['logo', className]}>
-  <svg class="logo__mark" width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-    <path class="logo__horizon" d="M3 22h26"></path>
+<span
+  class:list={['logo', className]}
+  style={`--logo-size: ${size}px`}
+  role={named ? 'img' : undefined}
+  aria-label={named ? label : undefined}
+>
+  <svg
+    class="logo__mark"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path class="logo__sun" d="M5.75 18a6.25 6.25 0 0 1 12.5 0z"></path>
+    <path class="logo__ray" d="M12 5v3M2.81 8.81l2.12 2.12M21.19 8.81l-2.12 2.12"></path>
+    <rect class="logo__horizon" x="1" y="17" width="22" height="2"></rect>
   </svg>
   {wordmark && <span class="logo__word">House Sums</span>}
 </span>
