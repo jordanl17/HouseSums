@@ -1,0 +1,5 @@
+/*
+ * Page shell: skip link, header, logo, nav and footer. Owned by the shell teammate in phase 2.
+ * Plain global classes (BEM-lite): .skip-link, .site-header, .site-header__inner, .site-nav,
+ * .site-nav__link, .site-footer, .logo, .logo__mark, .logo__word. Tokens only, no colour literals.
+ */

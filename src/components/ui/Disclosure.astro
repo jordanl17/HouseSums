@@ -1,0 +1,14 @@
+---
+/** Styled details/summary. Stub from the phase 2 lead; the primitives teammate owns it. */
+import type { DisclosureProps } from './types';
+
+type Props = DisclosureProps;
+const { summary, open = false, class: className } = Astro.props;
+---
+
+<details class:list={['disclosure', className]} open={open}>
+  <summary class="disclosure__summary">{summary}</summary>
+  <div class="disclosure__body">
+    <slot />
+  </div>
+</details>

@@ -1,0 +1,11 @@
+---
+/** Plain surface. Stub from the phase 2 lead; the primitives teammate owns it. */
+import type { CardProps } from './types';
+
+type Props = CardProps;
+const { as: Tag = 'div', labelledby, class: className } = Astro.props;
+---
+
+<Tag class:list={['card', className]} aria-labelledby={labelledby}>
+  <slot />
+</Tag>

@@ -1,0 +1,19 @@
+---
+/** Styled native range input. Stub from the phase 2 lead; the primitives teammate owns it. */
+import type { SliderProps } from './types';
+
+type Props = SliderProps;
+const { id, label, min, max, step, value, valuetext, class: className } = Astro.props;
+---
+
+<input
+  class:list={['slider', className]}
+  type="range"
+  id={id}
+  aria-label={label}
+  min={min}
+  max={max}
+  step={step}
+  value={value}
+  aria-valuetext={valuetext}
+/>

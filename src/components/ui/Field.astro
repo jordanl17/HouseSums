@@ -1,0 +1,58 @@
+---
+/** Labelled pill input with units, hint and error. Stub from the phase 2 lead; the primitives teammate owns it. */
+import type { FieldProps } from './types';
+
+type Props = FieldProps;
+const {
+  id,
+  label,
+  name = id,
+  value,
+  prefix,
+  suffix,
+  hint,
+  error,
+  kind = 'number',
+  inputmode = kind === 'number' ? 'decimal' : 'text',
+  readonly = false,
+  class: className,
+} = Astro.props;
+const hintId = hint ? `${id}-hint` : undefined;
+const errorId = error ? `${id}-error` : undefined;
+const describedby = [hintId, errorId].filter(Boolean).join(' ') || undefined;
+---
+
+<div class:list={['field', { 'field--invalid': error }, className]}>
+  <div class="field__head">
+    <label class="field__label" for={id}>
+      {label}
+    </label>
+    <slot name="tag" />
+  </div>
+  <div class="field__control">
+    {prefix && <span class="field__affix field__affix--prefix">{prefix}</span>}
+    <input
+      class:list={['field__input', { 'field__input--text': kind === 'text' }]}
+      id={id}
+      name={name}
+      type="text"
+      inputmode={inputmode}
+      value={value}
+      readonly={readonly}
+      aria-describedby={describedby}
+      aria-invalid={error ? 'true' : undefined}
+    />
+    {suffix && <span class="field__affix field__affix--suffix">{suffix}</span>}
+  </div>
+  <slot />
+  {hint && (
+    <p class="field__hint" id={hintId}>
+      {hint}
+    </p>
+  )}
+  {error && (
+    <p class="field__error" id={errorId}>
+      {error}
+    </p>
+  )}
+</div>

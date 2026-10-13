@@ -1,0 +1,23 @@
+---
+/**
+ * "Sun on the sill" logo: inline SVG mark plus the "House Sums" wordmark.
+ * Stub from the phase 2 lead; the shell teammate owns and designs it.
+ * Colours come from tokens via classes in src/styles/shell.css (no colour literals here).
+ */
+interface Props {
+  /** Height of the mark in px. Default 32. Must stay crisp at 24 and 48. */
+  size?: number;
+  /** Show the wordmark next to the mark. Default true. */
+  wordmark?: boolean;
+  class?: string;
+}
+
+const { size = 32, wordmark = true, class: className } = Astro.props;
+---
+
+<span class:list={['logo', className]}>
+  <svg class="logo__mark" width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
+    <path class="logo__horizon" d="M3 22h26"></path>
+  </svg>
+  {wordmark && <span class="logo__word">House Sums</span>}
+</span>

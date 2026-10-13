@@ -1,0 +1,11 @@
+---
+/** Small mono pill naming where a figure comes from. Stub from the phase 2 lead; the primitives teammate owns it. */
+import type { TagProps } from './types';
+
+type Props = TagProps;
+const { variant = 'typical', title, class: className } = Astro.props;
+---
+
+<span class:list={['tag', `tag--${variant}`, className]} title={title}>
+  <slot />
+</span>

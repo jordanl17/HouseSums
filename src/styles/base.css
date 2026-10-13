@@ -1,37 +1,275 @@
 /*
- * Minimal plain stylesheet for the scaffold. Phase 2 replaces this with the
- * brand tokens (B612, concrete, ink, hi-vis) from docs/brief.md.
+ * Base styles: reset, page background, type, links, focus, utilities and the
+ * layout grids. Uses tokens from tokens.css only (no colour literals here).
+ *
+ * Load order (set in src/layouts/Base.astro): fonts, tokens.css, base.css,
+ * ui.css (primitives), shell.css (header, nav, footer).
+ * Class naming is BEM-lite: .block, .block__element, .block--modifier.
+ * See docs/decisions.md, "Design system (phase 2)".
  */
+
+/* ---- Reset ---- */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
-:root {
-  color-scheme: light dark;
-  font-family: system-ui, sans-serif;
-  line-height: 1.5;
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
-body {
-  margin: 0 auto;
-  max-width: 60rem;
-  padding: 1rem;
+body,
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+blockquote,
+dl,
+dd,
+ul,
+ol {
+  margin: 0;
 }
 
-h1 {
-  font-size: 1.5rem;
-  line-height: 1.2;
+ul[class],
+ol[class] {
+  padding: 0;
+  list-style: none;
 }
 
 img,
 svg {
+  display: block;
   max-width: 100%;
+}
+
+img {
   height: auto;
 }
 
-.site-footer {
-  margin-top: 2rem;
-  font-size: 0.875rem;
+input,
+button,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+/* ---- Page ---- */
+body {
+  min-height: 100vh;
+  background-color: var(--color-concrete);
+  background-image: var(--contour-background);
+  /* One centre per view: the circles stay put while the page scrolls. */
+  background-attachment: fixed;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-md);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+  /* Every number on the site uses tabular figures. */
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Headings: bold, sentence case (in the copy), tight tracking, modest sizes ---- */
+h1,
+h2,
+h3,
+h4 {
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-heading);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--size-2xl);
+}
+
+h2 {
+  font-size: var(--size-xl);
+}
+
+h3 {
+  font-size: var(--size-lg);
+}
+
+h4 {
+  font-size: var(--size-md);
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* ---- Links ---- */
+a {
+  color: var(--color-ink);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* ---- Focus: always visible, both themes (see tokens.css, Focus) ---- */
+:focus {
+  outline: none;
+}
+
+:focus-visible,
+.focus-ring {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+  box-shadow: var(--focus-shadow);
+}
+
+/* ---- Utilities ---- */
+
+/* Hidden visually, still read by screen readers. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Figures: tabular, aligned columns. Body already sets tabular-nums; use this to re-assert inside components. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Mono for figures, tags and labels. */
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+.num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Vertical rhythm: children spaced by --stack-gap. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-gap, var(--space-4));
+}
+
+.stack--tight {
+  --stack-gap: var(--space-2);
+}
+
+.stack--loose {
+  --stack-gap: var(--space-8);
+}
+
+/* ---- Layout ---- */
+
+/* Page container: ~1200px of content with 16px gutters on mobile. Content inside is left-aligned. */
+.container {
+  width: 100%;
+  max-width: calc(var(--layout-max) + 2 * var(--layout-gutter));
+  margin-inline: auto;
+  padding-inline: var(--layout-gutter);
+}
+
+/* Prose pages (how it works, sources, about): readable measure, left-aligned. */
+.prose {
+  max-width: 42rem;
+}
+
+.prose > * + * {
+  margin-top: var(--space-4);
+}
+
+.prose > * + :is(h2, h3) {
+  margin-top: var(--space-8);
+}
+
+/*
+ * Calculator grid. Three regions so that on mobile the answer sits directly
+ * after the first inputs (area, buyer, price), with the rest of the inputs below.
+ *
+ *   mobile:            desktop (>= 60rem):
+ *   primary            primary | answer
+ *   answer             rest    | answer
+ *   rest
+ *
+ * <div class="calc-layout">
+ *   <div class="calc-layout__primary">...</div>
+ *   <div class="calc-layout__answer">...</div>
+ *   <div class="calc-layout__rest">...</div>
+ * </div>
+ */
+.calc-layout {
+  display: grid;
+  gap: var(--layout-gap);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'primary'
+    'answer'
+    'rest';
+  align-items: start;
+}
+
+.calc-layout__primary {
+  grid-area: primary;
+}
+
+.calc-layout__answer {
+  grid-area: answer;
+}
+
+.calc-layout__rest {
+  grid-area: rest;
+}
+
+@media (min-width: 60rem) {
+  .calc-layout {
+    column-gap: var(--space-8);
+    row-gap: var(--space-4);
+    grid-template-columns: minmax(20rem, 5fr) minmax(0, 7fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'primary answer'
+      'rest answer';
+  }
 }

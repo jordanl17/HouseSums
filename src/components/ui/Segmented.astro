@@ -1,0 +1,25 @@
+---
+/** Radio group styled as pills. Stub from the phase 2 lead; the primitives teammate owns it. */
+import type { SegmentedProps } from './types';
+
+type Props = SegmentedProps;
+const { name, legend, options, value, class: className } = Astro.props;
+---
+
+<fieldset class:list={['segmented', className]}>
+  <legend class="segmented__legend">{legend}</legend>
+  <div class="segmented__options">
+    {options.map((option) => (
+      <label class="segmented__option">
+        <input
+          class="segmented__input"
+          type="radio"
+          name={name}
+          value={option.value}
+          checked={option.value === value}
+        />
+        <span class="segmented__label">{option.label}</span>
+      </label>
+    ))}
+  </div>
+</fieldset>

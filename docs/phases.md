@@ -5,7 +5,7 @@ Each phase lands as one PR into `main`. The phase team appends its handoff notes
 | # | Phase | Branch | Status |
 |---|---|---|---|
 | 1 | Scaffold, CI and deploy | `phase/1-scaffold` | In review |
-| 2 | Brand and layout shell | `phase/2-brand` | Not started |
+| 2 | Brand and layout shell | `phase/2-brand` | In progress |
 | 3 | Engine and data pipeline | `phase/3-engine` | Not started |
 | 4 | Calculator UI | `phase/4-calculator` | Not started |
 | 5 | Area, nation and content pages, SEO | `phase/5-pages` | Not started |
@@ -44,3 +44,7 @@ What the next phase must know:
 - The no-JS e2e test asserts the home page loads no scripts. Phase 4 must change it when the calculator island lands on `/`.
 - Playwright is pinned to 1.56.1 to match the container's Chromium. Do not run `playwright install` locally.
 - CI and deploy actions are pinned to the major tags listed in `docs/decisions.md`. Phase 3's `refresh-data.yml` should use the same versions.
+
+### Phase 2: brand and layout shell
+
+In progress. Lead foundation (tokens, base styles, token lint guard, primitive stubs and prop contracts) is on `phase/2-brand`. See `docs/decisions.md`, "Design system (phase 2)", for files, load order, class naming and the focus ring. Full handoff notes for phase 4 follow when the phase lands.
