@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.astro/
+
+# Raw data downloads (processed JSON in data/ is committed)
+data/raw/
+
+# Test output
+test-results/
+playwright-report/
+blob-report/
+coverage/
+
+# Env and editor
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log

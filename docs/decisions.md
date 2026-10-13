@@ -30,3 +30,15 @@ Users asked to be able to choose between more cautious and more optimistic outlo
 
 ## Analytics
 - GoatCounter, loaded only when `PUBLIC_GOATCOUNTER_CODE` is set at build time. Off until Jordan creates an account. Events are named in `src/lib/analytics.ts` and never include input values.
+
+## Tooling (phase 1)
+- **Preact 10, not 11.** `@astrojs/preact` 6.0.6 (the latest) declares `preact@^10.6.5` as a peer, so Preact 11 fails `npm install` with a peer conflict. We use the latest Preact 10 and move to 11 when the integration supports it. No `--legacy-peer-deps`.
+- **TypeScript 6.0.** TypeScript 7 is out, but `typescript-eslint` supports `<6.1` and `@astrojs/check` supports `^5 || ^6`. Pinned to `~6.0.3`.
+- **Playwright pinned to 1.56.1.** It is the release whose Chromium build (1194) matches the browser preinstalled in the build container at `/opt/pw-browsers`, so local runs need no download. CI installs the matching Chromium with `npx playwright install --with-deps chromium`. Upgrade Playwright only together with the container's browser.
+- **Trailing slashes: always.** `trailingSlash: 'always'` with `build.format: 'directory'`. Pages build to `folder/index.html`, which is what GitHub Pages serves, and canonical URLs end in `/`. `url()` in `src/lib/url.ts` adds the slash to page paths and leaves file paths (anything with an extension) alone. Note that `astro preview` returns 404 for a path without its trailing slash, where GitHub Pages would redirect.
+- **Base path default applies everywhere.** `BASE_PATH` defaults to `/HouseSums` in dev, build and preview alike, so local URLs match production. Set `BASE_PATH=/` for a custom domain.
+- **Prettier skips Markdown.** Docs are hand-written prose and the brief is the source of truth; reformatting their tables would create churn. Code, config, CSS and Astro files are formatted.
+- **ESLint 10 flat config** with `typescript-eslint` recommended, `eslint-plugin-astro` recommended and `eslint-config-prettier` last. `npm run lint` runs `eslint .` then `prettier --check .`; `npm run format` is the only command that changes files.
+- **Strictest TypeScript.** `tsconfig.json` extends `astro/tsconfigs/strictest` (adds `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` and friends on top of `strict`).
+- **Astro telemetry is turned off in CI** with `ASTRO_TELEMETRY_DISABLED=1`.
+- The Preact renderer's client files (about 23KB raw) are emitted into `dist/_astro/` even while no page uses an island. They count towards the 100KB budget, but no page loads them yet.

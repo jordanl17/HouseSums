@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.astro/
+data/raw/
+test-results/
+playwright-report/
+blob-report/
+coverage/
+package-lock.json
+
+# Markdown docs are hand-written prose; keep them out of formatting churn.
+*.md

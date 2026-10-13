@@ -1,0 +1,45 @@
+---
+/**
+ * Base page shell. Phase 2 restyles this with the brand; the props are the contract.
+ * Pages pass a plain title (e.g. "Sources"); the site name is added here.
+ */
+import '../styles/base.css';
+import { url } from '../lib/url';
+
+interface Props {
+  /** Page title without the site name. Omit on the home page. */
+  title?: string;
+  /** Meta description. */
+  description?: string;
+  /** Exclude from search engines and skip the canonical link (e.g. the 404 page). */
+  noindex?: boolean;
+}
+
+const DEFAULT_DESCRIPTION = 'Plain-English UK home-buying calculators. The maths of moving in.';
+const { title, description = DEFAULT_DESCRIPTION, noindex = false } = Astro.props;
+const fullTitle = title ? `${title} | House Sums` : 'House Sums';
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+---
+
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a href={url()}>House Sums</a>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <p>This is a model, not financial advice.</p>
+    </footer>
+  </body>
+</html>
