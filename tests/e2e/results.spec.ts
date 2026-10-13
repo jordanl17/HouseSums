@@ -222,7 +222,7 @@ test.describe('what moves the answer', () => {
     expect(answers).toEqual(['11 years', '5 years', '3 years', '2 years', '1 year', '1 year']);
     const current = growth.locator('tbody tr[aria-current="true"]');
     await expect(current).toHaveCount(1);
-    await expect(current.locator('th')).toHaveText('3% a year');
+    await expect(current.locator('th')).toHaveText('3.00% a year');
     // Marked by weight and a text marker, not colour alone.
     const marker = await current
       .locator('th')

@@ -7,7 +7,7 @@
  * no exclamation marks, never advice.
  */
 import { breakEvenText, shortPercent, years } from './copy';
-import { formatMoney, formatPercent } from './format';
+import { formatFieldPercent, formatMoney } from './format';
 import type {
   BuyerType,
   Inputs,
@@ -36,11 +36,21 @@ export interface SensitivityTable {
 
 const same = (a: number, b: number) => Math.abs(a - b) < 5e-6;
 
+/** A field's fixed precision (defaults.json `decimals`), for the settings column. */
+export interface PercentPrecision {
+  decimals?: number | undefined;
+}
+
 /**
  * Break-even year at 0-5% house price growth. When the current growth is not one of those, its
- * own row is added in order, so the current setting is always a row of the table.
+ * own row is added in order, so the current setting is always a row of the table. Every row
+ * shows the field's decimals ("0.00% a year" ... "4.19% a year"), as the field does.
  */
-export function growthTable(result: ModelResult, inputs: Inputs): SensitivityTable {
+export function growthTable(
+  result: ModelResult,
+  inputs: Inputs,
+  field: PercentPrecision = {},
+): SensitivityTable {
   const rows = result.sensitivity
     .filter((row): row is SensitivityRow => row.kind === 'growth')
     .map((row) => ({ growth: row.houseGrowth, year: row.breakEvenYear }));
@@ -50,7 +60,7 @@ export function growthTable(result: ModelResult, inputs: Inputs): SensitivityTab
   }
   return {
     rows: rows.map((row) => ({
-      setting: `${shortPercent(row.growth)} a year`,
+      setting: formatFieldPercent(row.growth, field, { perYear: true }),
       answer: breakEvenText(row.year, inputs.years),
     })),
     current: rows.findIndex((row) => same(row.growth, inputs.houseGrowth)),
@@ -62,25 +72,29 @@ export function growthTable(result: ModelResult, inputs: Inputs): SensitivityTab
  * after the fix moves by the same amount). A lower row that the floor at 0% makes equal to the
  * current rate is left out.
  */
-export function rateTable(result: ModelResult, inputs: Inputs): SensitivityTable {
+export function rateTable(
+  result: ModelResult,
+  inputs: Inputs,
+  field: PercentPrecision = {},
+): SensitivityTable {
   const rateRows = result.sensitivity.filter((row) => row.kind === 'rate');
   const lower = rateRows.find((row) => row.value < 0);
   const higher = rateRows.find((row) => row.value > 0);
   const rows: SensitivityTableRow[] = [];
   if (lower && !same(lower.mortgageRate, inputs.mortgageRate)) {
     rows.push({
-      setting: `${formatPercent(lower.mortgageRate)} (${shortPoints(inputs.mortgageRate - lower.mortgageRate)} lower)`,
+      setting: `${formatFieldPercent(lower.mortgageRate, field)} (${shortPoints(inputs.mortgageRate - lower.mortgageRate)} lower)`,
       answer: breakEvenText(lower.breakEvenYear, inputs.years),
     });
   }
   const current = rows.length;
   rows.push({
-    setting: formatPercent(inputs.mortgageRate),
+    setting: formatFieldPercent(inputs.mortgageRate, field),
     answer: breakEvenText(result.breakEvenYear, inputs.years),
   });
   if (higher) {
     rows.push({
-      setting: `${formatPercent(higher.mortgageRate)} (${shortPoints(higher.mortgageRate - inputs.mortgageRate)} higher)`,
+      setting: `${formatFieldPercent(higher.mortgageRate, field)} (${shortPoints(higher.mortgageRate - inputs.mortgageRate)} higher)`,
       answer: breakEvenText(higher.breakEvenYear, inputs.years),
     });
   }

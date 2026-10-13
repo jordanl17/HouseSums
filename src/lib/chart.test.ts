@@ -1,10 +1,15 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { getArea, typicalAnswer } from './areas';
 import {
   areaPath,
+  crosses,
   formatK,
+  LABEL_BOX,
+  labelBox,
   labelPlacement,
   labelSides,
+  lineRange,
   LOW_LABEL_LIMIT,
   niceStep,
   polylinePoints,
@@ -15,6 +20,8 @@ import {
   yearAt,
   yPercent,
   yScale,
+  type LabelSide,
+  type Rect,
 } from './chart';
 
 describe('y axis', () => {
@@ -236,6 +243,117 @@ describe('direct label sides', () => {
           expect(buyOnTop ? sides.buy : sides.rent).toBe('above');
         },
       ),
+    );
+  });
+});
+
+describe('direct labels off the lines (polish)', () => {
+  const SIDES: readonly LabelSide[] = ['above', 'above-right', 'below'];
+  type Sides = { buy: LabelSide; rent: LabelSide };
+
+  /** Placement and lines for a chart, built as Chart.tsx builds them. */
+  function layout(buy: readonly number[], rent: readonly number[], breakEven: number | null) {
+    const scale = yScale([...buy, ...rent]);
+    const fromBottom = (value: number) => 100 - yPercent(value, scale);
+    const placement = labelPlacement(buy, rent, breakEven, scale);
+    const lines = {
+      x: xPercent(placement.year, buy.length - 1),
+      buy: buy.map(fromBottom),
+      rent: rent.map(fromBottom),
+      floor: fromBottom(0),
+    };
+    return { placement, lines, buyY: fromBottom(placement.buy), rentY: fromBottom(placement.rent) };
+  }
+  type Layout = ReturnType<typeof layout>;
+
+  const boxesOf = (sides: Sides, l: Layout) => ({
+    buy: labelBox(sides.buy, l.lines.x, l.buyY, LABEL_BOX.width.buy),
+    rent: labelBox(sides.rent, l.lines.x, l.rentY, LABEL_BOX.width.rent),
+  });
+  const onALine = (sides: Sides, l: Layout) => {
+    const { buy, rent } = boxesOf(sides, l);
+    return [l.lines.buy, l.lines.rent].some((ys) => crosses(ys, buy) || crosses(ys, rent));
+  };
+  /** Clear of both lines, of each other and of the £0 line, inside the plot. */
+  const fits = (sides: Sides, l: Layout) => {
+    const { buy, rent } = boxesOf(sides, l);
+    const inside = (r: Rect) =>
+      r.x0 >= 0 && r.x1 <= 100 && r.y0 >= l.lines.floor + 2 && r.y1 <= 100;
+    const apart = !(buy.x0 < rent.x1 && rent.x0 < buy.x1 && buy.y0 < rent.y1 && rent.y0 < buy.y1);
+    return inside(buy) && inside(rent) && apart && !onALine(sides, l);
+  };
+  const sidesOf = (l: Layout, withLines: boolean) =>
+    labelSides(l.placement.buyOnTop, l.buyY, l.rentY, withLines ? l.lines : undefined);
+
+  it('measures where a line runs through a box', () => {
+    // A line from 0 to 100 across: between 25% and 75% along, it spans 25 to 75.
+    expect(lineRange([0, 50, 100], 25, 75)).toEqual([25, 75]);
+    // A peak inside the range counts.
+    expect(lineRange([0, 80, 0], 10, 90)).toEqual([16, 80]);
+    expect(crosses([0, 50, 100], { x0: 40, x1: 60, y0: 55, y1: 70 })).toBe(true);
+    expect(crosses([0, 50, 100], { x0: 10, x1: 30, y0: 60, y1: 70 })).toBe(false);
+    // Above hangs left of the point; below and above-right hang right of it.
+    expect(labelBox('above', 50, 20, 10)).toEqual({ x0: 38.4, x1: 48.4, y0: 24.5, y1: 32.5 });
+    expect(labelBox('below', 50, 20, 10)).toEqual({ x0: 51.6, x1: 61.6, y0: 7.5, y1: 15.5 });
+    expect(labelBox('above-right', 50, 20, 10).x0).toBe(51.6);
+  });
+
+  it("keep Cardiff's rent label off the buy line where the lines cross", () => {
+    const area = getArea('cardiff');
+    if (!area) throw new Error('Cardiff missing');
+    const { result } = typicalAnswer(area);
+    const buy = result.series.map((point) => point.buyWealth);
+    const rent = result.series.map((point) => point.rentWealth);
+    const l = layout(buy, rent, result.breakEvenYear);
+    expect(onALine(sidesOf(l, true), l)).toBe(false);
+    // The old placement (no axis, no lines): the rent label sat on the buy line.
+    const old = labelPlacement(buy, rent, result.breakEvenYear);
+    const scale = yScale([...buy, ...rent]);
+    const fromBottom = (value: number) => 100 - yPercent(value, scale);
+    const oldLayout = {
+      ...l,
+      placement: old,
+      lines: { ...l.lines, x: xPercent(old.year, buy.length - 1) },
+      buyY: fromBottom(old.buy),
+      rentY: fromBottom(old.rent),
+    };
+    expect(onALine(sidesOf(oldLayout, false), oldLayout)).toBe(true);
+  });
+
+  it('move a label only to a clear place, and leave one on a line only when none is clear', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 3, max: 40 }),
+        fc.integer({ min: -20000, max: 60000 }),
+        fc.integer({ min: 1000, max: 30000 }),
+        fc.double({ min: 0, max: 1, noNaN: true }),
+        fc.integer({ min: 0, max: 80000 }),
+        fc.integer({ min: 0, max: 15000 }),
+        fc.option(fc.integer({ min: 1, max: 40 }), { nil: null }),
+        (years, buyStart, buySlope, curve, rentStart, rentSlope, breakEvenRaw) => {
+          // Buying starts anywhere and climbs, maybe faster each year; renting climbs steadily.
+          const buy = Array.from({ length: years + 1 }, (_, t) =>
+            Math.round(buyStart + buySlope * t * (1 + curve * t * 0.1)),
+          );
+          const rent = Array.from({ length: years + 1 }, (_, t) => rentStart + rentSlope * t);
+          const breakEven = breakEvenRaw === null ? null : Math.min(breakEvenRaw, years);
+          const l = layout(buy, rent, breakEven);
+          expect(l.placement.year).toBeGreaterThan(0);
+          expect(l.placement.year / years).toBeLessThanOrEqual(0.8 + 1e-9);
+          if (breakEven !== null) expect(l.placement.year).not.toBe(breakEven);
+          const preferred = sidesOf(l, false);
+          const sides = sidesOf(l, true);
+          if (sides.buy !== preferred.buy || sides.rent !== preferred.rent) {
+            expect(fits(sides, l)).toBe(true);
+          } else if (onALine(sides, l)) {
+            const all = SIDES.flatMap((buySide) =>
+              SIDES.map((rentSide) => ({ buy: buySide, rent: rentSide })),
+            );
+            expect(all.some((option) => fits(option, l))).toBe(false);
+          }
+        },
+      ),
+      { numRuns: 500 },
     );
   });
 });

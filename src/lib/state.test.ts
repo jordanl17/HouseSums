@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import defaultsJson from '../../data/defaults.json';
 import { parseDefaults } from './schema';
-import { percentShownDecimals } from '../components/calculator/ui/units';
+import { fieldDecimals, formatFieldValue } from '../components/calculator/ui/units';
 import {
   INPUT_PARAMS,
   SELECTION_PARAMS,
@@ -460,11 +460,33 @@ describe('canonicalInput (typed values as the calculator keeps them)', () => {
     );
   });
 
-  it('matches what the field shows', () => {
-    // A local 10-year average shows its two decimals; a step value shows the step's.
-    expect(percentShownDecimals(0.0419, fields.houseGrowth.step)).toBe(2);
-    expect(percentShownDecimals(0.042, fields.houseGrowth.step)).toBe(1);
-    expect(percentShownDecimals(0.04, fields.houseGrowth.step)).toBe(1);
-    expect(percentShownDecimals(0.0433, fields.mortgageRate.step)).toBe(2);
+  it("keeps a percentage at its field's decimals from defaults.json", () => {
+    expect(canonicalInput(0.05251, fields.investmentReturn)).toBe(0.053);
+    expect(canonicalInput(0.01444, fields.agentFeeRate)).toBe(0.0144);
+    expect(canonicalInput(0.02549, fields.inflation)).toBe(0.025);
+  });
+
+  it('matches what the field shows, at one precision whatever the value', () => {
+    // Leeds 4.19, Belfast 5.10 (was "5.1"), Westminster 0.00 (was "0.0"): same decimals.
+    expect(formatFieldValue(0.041901, fields.houseGrowth)).toBe('4.19');
+    expect(formatFieldValue(0.050991, fields.houseGrowth)).toBe('5.10');
+    expect(formatFieldValue(0, fields.houseGrowth)).toBe('0.00');
+    expect(formatFieldValue(0.01, fields.rentGrowth)).toBe('1.00');
+    expect(formatFieldValue(0.014, fields.agentFeeRate)).toBe('1.40');
+    expect(formatFieldValue(0.05, fields.investmentReturn)).toBe('5.0');
+    expect(formatFieldValue(0.0433, fields.mortgageRate)).toBe('4.33');
+    for (const field of Object.values(fields)) {
+      if (field.unit !== 'percent' && field.unit !== 'percentPerYear') continue;
+      fc.assert(
+        fc.property(fc.double({ min: field.min, max: field.max, noNaN: true }), (raw) => {
+          const kept = canonicalInput(raw, field);
+          const shown = formatFieldValue(kept, field);
+          // Every value shows the field's decimals, and what is shown is what is kept.
+          expect(shown.split('.')[1]?.length ?? 0).toBe(fieldDecimals(field));
+          expect(Number(shown.replace(/[^\d.]/g, '')) / 100).toBeCloseTo(Math.abs(kept), 10);
+        }),
+        { numRuns: 200 },
+      );
+    }
   });
 });

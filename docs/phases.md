@@ -9,7 +9,7 @@ Each phase lands as one PR into `main`. The phase team appends its handoff notes
 | 3 | Engine and data pipeline | `phase/3-engine` | Merged |
 | 4 | Calculator UI | `phase/4-calculator` | Merged |
 | 5 | Area, nation and content pages, SEO | `phase/5-pages` | Merged |
-| 6 | Accessibility, performance and end-to-end | `phase/6-hardening` | In review |
+| 6 | Accessibility, performance and end-to-end | `phase/6-hardening` | Done |
 
 ## Handoff notes
 
@@ -205,7 +205,7 @@ Merged (PR #5). The lead laid the foundations below; three teammates (areas, con
 
 #### Contracts for the teammates
 - **Titles and h1s** (asserted by `PAGES` in `tests/e2e/helpers.ts`; keep them):
-  - Area: title `areaTitle(name)` ("Rent or buy in Leeds? See your break-even year | House Sums"), description `areaDescription({ answer: typicalAnswer(area).sentence, price, rent })`, h1 "Rent v buy in Leeds: how long until buying beats renting?".
+  - Area: title `areaTitle(name)` ("Rent or buy in Leeds? Your break-even year | House Sums"; phase 6 holds titles to 65 characters with the suffix, so a long name drops to "Rent or buy in {name}? Break-even year", then "Rent or buy in {name}?"), description `areaDescription({ answer: typicalAnswer(area).sentence, price, rent })`, h1 "Rent v buy in Leeds: how long until buying beats renting?".
   - Nation: title `nationTitle(nation)`, description `nationDescription(nation, count)`, h1 "Rent v buy in Scotland".
   - `/rent-vs-buy/`: title and h1 "Rent v buy by nation".
   - `/how-it-works/` "How it works", `/sources/` "Sources", `/about/` "About House Sums" (h1s unchanged); content sets a unique description on each.
@@ -247,7 +247,7 @@ Decisions: `docs/decisions.md`, "Pages and SEO (phase 5, lead)", "Area and natio
 
 ### Phase 6: accessibility, performance and end-to-end hardening
 
-In review. The lead measured a baseline and set up shared tooling (`docs/decisions.md`, "Phase 6 baseline (lead)" and "Phase 6 ownership (lead)"); three teammates (perf, a11y-ux, docs-acceptance) worked on their own branches and the integrator merged them without textual conflicts. Decisions: "Performance (phase 6, perf)", "Accessibility and UX (phase 6, a11y-ux)", "Docs and acceptance (phase 6, docs-acceptance)" and "Integration (phase 6)". The acceptance checklist with evidence for every box and test case is `docs/acceptance.md`.
+Done (PR #6, merged; live e2e and live Lighthouse green on deploy run 38480497569). The lead measured a baseline and set up shared tooling (`docs/decisions.md`, "Phase 6 baseline (lead)" and "Phase 6 ownership (lead)"); three teammates (perf, a11y-ux, docs-acceptance) worked on their own branches and the integrator merged them without textual conflicts. Decisions: "Performance (phase 6, perf)", "Accessibility and UX (phase 6, a11y-ux)", "Docs and acceptance (phase 6, docs-acceptance)" and "Integration (phase 6)". The acceptance checklist with evidence for every box and test case is `docs/acceptance.md`.
 
 #### What shipped (phase 6)
 - **Island JS** (`npm run budget`): the island needs 43,641 bytes of our code before it hydrates (61,805 before), held to 45KB in CI by `scripts/check-budget.mjs`; total client JS 82,222 of 102,400 bytes (85,816 before). The chart, share row, advanced panel, waiting card and the sections under the card load in a second chunk (`later.ts`, `deferred.tsx`, `Hold`) as soon as the island starts; they stay server-rendered until it arrives. The unused `@preact/signals` chunk is stubbed out, analytics code drops out when it is off, and Preact has its own chunk. The 40KB aim is missed by about 3.6KB (see "Integration (phase 6)").
@@ -274,3 +274,13 @@ In review. The lead measured a baseline and set up shared tooling (`docs/decisio
 - **Headroom**: island 43,641 of 46,080 bytes; area pages about 40KB of 45KB. Both are checked in CI.
 - **Lighthouse** scores: the PR body has the CI table and the live-site run. If runner variance ever fails the performance median, the documented next step is five runs, not a lower bar.
 - **e2e ports**: give each worktree its own `E2E_PORT`; screenshots use `SCREENSHOTS_PORT` (4340) and Lighthouse its own preview.
+
+### Polish after phase 6
+
+Branch `polish/review-nits`, one PR into `main`. Review nits from the phase 6 pass; decisions in `docs/decisions.md`, "Polish after phase 6".
+
+- **Percentages**: each percentage field has a `decimals` in `data/defaults.json` and always shows that many (house price growth, rent increases, mortgage rate, rate after the fix and estate agent fee 2; investment return, maintenance and inflation 1). The same figure reads the same in the field, the sensitivity rows, the "what would flip it" hint, the breakdown, the area summary, the figures table and How it works. Typed values are kept at the field's decimals (`canonicalInput`). Limits and rules ("kept between 0% and 6%", "Floored at 0%", range notes, tax bands) keep their short form.
+- **Price in years of rent** reads "18.0 years".
+- **Fonts**: B612 Mono 700 is preloaded only on area pages and /sources/ (`Base` prop `boldFigures`); `tests/e2e/fonts.spec.ts` checks with document.fonts that nothing preloaded goes unused and CLS stays 0.
+- **Chart labels**: given the axis, `labelPlacement` and `labelSides` keep both direct labels off both lines (Cardiff at 360); at typical assumptions no area's labels touch a line.
+- **Typed before hydration**: a server-rendered number field typed in before the island hydrates keeps what was typed (`NumberField`), tested in `hydration.spec.ts`.

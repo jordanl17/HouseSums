@@ -161,7 +161,7 @@ describe('flipHint (re-runs the model)', () => {
     const hint = flipHint(inputs, breakEven);
     expect(hint.key).toBe('houseGrowth');
     expect(hint.text).toMatch(
-      /^At \d+(\.5)?% house price growth a year, buying would pull ahead after \d+ years?\.$/,
+      /^At \d+\.[05]0% house price growth a year, buying would pull ahead after \d+ years?\.$/,
     );
     const growth = Number(/At ([\d.]+)%/.exec(hint.text)?.[1]) / 100;
     expect(breakEven({ ...inputs, houseGrowth: growth })).toBe(hint.breakEvenYear);
@@ -199,7 +199,7 @@ describe('flipHint (re-runs the model)', () => {
       inputs.rent === 1250 && inputs.mortgageRate < 0.0386 ? 20 : null,
     );
     expect(rateHint.key).toBe('mortgageRate');
-    expect(rateHint.text).toBe('At a 3.8% mortgage rate, buying would pull ahead after 20 years.');
+    expect(rateHint.text).toBe('At a 3.80% mortgage rate, buying would pull ahead after 20 years.');
   });
 
   it('skips the mortgage rate when there is no mortgage, and says so when nothing flips it', () => {
@@ -249,14 +249,15 @@ describe('key numbers', () => {
 describe('sensitivity tables', () => {
   it('growth: 0-5% with the current row marked', () => {
     const inputs = reference();
-    const table = growthTable(run(inputs), inputs);
+    const table = growthTable(run(inputs), inputs, { decimals: 2 });
+    // Every row at the field's decimals, so the column lines up and matches the field.
     expect(table.rows.map((row) => row.setting)).toEqual([
-      '0% a year',
-      '1% a year',
-      '2% a year',
-      '3% a year',
-      '4% a year',
-      '5% a year',
+      '0.00% a year',
+      '1.00% a year',
+      '2.00% a year',
+      '3.00% a year',
+      '4.00% a year',
+      '5.00% a year',
     ]);
     // The brief's break-even years at 0-5% growth.
     expect(table.rows.map((row) => row.answer)).toEqual([
@@ -273,13 +274,29 @@ describe('sensitivity tables', () => {
   it('growth off the grid gets its own row, in order, as the current one', () => {
     const inputs = reference({ houseGrowth: 0.042 });
     const result = run(inputs);
-    const table = growthTable(result, inputs);
+    const table = growthTable(result, inputs, { decimals: 2 });
     expect(table.rows).toHaveLength(7);
     expect(table.current).toBe(5);
     expect(table.rows[5]).toEqual({
-      setting: '4.2% a year',
+      setting: '4.20% a year',
       answer: breakEvenText(result.breakEvenYear, 25),
     });
+  });
+
+  it("follows the field's decimals from defaults.json", () => {
+    const inputs = reference({ houseGrowth: 0.0419 });
+    const result = run(inputs);
+    const growth = growthTable(result, inputs, defaults.fields.houseGrowth);
+    expect(growth.rows[growth.current]?.setting).toBe('4.19% a year');
+    expect(growthTable(result, inputs, { decimals: 1 }).rows[0]?.setting).toBe('0.0% a year');
+    const rate = rateTable(result, inputs, defaults.fields.mortgageRate);
+    expect(rate.rows[rate.current]?.setting).toBe('4.30%');
+    const hint = flipHint(reference({ rent: 700, houseGrowth: 0 }), breakEven, false, {
+      growthMax: 0.06,
+      yearsMax: 40,
+      decimals: { houseGrowth: 1 },
+    });
+    expect(hint.text).toMatch(/^At \d+\.[05]% house price growth a year/);
   });
 
   it('rate: 1 point lower, as entered, 1 point higher', () => {

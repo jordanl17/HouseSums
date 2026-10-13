@@ -103,6 +103,16 @@ The brief's "Acceptance criteria and test cases" (`docs/brief.md`) says v1 is do
 - Baseline, `docs/decisions.md` "Phase 6 baseline (lead)": `npm run lighthouse` (Lighthouse 13.5, median of 3 runs, `astro preview` on `dist/`) scored 100 for performance, accessibility, best practices and SEO on `/` and `/rent-vs-buy/leeds/`, mobile and desktop.
 - CI: the step "Lighthouse" in `.github/workflows/ci.yml` (job "Check, lint, test, build and e2e", after the e2e tests) runs `npm run lighthouse`: `/` and `/rent-vs-buy/leeds/`, mobile and desktop, median of 3 runs on `astro preview`, failing below 95 in performance, accessibility, best practices or SEO, or past the LCP, TBT and CLS limits in `THRESHOLDS` (`scripts/lighthouse.mjs`). Reports: the `lighthouse` artifact and the job summary. The first CI run with the gate (run 38474069676, perf branch) scored 100 in all four categories on both pages and both form factors; the phase 6 pull request carries the scores of its own final CI run.
 - Live site: the deploy workflow's `live` job runs it once against <https://jordanl17.github.io/HouseSums/> with `--report-only` (never fails the deploy; `lighthouse-live` artifact). Before the phase 6 merge the same command ran once from a GitHub runner (run 38476480377, against the phase 5 build then live): 100 in all four categories on both pages, mobile and desktop.
+- Live site after the phase 6 merge: deploy run 38480497569, job "Test the live site", median of 3 runs against <https://jordanl17.github.io/HouseSums/>:
+
+  | Page | Form factor | Performance | Accessibility | Best practices | SEO | TBT | CLS |
+  |---|---|---|---|---|---|---|---|
+  | `/` | Mobile | 100 | 100 | 100 | 100 | 0 ms | 0 |
+  | `/` | Desktop | 100 | 100 | 100 | 100 | 0 ms | 0 |
+  | `/rent-vs-buy/leeds/` | Mobile | 100 | 100 | 100 | 100 | 0 ms | 0 |
+  | `/rent-vs-buy/leeds/` | Desktop | 100 | 100 | 100 | 100 | 0 ms | 0 |
+
+  Mobile LCP was 1,357 ms on `/` and 1,508 ms on `/rent-vs-buy/leeds/` (limit 2,500 ms). Desktop LCP is in that run's `lighthouse-live` artifact.
 - Variance note: one single run of the area page on mobile scored 94 (TBT 241 ms) during the baseline, which is why the gate uses the median of 3 runs and the stable metrics.
 
 ### 11. The data workflow runs green on a manual trigger and opens a pull request with refreshed data
@@ -172,6 +182,7 @@ Reference scenario (brief): England, first-time buyer, £300k price, £30k depos
 | Item | Status | What is needed |
 |---|---|---|
 | Copy rules site-wide: no em-dashes, British English, no advice language, no exclamation marks | Met | `tests/built/pages.test.ts > every page > has no em-dashes in its visible text, title or descriptions`, `> is in British English`; `tests/e2e/pages.spec.ts > page {path} > copy has no em-dashes or exclamation marks`; `tests/e2e/results.spec.ts > answer copy > no advice language, em-dashes or exclamation marks in any result`; `src/lib/copy.test.ts > answerCopy > every case keeps to the house style`. |
+| Font preloads | Met | Every page preloads B612 400 and 700 and B612 Mono 400; B612 Mono 700 only on area pages and /sources/, which show bold figures in the first screen (`docs/decisions.md`, "Polish after phase 6"). `tests/e2e/fonts.spec.ts > {page} preloads only fonts it uses, and does not shift` (document.fonts and layout-shift entries, at 360 and 1280); `tests/built/weight.test.ts > fonts > preloads the woff2 files each page uses, and builds no .woff`. |
 | Under 100KB of JavaScript | Met | `npm run budget` (`scripts/check-budget.mjs`, unit-tested in `scripts/check-budget.test.ts`) in CI and in the deploy: 82,222 of 102,400 bytes after phase 6 (85,816 at the baseline). It also holds the calculator island to 45KB of our own code before hydration: 43,641 bytes after phase 6 (61,805 before). The 40KB aim is missed; see `docs/decisions.md`, "Integration (phase 6)". |
 | No runtime third-party calls | Met | `tests/e2e/pages.spec.ts > page {path} > loads JavaScript only for the calculator, only from our own origin` and `> loads no JavaScript`; `tests/e2e/smoke.spec.ts > home page > loads scripts only from our own origin`; `tests/e2e/calculator.spec.ts > the area list is fetched as JSON from our own origin, not bundled`. |
 | Live site | Met | Public repository, GitHub Pages on, <https://jordanl17.github.io/HouseSums/>; every deploy runs the e2e suite against it (deploy runs 1 to 5 all green). |

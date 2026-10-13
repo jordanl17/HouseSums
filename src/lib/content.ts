@@ -13,7 +13,7 @@
  * sources.json without them.
  */
 import { shortPercent } from './copy';
-import { formatMoney, MINUS } from './format';
+import { formatFieldPercent, formatMoney, MINUS } from './format';
 import { NATION_NAMES } from './nations';
 import type {
   Area,
@@ -140,8 +140,14 @@ export function formulaHtml(expr: string): string {
 // Defaults and presets (data/defaults.json)
 // ---------------------------------------------------------------------------------------------
 
-/** A value in a field's unit: "£999", "£350 a year", "1.4%", "2.5% a year", "30 years". */
-export function formatFieldValue(value: number, spec: Pick<FieldSpec, 'unit'>): string {
+/**
+ * A value in a field's unit: "£999", "£350 a year", "1.40%", "2.5% a year", "30 years".
+ * Percentages show the field's `decimals` from defaults.json, as the calculator does.
+ */
+export function formatFieldValue(
+  value: number,
+  spec: Pick<FieldSpec, 'unit'> & Partial<Pick<FieldSpec, 'decimals'>>,
+): string {
   switch (spec.unit) {
     case 'gbp':
       return formatMoney(value);
@@ -150,9 +156,9 @@ export function formatFieldValue(value: number, spec: Pick<FieldSpec, 'unit'>): 
     case 'gbpPerYear':
       return `${formatMoney(value)} a year`;
     case 'percent':
-      return shortPercent(value);
+      return formatFieldPercent(value, spec);
     case 'percentPerYear':
-      return `${shortPercent(value)} a year`;
+      return formatFieldPercent(value, spec, { perYear: true });
     case 'years':
       return `${value} ${value === 1 ? 'year' : 'years'}`;
   }

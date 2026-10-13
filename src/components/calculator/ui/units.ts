@@ -62,7 +62,7 @@ export function formatFieldValue(value: number, spec: FieldSpec): string {
   switch (spec.unit) {
     case 'percent':
     case 'percentPerYear':
-      return formatPercentValue(value, percentShownDecimals(value, spec.step));
+      return formatPercentValue(value, fieldDecimals(spec));
     case 'years':
       return formatYearsValue(value);
     default:
@@ -70,22 +70,14 @@ export function formatFieldValue(value: number, spec: FieldSpec): string {
   }
 }
 
-/** Most decimal places of a percent a field shows (and keeps when typed, see canonicalInput). */
-const MAX_PERCENT_DECIMALS = 2;
-
 /**
- * Decimal places to show for this value: the step's ("3.0"), or up to two when the value has
- * them ("4.19" for a local 10-year average), so the field never hides the figure the model uses
- * and matches the sensitivity table's "(now)" row.
+ * Decimal places a percentage field always shows, whatever the value: its `decimals` in
+ * data/defaults.json (Belfast's growth reads "5.10", Westminster's "0.00"), so a field never
+ * changes precision as its value changes and reads the same as its figure elsewhere on the page.
+ * A spec without one (the styleguide's examples) falls back to its step's.
  */
-export function percentShownDecimals(value: number, step: number): number {
-  const min = percentDecimals(step);
-  const max = Math.max(min, MAX_PERCENT_DECIMALS);
-  const target = Number((value * 100).toFixed(max));
-  for (let decimals = min; decimals < max; decimals += 1) {
-    if (Number((value * 100).toFixed(decimals)) === target) return decimals;
-  }
-  return max;
+export function fieldDecimals(spec: Pick<FieldSpec, 'step' | 'decimals'>): number {
+  return spec.decimals ?? percentDecimals(spec.step);
 }
 
 /** Human value for aria-valuetext and tooltips: "£245,000", "4.30%", "3.0% a year", "30 years". */

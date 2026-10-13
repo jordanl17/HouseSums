@@ -126,14 +126,15 @@ export function encodeNumber(value: number, field: FieldSpec): string | null {
   }
 }
 
-/** Decimal places of a percent a field shows and keeps when typed: 4.19%, never 4.3333%. */
+/** Decimal places of a percent kept when typed, for a field without its own `decimals`. */
 export const PERCENT_INPUT_DECIMALS = 2;
 
 /**
  * A typed or slid value as the calculator keeps it (phase 4 review): clamped to the field and
- * rounded to what the field can show (2 decimals of a percent, pence, whole years), which is
- * also exact in the URL. So the figures on screen, the model's inputs and a shared link always
- * agree: typing 4.33333 keeps 4.33%, and the link reproduces it exactly.
+ * rounded to what the field shows (a percentage field's `decimals` from defaults.json, pence,
+ * whole years), which is also exact in the URL. So the figures on screen, the model's inputs and
+ * a shared link always agree: typing 4.33333 as a mortgage rate keeps 4.33%, typing 5.25 as an
+ * investment return (1 decimal) keeps 5.3%, and the link reproduces it exactly.
  */
 export function canonicalInput(value: number, field: FieldSpec): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) return value;
@@ -141,7 +142,7 @@ export function canonicalInput(value: number, field: FieldSpec): number {
   let result: number;
   switch (kindOf(field)) {
     case 'percent':
-      result = shift(roundTo(shift(clamped, 2), PERCENT_INPUT_DECIMALS), -2);
+      result = shift(roundTo(shift(clamped, 2), field.decimals ?? PERCENT_INPUT_DECIMALS), -2);
       break;
     case 'years':
       result = roundTo(clamped, 0);

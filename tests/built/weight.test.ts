@@ -7,7 +7,9 @@
  *   tax rules, rates or nation figures.
  * - data/calculator.json holds exactly the validated data files, and every page with the island
  *   asks for it (and preloads it) with the hash of its content in the query.
- * - Every page preloads the woff2 fonts its stylesheet uses, and nothing else of the kind.
+ * - Every page preloads the woff2 fonts every page uses (B612 400 and 700, B612 Mono 400);
+ *   B612 Mono 700 only on area pages and Sources, which show bold figures in the first screen.
+ *   tests/e2e/fonts.spec.ts checks in a browser that no preloaded font goes unused.
  *
  * The static answer staying in the HTML is checked by answers.test.ts.
  */
@@ -130,7 +132,7 @@ describe('data/calculator.json', () => {
 });
 
 describe('fonts', () => {
-  it('preloads the woff2 files the stylesheet uses, on every page, and builds no .woff', () => {
+  it('preloads the woff2 files each page uses, and builds no .woff', () => {
     const css = [...site.files].filter(([rel]) => rel.endsWith('.css'));
     const used = new Set<string>();
     for (const [, text] of css) {
@@ -143,6 +145,12 @@ describe('fonts', () => {
       expect(site.files.has(href.slice(config.base.length)), href).toBe(true);
     }
     expect([...site.files.keys()].filter((rel) => rel.endsWith('.woff'))).toEqual([]);
+    const monoBold = [...used].filter((href) => href.includes('b612-mono-latin-700'));
+    expect(monoBold).toHaveLength(1);
+    const everyPage = new Set([...used].filter((href) => !monoBold.includes(href)));
+    const areaSlugs = new Set(parseAreasFile(areasJson).areas.map((area) => area.slug));
+    const showsBoldFigures = (route: string) =>
+      route === 'sources/' || areaSlugs.has(/^rent-vs-buy\/([^/]+)\/$/.exec(route)?.[1] ?? '');
     for (const page of site.pages) {
       const fonts = tagsOf(page, 'link')
         .filter((link) => link.attrs['rel'] === 'preload' && link.attrs['as'] === 'font')
@@ -151,7 +159,8 @@ describe('fonts', () => {
           expect(link.attrs['crossorigin'], page.route).toBe('anonymous');
           return link.attrs['href'];
         });
-      expect(new Set(fonts), page.route).toEqual(used);
+      const expected = showsBoldFigures(page.route) ? used : everyPage;
+      expect(new Set(fonts), page.route).toEqual(expected);
     }
   });
 });

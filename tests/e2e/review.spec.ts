@@ -61,6 +61,50 @@ for (const slug of ['glasgow-city', 'belfast', 'leeds']) {
   });
 }
 
+// Polish: at 360 Cardiff's "Rent" label sat on the buy line where the lines cross. No direct
+// label may sit on either line (each line sampled along its segments, in page pixels).
+for (const slug of ['cardiff', 'leeds', 'belfast', 'westminster', 'glasgow-city']) {
+  test(`direct labels keep off both lines (${slug})`, async ({ page }) => {
+    await page.goto(`rent-vs-buy/${slug}/`);
+    const chart = page.getByTestId('chart');
+    await expect(page.getByTestId('calculator')).toHaveAttribute('data-hydrated', 'true');
+    await page.evaluate(() => document.fonts.ready);
+    const plot = await chart.locator('.chart__plot').boundingBox();
+    if (!plot) throw new Error('chart missing');
+    const lines: { x: number; y: number }[][] = [];
+    for (const name of ['buy', 'rent']) {
+      const points = (await chart.locator(`.chart__line--${name}`).getAttribute('points')) ?? '';
+      lines.push(
+        points.split(' ').map((pair) => {
+          const [x = 0, y = 0] = pair.split(',').map(Number);
+          return { x: plot.x + (x / 100) * plot.width, y: plot.y + (y / 100) * plot.height };
+        }),
+      );
+    }
+    for (const label of await chart.locator('.chart__series-label').all()) {
+      const box = await label.boundingBox();
+      const text = (await label.textContent())?.trim();
+      if (!box) throw new Error('label missing');
+      for (const line of lines) {
+        for (let i = 1; i < line.length; i += 1) {
+          const a = line[i - 1]!;
+          const b = line[i]!;
+          for (let step = 0; step <= 20; step += 1) {
+            const x = a.x + ((b.x - a.x) * step) / 20;
+            const y = a.y + ((b.y - a.y) * step) / 20;
+            const inside =
+              x > box.x - 1 &&
+              x < box.x + box.width + 1 &&
+              y > box.y - 1 &&
+              y < box.y + box.height + 1;
+            expect(inside, `${text} label sits on a line`).toBe(false);
+          }
+        }
+      }
+    }
+  });
+}
+
 // Review round 2: on a 1 or 2-year horizon the labels used to sit at the last year, at the
 // right edge, and hang off the card (horizontal scroll at 360) or onto the "Year 1" marker.
 for (const query of [
@@ -129,12 +173,17 @@ test("'How this works' gives the area's own data months", async ({ page }) => {
   await expect(small).toContainText(`Private Rents (${rentMonth})`);
 });
 
-test("the '(now)' growth row shows the same figure as the field", async ({ page }) => {
-  await open(page, 'a=leeds');
-  const field = await input(page, 'houseGrowth').inputValue();
-  const current = page.getByTestId('sensitivity-growth').locator('tr[aria-current="true"]');
-  await expect(current).toContainText(`${field.replace(/0$/, '').replace(/\.$/, '')}% a year`);
-});
+// Polish: one precision per field, so the row reads exactly as the field (Belfast "5.10", not
+// "5.1"; Westminster "0.00").
+for (const slug of ['leeds', 'belfast', 'westminster']) {
+  test(`the '(now)' growth row shows the same figure as the field (${slug})`, async ({ page }) => {
+    await open(page, `a=${slug}`);
+    const field = await input(page, 'houseGrowth').inputValue();
+    expect(field).toMatch(/^\d+\.\d{2}$/);
+    const current = page.getByTestId('sensitivity-growth').locator('tr[aria-current="true"]');
+    await expect(current).toContainText(`${field}% a year`);
+  });
+}
 
 test('the home page HTML holds no made-up answer or figures in the card', async ({ request }) => {
   const html = await (await request.get('./')).text();

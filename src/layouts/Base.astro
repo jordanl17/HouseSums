@@ -7,9 +7,11 @@
  * (latin subset only, font-display swap) and the narrow mono punctuation (fonts.css), tokens,
  * base, UI primitives, page shell.
  *
- * Phase 6 (perf): the four woff2 files are preloaded, so they download with the stylesheet
- * rather than after it (no late swap, no shift); `preloads` lets a page add its own (the
- * calculator's data file).
+ * Phase 6 (perf): the woff2 files are preloaded, so they download with the stylesheet rather
+ * than after it (no late swap, no shift); `preloads` lets a page add its own (the calculator's
+ * data file). Polish: every page preloads B612 400 and 700 and B612 Mono 400, which every page
+ * uses; B612 Mono 700 (bold figures) only on pages that show it in the first screen
+ * (`boldFigures`), so no page downloads a preloaded font it never uses.
  */
 import '../styles/fonts.css';
 import '../styles/tokens.css';
@@ -63,6 +65,11 @@ interface Props {
    * the calculator pass calculatorPreloads() from src/lib/calculator-data.ts).
    */
   preloads?: readonly Preload[] | undefined;
+  /**
+   * Optional. Also preload B612 Mono 700, for pages that show bold figures in the first screen:
+   * the answer numeral on area pages, the refresh date on Sources. Default false.
+   */
+  boldFigures?: boolean;
 }
 
 const {
@@ -73,10 +80,14 @@ const {
   ogImageAlt: imageAlt = ogImageAlt(),
   jsonLd,
   preloads = [],
+  boldFigures = false,
 } = Astro.props;
-const fontPreloads: readonly Preload[] = [b612Regular, b612Bold, b612MonoRegular, b612MonoBold].map(
-  (href) => ({ href, as: 'font', type: 'font/woff2' }),
-);
+const fontPreloads: readonly Preload[] = [
+  b612Regular,
+  b612Bold,
+  b612MonoRegular,
+  ...(boldFigures ? [b612MonoBold] : []),
+].map((href) => ({ href, as: 'font', type: 'font/woff2' }));
 // Fetches and fonts are requested in CORS mode, so their preloads need crossorigin to be used.
 const needsCors = (as: Preload['as']) => as === 'font' || as === 'fetch';
 const fullTitle = buildTitle(title);

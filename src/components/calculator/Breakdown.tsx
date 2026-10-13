@@ -13,7 +13,7 @@
  */
 import { years } from '../../lib/copy';
 import { taxName, taxNote } from '../../lib/copy-details';
-import { formatMoney, formatPercent } from '../../lib/format';
+import { formatFieldPercent, formatMoney } from '../../lib/format';
 import { Disclosure } from './ui';
 import { DataTable } from './ui/DataTable';
 import type { CalcProps } from './types';
@@ -72,8 +72,8 @@ export default function Breakdown({ calc }: CalcProps) {
         <>
           {fields.agentFeeRate.label}
           <span class="breakdown__note">
-            {formatPercent(inputs.agentFeeRate)} of {formatMoney(selling.value)}, the home's value
-            then
+            {formatFieldPercent(inputs.agentFeeRate, fields.agentFeeRate)} of{' '}
+            {formatMoney(selling.value)}, the home's value then
           </span>
         </>
       ),

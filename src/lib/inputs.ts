@@ -322,7 +322,11 @@ export function provenanceTag(provenance: Provenance): {
  * also the real figure and the bound: "... Jul 2026. The actual figure is −2.15% a year; the
  * calculator floors it at 0%." `month` is already formatted ("Jul 2026") or empty.
  */
-export function provenanceInfo(provenance: Provenance, month: string): string {
+export function provenanceInfo(
+  provenance: Provenance,
+  month: string,
+  field: Pick<FieldSpec, 'decimals'> = {},
+): string {
   const where = month ? `${provenance.source}, ${month}` : provenance.source;
-  return provenance.held ? `${where}. ${heldNote(provenance.held)}` : where;
+  return provenance.held ? `${where}. ${heldNote(provenance.held, field)}` : where;
 }

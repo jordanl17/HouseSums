@@ -45,6 +45,7 @@ const leeds: SummaryInput = {
   },
   used: { houseGrowth: 0.0419, rentGrowth: 0.0423 },
   clamps,
+  decimals: { houseGrowth: 2, rentGrowth: 2 },
 };
 
 /** Every sentence must follow the brief's voice. */
@@ -90,7 +91,7 @@ describe('formatters', () => {
   });
 
   it('gives price as years of rent', () => {
-    expect(priceToRentYears(247695, 1145)).toBe('18.0');
+    expect(priceToRentYears(247695, 1145)).toBe('18.0 years');
     expect(priceToRentYears(100, 0)).toBe('');
   });
 
@@ -108,7 +109,7 @@ describe('figure rows', () => {
       ['Price growth a year, 10-year average', 'to Jul 2026', '4.19%', '3.02%'],
       ['Average monthly rent', 'Aug 2026', '£1,145', '£1,459'],
       ['Rent change over the year', 'to Aug 2026', '+4.23%', '+4.00%'],
-      ['Price in years of rent', null, '18.0', '16.8'],
+      ['Price in years of rent', null, '18.0 years', '16.8 years'],
     ]);
     expect(rows.every((row) => !row.area.fallback && !row.nation.fallback)).toBe(true);
   });
@@ -184,7 +185,7 @@ describe('notes', () => {
       used: { ...leeds.used, houseGrowth: 0.06 },
     });
     expect(notes[0]).toBe(
-      'Average prices in Leeds grew by 6.78% a year over the 10 years to July 2026. The calculator caps house price growth at 6% a year, so its answer uses 6%.',
+      'Average prices in Leeds grew by 6.78% a year over the 10 years to July 2026. The calculator caps house price growth at 6% a year, so its answer uses 6.00%.',
     );
   });
 
@@ -195,7 +196,7 @@ describe('notes', () => {
       used: { ...leeds.used, rentGrowth: 0.01 },
     });
     expect(fell).toEqual([
-      'Rents fell by 0.52% in the year to August 2026. The calculator assumes rent rises by at least 1% a year, so its answer uses 1%.',
+      'Rents fell by 0.52% in the year to August 2026. The calculator assumes rent rises by at least 1% a year, so its answer uses 1.00%.',
     ]);
     const low = summaryNotes({
       ...leeds,
@@ -209,7 +210,7 @@ describe('notes', () => {
       used: { ...leeds.used, rentGrowth: 0.06 },
     });
     expect(high[0]).toBe(
-      'Rents rose by 13.35% in the year to August 2026. The calculator caps rent increases at 6% a year, so its answer uses 6%.',
+      'Rents rose by 13.35% in the year to August 2026. The calculator caps rent increases at 6% a year, so its answer uses 6.00%.',
     );
   });
 
@@ -292,12 +293,25 @@ describe('assumptions sentence', () => {
     rentGrowth: 0.0423,
     investmentReturn: 0.05,
     years: 25,
+    decimals: { mortgageRate: 2, houseGrowth: 2, rentGrowth: 2, investmentReturn: 1 },
   };
 
   it('spells out what typical means', () => {
     expect(assumptionsSentence(base)).toBe(
-      'That is a first-time buyer with a 10% deposit of £24,770 and a 5-year fix at 5.17% (Bank of England, September 2026), with prices growing 4.19% a year, rent rising 4.23% a year and savings earning 5% a year, over 25 years.',
+      'That is a first-time buyer with a 10% deposit of £24,770 and a 5-year fix at 5.17% (Bank of England, September 2026), with prices growing 4.19% a year, rent rising 4.23% a year and savings earning 5.0% a year, over 25 years.',
     );
+  });
+
+  it("shows each figure at its field's decimals, whatever the value", () => {
+    // Belfast: 5.1% growth reads "5.10%", as the calculator's field and the figures table show it.
+    const text = assumptionsSentence({ ...base, houseGrowth: 0.050991, rentGrowth: 0.01 });
+    expect(text).toContain('prices growing 5.10% a year, rent rising 1.00% a year');
+    const rows = figureRows({
+      ...leeds,
+      figures: { ...leeds.figures, growth10y: 0.050991, rentGrowth: 0.03 },
+    });
+    expect(rows.find((row) => row.key === 'growth10y')?.area.text).toBe('5.10%');
+    expect(rows.find((row) => row.key === 'rentGrowth')?.area.text).toBe('+3.00%');
   });
 
   it('covers steady prices and a cash purchase', () => {
@@ -321,10 +335,11 @@ describe('typical definition', () => {
         depositFraction: 0.1,
         fixYears: 5,
         investmentReturn: 0.05,
+        investmentReturnDecimals: 1,
         years: 25,
       }),
     ).toBe(
-      "Typical assumptions: a first-time buyer with a 10% deposit and a 5-year fix at the Bank of England's quoted rate for that loan-to-value, each area's own price growth and rent change within the calculator's limits, and savings earning 5% a year, over 25 years.",
+      "Typical assumptions: a first-time buyer with a 10% deposit and a 5-year fix at the Bank of England's quoted rate for that loan-to-value, each area's own price growth and rent change within the calculator's limits, and savings earning 5.0% a year, over 25 years.",
     );
   });
 });

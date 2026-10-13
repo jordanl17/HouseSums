@@ -114,7 +114,7 @@ export function FieldInput({ calc, name, reserve = false }: FieldInputProps) {
   ) : (
     <Tag
       variant={tag.variant}
-      info={provenanceInfo(provenance, formatMonth(provenance.month))}
+      info={provenanceInfo(provenance, formatMonth(provenance.month), spec)}
       about={label}
       id={`${id}-source`}
       testId={`tag-${name}`}

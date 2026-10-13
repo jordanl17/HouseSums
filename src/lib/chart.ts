@@ -172,6 +172,9 @@ export interface LabelPlacement {
 /** Furthest along (fraction of the horizon) a label may sit: a label hanging right of its point
  * then still ends inside the plot at 360px. */
 const LABEL_MAX_AT = 0.7;
+/** Furthest along a label may sit when its box is checked against the plot (labelPlacement
+ * given the axis): only tried when no place up to LABEL_MAX_AT keeps the labels off the lines. */
+const LABEL_FAR_AT = 0.8;
 /** Where labels prefer to sit, and the wider range tried when the break-even year is in the way. */
 const LABEL_PREFERRED_FROM = 0.55;
 const LABEL_WIDE_FROM = 0.25;
@@ -185,14 +188,14 @@ function valueAt(values: readonly number[], at: number): number {
   return a + (b - a) * (at - low);
 }
 
-/** Label positions between `from` and LABEL_MAX_AT of the horizon: whole years, or half years
- * on a 1 or 2-year horizon (which has no whole year inside that range). */
-function labelCandidates(years: number, from: number): number[] {
+/** Label positions between `from` and `to` (LABEL_MAX_AT) of the horizon: whole years, or half
+ * years on a 1 or 2-year horizon (which has no whole year inside that range). */
+function labelCandidates(years: number, from: number, to = LABEL_MAX_AT): number[] {
   const step = years <= 2 ? 0.5 : 1;
   const out: number[] = [];
   for (
     let at = Math.ceil((years * from) / step - 1e-9) * step;
-    at <= years * LABEL_MAX_AT + 1e-9;
+    at <= years * to + 1e-9;
     at += step
   ) {
     if (at > 0) out.push(at);
@@ -211,6 +214,7 @@ export function labelPlacement(
   buy: readonly number[],
   rent: readonly number[],
   breakEvenYear: number | null,
+  scale?: YScale,
 ): LabelPlacement {
   const years = Math.min(buy.length, rent.length) - 1;
   const at = (year: number): LabelPlacement => {
@@ -223,19 +227,31 @@ export function labelPlacement(
   const clearance = Math.max(step, years / 10);
   const clear = (year: number) =>
     breakEvenYear === null || Math.abs(year - breakEvenYear) >= clearance;
-  for (const from of [LABEL_PREFERRED_FROM, LABEL_WIDE_FROM]) {
-    let best: number | null = null;
-    let bestGap = -1;
-    for (const year of labelCandidates(years, from)) {
-      if (!clear(year)) continue;
-      const gap = Math.abs(valueAt(buy, year) - valueAt(rent, year));
-      if (gap > bestGap) {
-        bestGap = gap;
-        best = year;
-      }
+  /** Places in a range clear of the marker, lines furthest apart first (earlier on a tie). */
+  const ranked = (from: number, to?: number) =>
+    labelCandidates(years, from, to)
+      .filter(clear)
+      .map((year) => ({ year, gap: Math.abs(valueAt(buy, year) - valueAt(rent, year)) }))
+      .sort((x, y) => y.gap - x.gap)
+      .map((candidate) => candidate.year);
+  const preferred = ranked(LABEL_PREFERRED_FROM);
+  const wide = ranked(LABEL_WIDE_FROM);
+  if (scale) {
+    // Given the axis, the first of those places (preferred range, then the wider one, then up
+    // to LABEL_FAR_AT) where labelSides can keep both labels off both lines.
+    const fromBottom = (value: number) => 100 - yPercent(value, scale);
+    const lines = { buy: buy.map(fromBottom), rent: rent.map(fromBottom), floor: fromBottom(0) };
+    const far = ranked(LABEL_WIDE_FROM, LABEL_FAR_AT).filter((year) => !wide.includes(year));
+    for (const year of [...preferred, ...wide, ...far]) {
+      const placement = at(year);
+      const buyY = fromBottom(placement.buy);
+      const rentY = fromBottom(placement.rent);
+      const sides = defaultSides(placement.buyOnTop, buyY, rentY);
+      if (clearSides(sides, buyY, rentY, { ...lines, x: xPercent(year, years) })) return placement;
     }
-    if (best !== null) return at(best);
   }
+  const best = preferred[0] ?? wide[0];
+  if (best !== undefined) return at(best);
   // Unreachable in practice (the wide range always has a place clear of one year); stay inside.
   return at(Math.max(step, Math.floor((years * LABEL_MAX_AT) / step) * step));
 }
@@ -258,18 +274,120 @@ export const LOW_LABEL_LIMIT = 18;
 export const LABEL_STACK_GAP = 16;
 
 /**
+ * A direct label's box at the narrowest plot (360px wide page: a 248px by 176-192px plot), in %
+ * of the plot: x from the left, y from the bottom, as the CSS places it (chart.css and
+ * results.css). Widths include the key line. Wider plots make the real box smaller in %, so a
+ * side that is clear here is clear at every width.
+ */
+export const LABEL_BOX = {
+  width: { buy: 18, rent: 22 },
+  height: 8,
+  /** margin-bottom / translate of var(--space-2) above or below the line. */
+  gapY: 4.5,
+  /** var(--space-1) beside the point. */
+  gapX: 1.6,
+} as const;
+
+/** Space kept between a label and a line, in % of the plot height (the lines are 3px). */
+const LINE_CLEARANCE = 1;
+/** Space kept between a label hanging below its line and the £0 line, in % of the plot height. */
+const BASELINE_CLEARANCE = 2;
+
+export interface Rect {
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+}
+
+/** The box a label takes on `side` of the point (x, y), both in % (y from the bottom). */
+export function labelBox(side: LabelSide, x: number, y: number, width: number): Rect {
+  const { height, gapX, gapY } = LABEL_BOX;
+  switch (side) {
+    case 'above':
+      return { x0: x - gapX - width, x1: x - gapX, y0: y + gapY, y1: y + gapY + height };
+    case 'above-right':
+      return { x0: x + gapX, x1: x + gapX + width, y0: y + gapY, y1: y + gapY + height };
+    case 'below':
+      return { x0: x + gapX, x1: x + gapX + width, y0: y - gapY - height, y1: y - gapY };
+  }
+}
+
+/**
+ * Lowest and highest point of a line (one y per year, % from the bottom, years spread evenly
+ * over 0-100% across) between x0 and x1. The line is continuous, so it passes through every
+ * height in between: it crosses a box spanning x0-x1 exactly when this range meets the box's.
+ */
+export function lineRange(ys: readonly number[], x0: number, x1: number): [number, number] {
+  const years = ys.length - 1;
+  const at = (x: number): number => {
+    if (years <= 0) return ys[0] ?? 0;
+    const position = (Math.min(100, Math.max(0, x)) / 100) * years;
+    return valueAt(ys, position);
+  };
+  let low = Math.min(at(x0), at(x1));
+  let high = Math.max(at(x0), at(x1));
+  for (let year = 0; year <= years; year += 1) {
+    const x = years > 0 ? (year / years) * 100 : 0;
+    if (x <= x0 || x >= x1) continue;
+    const y = ys[year] ?? 0;
+    low = Math.min(low, y);
+    high = Math.max(high, y);
+  }
+  return [low, high];
+}
+
+/** True when the line passes through the box (with a little clearance). */
+export function crosses(ys: readonly number[], box: Rect): boolean {
+  const [low, high] = lineRange(ys, box.x0, box.x1);
+  return low <= box.y1 + LINE_CLEARANCE && high >= box.y0 - LINE_CLEARANCE;
+}
+
+const overlap = (a: Rect, b: Rect) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+
+/** Both lines in plot %, and where the labels sit, for labelSides to keep labels off them. */
+export interface LabelLines {
+  /** The placement year's position, % from the left. */
+  x: number;
+  /** One value per year, % of the plot height from the bottom. */
+  buy: readonly number[];
+  rent: readonly number[];
+  /** The £0 line, % of the plot height from the bottom (0 unless the axis dips below £0). */
+  floor: number;
+}
+
+const SIDES: readonly LabelSide[] = ['above', 'above-right', 'below'];
+
+/**
  * Sides for the "Buy" and "Rent" labels at the placement year. The upper line's label goes
  * above it. The lower line's goes below it, unless that line is too close to the bottom of the
  * plot (rent staying near £0 while buying pulls ahead): then it goes above its line, left of the
  * point when the upper label is far enough above, else right of the point, so it never covers
  * the axis and never sits on the other label.
  * `buyY` and `rentY` are % of the plot height from the bottom.
+ *
+ * Given the lines (polish), the sides are also kept off both lines: when a label would sit on
+ * a line (Cardiff at 360px: the rent label, above its line and left of the point, sat on the buy
+ * line where the lines cross), the nearest arrangement that keeps both labels off both lines,
+ * off each other, inside the plot and clear of the £0 line is used instead (measured boxes, so a
+ * label may hang below a line under LOW_LABEL_LIMIT when it really fits). If there is none, the
+ * sides above stand.
  */
 export function labelSides(
   buyOnTop: boolean,
   buyY: number,
   rentY: number,
+  lines?: LabelLines,
 ): { buy: LabelSide; rent: LabelSide } {
+  const sides = defaultSides(buyOnTop, buyY, rentY);
+  if (!lines) return sides;
+  return clearSides(sides, buyY, rentY, lines) ?? sides;
+}
+
+type Sides = { buy: LabelSide; rent: LabelSide };
+
+/** The sides before the lines are considered (see labelSides). */
+function defaultSides(buyOnTop: boolean, buyY: number, rentY: number): Sides {
   const lowerY = buyOnTop ? rentY : buyY;
   const upperY = buyOnTop ? buyY : rentY;
   let lower: LabelSide = 'below';
@@ -279,4 +397,37 @@ export function labelSides(
     lower = upperY - lowerY >= LABEL_STACK_GAP ? 'above' : 'above-right';
   }
   return buyOnTop ? { buy: 'above', rent: lower } : { buy: lower, rent: 'above' };
+}
+
+/**
+ * The arrangement nearest `preferred` (fewest labels moved, then in SIDES order) that keeps both
+ * labels off both lines, off each other, inside the plot and clear of the £0 line, or null when
+ * there is none.
+ */
+function clearSides(
+  preferred: Sides,
+  buyY: number,
+  rentY: number,
+  lines: LabelLines,
+): Sides | null {
+  const fits = ({ buy, rent }: Sides): boolean => {
+    const buyBox = labelBox(buy, lines.x, buyY, LABEL_BOX.width.buy);
+    const rentBox = labelBox(rent, lines.x, rentY, LABEL_BOX.width.rent);
+    // Inside the plot, and clear of the £0 line (the boxes are measured, so this replaces the
+    // LOW_LABEL_LIMIT rule of thumb).
+    const inside = (box: Rect) =>
+      box.x0 >= 0 && box.x1 <= 100 && box.y0 >= lines.floor + BASELINE_CLEARANCE && box.y1 <= 100;
+    return (
+      inside(buyBox) &&
+      inside(rentBox) &&
+      !overlap(buyBox, rentBox) &&
+      ![lines.buy, lines.rent].some((ys) => crosses(ys, buyBox) || crosses(ys, rentBox))
+    );
+  };
+  const changes = (option: Sides) =>
+    Number(option.buy !== preferred.buy) + Number(option.rent !== preferred.rent);
+  const options = SIDES.flatMap((buy) => SIDES.map((rent) => ({ buy, rent }))).sort(
+    (x, y) => changes(x) - changes(y),
+  );
+  return options.find(fits) ?? null;
 }

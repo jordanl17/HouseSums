@@ -101,6 +101,7 @@ const jsonLd =
   ogImageAlt={ogImageAlt(nation)}
   jsonLd={jsonLd}
   preloads={page.kind === 'area' ? calculatorPreloads() : undefined}
+  boldFigures={page.kind === 'area'}
 >
   {page.kind === 'area' ? (
     <>
