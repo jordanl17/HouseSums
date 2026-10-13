@@ -1,0 +1,287 @@
+{
+  "schemaVersion": 1,
+  "description": "Which Broad Rental Market Area (BRMA) supplies the rent figures for each council area in Scotland and local government district in Northern Ireland. ONS publishes private rents for these two nations by BRMA, not by local authority.",
+  "method": "Each council takes the BRMA that ONS names as its best match on its 'Housing prices in your area' page: the BRMA containing the largest share of the council's postcodes (ONS ignores overlaps under 1% of postcodes). In Scotland ONS assigns each council area to exactly one BRMA. In Northern Ireland BRMAs are built from postcode districts and several councils overlap more than one; the other overlapping BRMAs are listed under overlaps. The brief asks for the BRMA covering most of the population; the share of postcodes is the closest published measure, and no BRMA population split is published.",
+  "source": {
+    "title": "ONS, Housing prices in your area (local authority pages, rents section)",
+    "url": "https://www.ons.gov.uk/visualisations/housingpriceslocal/",
+    "checked": "2026-10-13"
+  },
+  "areas": [
+    {
+      "code": "N09000001",
+      "name": "Antrim and Newtownabbey",
+      "rentArea": "Lough Neagh Upper",
+      "rentAreaCode": null
+    },
+    {
+      "code": "N09000002",
+      "name": "Armagh City, Banbridge and Craigavon",
+      "rentArea": "Lough Neagh Lower",
+      "rentAreaCode": null,
+      "overlaps": ["Lough Neagh Lower", "South Northern Ireland"]
+    },
+    {
+      "code": "N09000003",
+      "name": "Belfast",
+      "rentArea": "Belfast",
+      "rentAreaCode": null,
+      "overlaps": ["Belfast", "South East Northern Ireland", "Lough Neagh Upper"]
+    },
+    {
+      "code": "N09000004",
+      "name": "Causeway Coast and Glens",
+      "rentArea": "North Northern Ireland",
+      "rentAreaCode": null,
+      "overlaps": ["North Northern Ireland", "North West Northern Ireland", "Lough Neagh Upper"]
+    },
+    {
+      "code": "N09000005",
+      "name": "Derry City and Strabane",
+      "rentArea": "North West Northern Ireland",
+      "rentAreaCode": null,
+      "overlaps": ["North West Northern Ireland", "South West Northern Ireland"]
+    },
+    {
+      "code": "N09000006",
+      "name": "Fermanagh and Omagh",
+      "rentArea": "South West Northern Ireland",
+      "rentAreaCode": null
+    },
+    {
+      "code": "N09000007",
+      "name": "Lisburn and Castlereagh",
+      "rentArea": "South East Northern Ireland",
+      "rentAreaCode": null,
+      "overlaps": [
+        "South East Northern Ireland",
+        "Belfast",
+        "Lough Neagh Lower",
+        "Lough Neagh Upper"
+      ]
+    },
+    {
+      "code": "N09000008",
+      "name": "Mid and East Antrim",
+      "rentArea": "Lough Neagh Upper",
+      "rentAreaCode": null
+    },
+    {
+      "code": "N09000009",
+      "name": "Mid Ulster",
+      "rentArea": "Lough Neagh Upper",
+      "rentAreaCode": null,
+      "overlaps": [
+        "Lough Neagh Upper",
+        "Lough Neagh Lower",
+        "South West Northern Ireland",
+        "South Northern Ireland"
+      ]
+    },
+    {
+      "code": "N09000010",
+      "name": "Newry, Mourne and Down",
+      "rentArea": "South Northern Ireland",
+      "rentAreaCode": null,
+      "overlaps": ["South Northern Ireland", "South East Northern Ireland"]
+    },
+    {
+      "code": "N09000011",
+      "name": "Ards and North Down",
+      "rentArea": "South East Northern Ireland",
+      "rentAreaCode": null
+    },
+    {
+      "code": "S12000005",
+      "name": "Clackmannanshire",
+      "rentArea": "Forth Valley",
+      "rentAreaCode": "S33000008"
+    },
+    {
+      "code": "S12000006",
+      "name": "Dumfries and Galloway",
+      "rentArea": "Dumfries and Galloway",
+      "rentAreaCode": "S33000004"
+    },
+    {
+      "code": "S12000008",
+      "name": "East Ayrshire",
+      "rentArea": "Ayrshires",
+      "rentAreaCode": "S33000003"
+    },
+    {
+      "code": "S12000010",
+      "name": "East Lothian",
+      "rentArea": "Lothian",
+      "rentAreaCode": "S33000011"
+    },
+    {
+      "code": "S12000011",
+      "name": "East Renfrewshire",
+      "rentArea": "Greater Glasgow",
+      "rentAreaCode": "S33000009"
+    },
+    {
+      "code": "S12000013",
+      "name": "Na h-Eileanan Siar",
+      "rentArea": "Highland and Islands",
+      "rentAreaCode": "S33000010"
+    },
+    {
+      "code": "S12000014",
+      "name": "Falkirk",
+      "rentArea": "Forth Valley",
+      "rentAreaCode": "S33000008"
+    },
+    {
+      "code": "S12000017",
+      "name": "Highland",
+      "rentArea": "Highland and Islands",
+      "rentAreaCode": "S33000010"
+    },
+    {
+      "code": "S12000018",
+      "name": "Inverclyde",
+      "rentArea": "Renfrewshire/Inverclyde",
+      "rentAreaCode": "S33000014"
+    },
+    {
+      "code": "S12000019",
+      "name": "Midlothian",
+      "rentArea": "Lothian",
+      "rentAreaCode": "S33000011"
+    },
+    {
+      "code": "S12000020",
+      "name": "Moray",
+      "rentArea": "Highland and Islands",
+      "rentAreaCode": "S33000010"
+    },
+    {
+      "code": "S12000021",
+      "name": "North Ayrshire",
+      "rentArea": "Ayrshires",
+      "rentAreaCode": "S33000003"
+    },
+    {
+      "code": "S12000023",
+      "name": "Orkney Islands",
+      "rentArea": "Highland and Islands",
+      "rentAreaCode": "S33000010"
+    },
+    {
+      "code": "S12000026",
+      "name": "Scottish Borders",
+      "rentArea": "Scottish Borders",
+      "rentAreaCode": "S33000015"
+    },
+    {
+      "code": "S12000027",
+      "name": "Shetland Islands",
+      "rentArea": "Highland and Islands",
+      "rentAreaCode": "S33000010"
+    },
+    {
+      "code": "S12000028",
+      "name": "South Ayrshire",
+      "rentArea": "Ayrshires",
+      "rentAreaCode": "S33000003"
+    },
+    {
+      "code": "S12000029",
+      "name": "South Lanarkshire",
+      "rentArea": "South Lanarkshire",
+      "rentAreaCode": "S33000016"
+    },
+    {
+      "code": "S12000030",
+      "name": "Stirling",
+      "rentArea": "Forth Valley",
+      "rentAreaCode": "S33000008"
+    },
+    {
+      "code": "S12000033",
+      "name": "Aberdeen City",
+      "rentArea": "Aberdeen and Shire",
+      "rentAreaCode": "S33000001"
+    },
+    {
+      "code": "S12000034",
+      "name": "Aberdeenshire",
+      "rentArea": "Aberdeen and Shire",
+      "rentAreaCode": "S33000001"
+    },
+    {
+      "code": "S12000035",
+      "name": "Argyll and Bute",
+      "rentArea": "Argyll and Bute",
+      "rentAreaCode": "S33000002"
+    },
+    {
+      "code": "S12000036",
+      "name": "City of Edinburgh",
+      "rentArea": "Lothian",
+      "rentAreaCode": "S33000011"
+    },
+    {
+      "code": "S12000038",
+      "name": "Renfrewshire",
+      "rentArea": "Renfrewshire/Inverclyde",
+      "rentAreaCode": "S33000014"
+    },
+    {
+      "code": "S12000039",
+      "name": "West Dunbartonshire",
+      "rentArea": "West Dunbartonshire",
+      "rentAreaCode": "S33000017"
+    },
+    {
+      "code": "S12000040",
+      "name": "West Lothian",
+      "rentArea": "West Lothian",
+      "rentAreaCode": "S33000018"
+    },
+    {
+      "code": "S12000041",
+      "name": "Angus",
+      "rentArea": "Dundee and Angus",
+      "rentAreaCode": "S33000005"
+    },
+    {
+      "code": "S12000042",
+      "name": "Dundee City",
+      "rentArea": "Dundee and Angus",
+      "rentAreaCode": "S33000005"
+    },
+    {
+      "code": "S12000045",
+      "name": "East Dunbartonshire",
+      "rentArea": "East Dunbartonshire",
+      "rentAreaCode": "S33000006"
+    },
+    {
+      "code": "S12000047",
+      "name": "Fife",
+      "rentArea": "Fife",
+      "rentAreaCode": "S33000007"
+    },
+    {
+      "code": "S12000048",
+      "name": "Perth and Kinross",
+      "rentArea": "Perth and Kinross",
+      "rentAreaCode": "S33000013"
+    },
+    {
+      "code": "S12000049",
+      "name": "Glasgow City",
+      "rentArea": "Greater Glasgow",
+      "rentAreaCode": "S33000009"
+    },
+    {
+      "code": "S12000050",
+      "name": "North Lanarkshire",
+      "rentArea": "North Lanarkshire",
+      "rentAreaCode": "S33000012"
+    }
+  ]
+}

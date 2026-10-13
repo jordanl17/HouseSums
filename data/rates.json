@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-13T15:23:47Z",
+  "asOf": "2026-09",
+  "source": "Bank of England, quoted household interest rates",
+  "rates": [
+    {
+      "fixYears": 2,
+      "ltv": 0.6,
+      "rate": 0.0501,
+      "series": "IUMZICQ"
+    },
+    {
+      "fixYears": 2,
+      "ltv": 0.75,
+      "rate": 0.0513,
+      "series": "IUMBV34"
+    },
+    {
+      "fixYears": 2,
+      "ltv": 0.85,
+      "rate": 0.0526,
+      "series": "IUMZICR"
+    },
+    {
+      "fixYears": 2,
+      "ltv": 0.9,
+      "rate": 0.0537,
+      "series": "IUMB482"
+    },
+    {
+      "fixYears": 2,
+      "ltv": 0.95,
+      "rate": 0.057,
+      "series": "IUM2WTL"
+    },
+    {
+      "fixYears": 5,
+      "ltv": 0.6,
+      "rate": 0.0484,
+      "series": "IUMZO27"
+    },
+    {
+      "fixYears": 5,
+      "ltv": 0.75,
+      "rate": 0.0498,
+      "series": "IUMBV42"
+    },
+    {
+      "fixYears": 5,
+      "ltv": 0.9,
+      "rate": 0.0517,
+      "series": "IUMZO28"
+    },
+    {
+      "fixYears": 5,
+      "ltv": 0.95,
+      "rate": 0.0554,
+      "series": "IUM5WTL"
+    }
+  ]
+}

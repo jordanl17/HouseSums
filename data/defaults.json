@@ -1,0 +1,290 @@
+{
+  "schemaVersion": 1,
+  "fields": {
+    "price": {
+      "label": "Property price",
+      "unit": "gbp",
+      "level": "simple",
+      "default": null,
+      "min": 10000,
+      "max": 10000000,
+      "step": 1000,
+      "source": "Area average, UK House Price Index, latest month"
+    },
+    "deposit": {
+      "label": "Deposit",
+      "unit": "gbp",
+      "level": "simple",
+      "default": null,
+      "min": 0,
+      "max": 10000000,
+      "step": 500,
+      "source": "10% of the price, a typical first-time buyer loan-to-value"
+    },
+    "rent": {
+      "label": "Monthly rent for a similar home",
+      "unit": "gbpPerMonth",
+      "level": "simple",
+      "default": null,
+      "min": 100,
+      "max": 20000,
+      "step": 10,
+      "source": "Area average, ONS Price Index of Private Rents, latest month"
+    },
+    "mortgageRate": {
+      "label": "Mortgage rate",
+      "unit": "percent",
+      "level": "simple",
+      "default": null,
+      "min": 0,
+      "max": 0.15,
+      "step": 0.0005,
+      "source": "Bank of England quoted rates, matched to your loan-to-value band and fix length"
+    },
+    "houseGrowth": {
+      "label": "House price growth",
+      "unit": "percentPerYear",
+      "level": "simple",
+      "default": null,
+      "min": -0.05,
+      "max": 0.1,
+      "step": 0.001,
+      "source": "Area 10-year average, UK House Price Index, kept between 0% and 6%"
+    },
+    "termYears": {
+      "label": "Mortgage term",
+      "unit": "years",
+      "level": "advanced",
+      "default": 30,
+      "min": 5,
+      "max": 40,
+      "step": 1,
+      "source": "Common for first-time buyers"
+    },
+    "fixYears": {
+      "label": "Initial fix length",
+      "unit": "years",
+      "level": "advanced",
+      "default": 5,
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "source": "A common fix length"
+    },
+    "rateAfterFix": {
+      "label": "Rate after the fix",
+      "unit": "percent",
+      "level": "advanced",
+      "default": null,
+      "min": 0,
+      "max": 0.15,
+      "step": 0.0005,
+      "source": "Same as the initial rate: assumes you remortgage rather than pay the standard variable rate"
+    },
+    "productFee": {
+      "label": "Product fee",
+      "unit": "gbp",
+      "level": "advanced",
+      "default": 999,
+      "min": 0,
+      "max": 10000,
+      "step": 1,
+      "source": "A typical lender arrangement fee"
+    },
+    "legalBuying": {
+      "label": "Legal fees (buying)",
+      "unit": "gbp",
+      "level": "advanced",
+      "default": 1800,
+      "min": 0,
+      "max": 20000,
+      "step": 50,
+      "source": "Typical conveyancing cost"
+    },
+    "survey": {
+      "label": "Survey",
+      "unit": "gbp",
+      "level": "advanced",
+      "default": 500,
+      "byNation": {
+        "sco": 0
+      },
+      "min": 0,
+      "max": 5000,
+      "step": 50,
+      "source": "£500 in England, Wales and NI. £0 in Scotland, where the seller pays for the Home Report"
+    },
+    "moving": {
+      "label": "Moving costs",
+      "unit": "gbp",
+      "level": "advanced",
+      "default": 800,
+      "min": 0,
+      "max": 20000,
+      "step": 50,
+      "source": "Typical removals cost"
+    },
+    "maintenanceRate": {
+      "label": "Maintenance",
+      "unit": "percentPerYear",
+      "level": "advanced",
+      "default": 0.01,
+      "min": 0,
+      "max": 0.05,
+      "step": 0.001,
+      "source": "1% of the home's value a year, a common rule of thumb"
+    },
+    "insurance": {
+      "label": "Buildings insurance",
+      "unit": "gbpPerYear",
+      "level": "advanced",
+      "default": 350,
+      "min": 0,
+      "max": 10000,
+      "step": 10,
+      "source": "Typical annual premium"
+    },
+    "serviceCharge": {
+      "label": "Service charge, ground rent and factor fees",
+      "unit": "gbpPerYear",
+      "level": "advanced",
+      "default": 0,
+      "min": 0,
+      "max": 50000,
+      "step": 50,
+      "source": "None for most houses",
+      "hint": "Flats usually have a service charge and sometimes ground rent"
+    },
+    "rentGrowth": {
+      "label": "Rent increases",
+      "unit": "percentPerYear",
+      "level": "advanced",
+      "default": null,
+      "min": -0.05,
+      "max": 0.15,
+      "step": 0.001,
+      "source": "Area annual rent growth, ONS Price Index of Private Rents, kept between 1% and 6%"
+    },
+    "investmentReturn": {
+      "label": "Investment return",
+      "unit": "percentPerYear",
+      "level": "advanced",
+      "default": null,
+      "min": -0.05,
+      "max": 0.15,
+      "step": 0.001,
+      "source": "If you invested in a global index fund in an ISA, after fees. Set by the outlook"
+    },
+    "inflation": {
+      "label": "Inflation",
+      "unit": "percentPerYear",
+      "level": "advanced",
+      "default": 0.025,
+      "min": 0,
+      "max": 0.1,
+      "step": 0.001,
+      "source": "Uprates buildings insurance and the service charge each year"
+    },
+    "agentFeeRate": {
+      "label": "Estate agent fee",
+      "unit": "percent",
+      "level": "advanced",
+      "default": 0.014,
+      "min": 0,
+      "max": 0.05,
+      "step": 0.001,
+      "source": "1.4% including VAT, a typical high-street fee"
+    },
+    "legalSelling": {
+      "label": "Legal fees (selling)",
+      "unit": "gbp",
+      "level": "advanced",
+      "default": 1500,
+      "min": 0,
+      "max": 20000,
+      "step": 50,
+      "source": "Typical conveyancing cost"
+    },
+    "homeReport": {
+      "label": "Home Report",
+      "unit": "gbp",
+      "level": "advanced",
+      "default": 0,
+      "byNation": {
+        "sco": 600
+      },
+      "min": 0,
+      "max": 5000,
+      "step": 50,
+      "source": "Scotland only: the seller pays for the Home Report, typically £600"
+    },
+    "years": {
+      "label": "Years to compare",
+      "unit": "years",
+      "level": "advanced",
+      "default": 25,
+      "min": 1,
+      "max": 40,
+      "step": 1,
+      "source": "How long you might stay"
+    }
+  },
+  "depositFraction": 0.1,
+  "areaClamps": {
+    "houseGrowth": {
+      "min": 0,
+      "max": 0.06
+    },
+    "rentGrowth": {
+      "min": 0.01,
+      "max": 0.06
+    }
+  },
+  "presets": {
+    "cautious": {
+      "label": "Cautious",
+      "description": "Slower price growth, slower rent rises, lower returns and a higher rate after the fix",
+      "houseGrowth": {
+        "add": 0,
+        "cap": 0.015
+      },
+      "rentGrowth": {
+        "add": 0,
+        "cap": 0.02
+      },
+      "investmentReturn": 0.035,
+      "rateAfterFixDelta": 0.005
+    },
+    "typical": {
+      "label": "Typical",
+      "description": "Local trends and typical returns",
+      "houseGrowth": {
+        "add": 0,
+        "cap": null
+      },
+      "rentGrowth": {
+        "add": 0,
+        "cap": null
+      },
+      "investmentReturn": 0.05,
+      "rateAfterFixDelta": 0
+    },
+    "optimistic": {
+      "label": "Optimistic",
+      "description": "Faster price growth, higher returns and a lower rate after the fix",
+      "houseGrowth": {
+        "add": 0.01,
+        "cap": 0.06
+      },
+      "rentGrowth": {
+        "add": 0,
+        "cap": null
+      },
+      "investmentReturn": 0.065,
+      "rateAfterFixDelta": -0.005
+    }
+  },
+  "defaultPreset": "typical",
+  "defaultBuyerType": "first",
+  "defaultNation": "eng"
+}
