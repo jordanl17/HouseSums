@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-13T15:23:47Z",
+  "sources": [
+    {
+      "id": "uk-hpi",
+      "dataset": "UK House Price Index",
+      "publisher": "HM Land Registry with ONS",
+      "url": "https://www.gov.uk/government/collections/uk-house-price-index-reports",
+      "licence": "Open Government Licence v3.0",
+      "licenceUrl": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+      "asOf": "2026-07",
+      "notes": "Average price, all property types, by local authority; 10-year growth from the same series. Northern Ireland figures are quarterly. File: https://publicdata.landregistry.gov.uk/market-trend-data/house-price-index-data/Average-prices-2026-07.csv"
+    },
+    {
+      "id": "ons-pipr",
+      "dataset": "Price Index of Private Rents, UK: monthly price statistics",
+      "publisher": "Office for National Statistics",
+      "url": "https://www.ons.gov.uk/economy/inflationandpriceindices/datasets/priceindexofprivaterentsukmonthlypricestatistics",
+      "licence": "Open Government Licence v3.0",
+      "licenceUrl": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+      "asOf": "2026-08",
+      "notes": "Average monthly rent and annual change, Table 1. Local authorities in England and Wales; Broad Rental Market Areas in Scotland and Northern Ireland, matched to councils in data/brma-map.json. Official statistics in development. Edition: 16 September 2026. File: https://www.ons.gov.uk/file?uri=/economy/inflationandpriceindices/datasets/priceindexofprivaterentsukmonthlypricestatistics/16september2026/priceindexofprivaterentsukmonthlypricestatistics.xlsx"
+    },
+    {
+      "id": "boe-quoted-rates",
+      "dataset": "Quoted household interest rates",
+      "publisher": "Bank of England",
+      "url": "https://www.bankofengland.co.uk/boeapps/database/",
+      "licence": "Open Government Licence v3.0",
+      "licenceUrl": "https://www.bankofengland.co.uk/legal",
+      "asOf": "2026-09",
+      "notes": "Monthly average quoted rates for owner-occupier fixed-rate mortgages. The Bank publishes no 5-year 85% LTV series. Reproduction of Bank of England Database data is under the Open Government Licence (bankofengland.co.uk/legal).",
+      "series": [
+        {
+          "code": "IUMZICQ",
+          "description": "Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 2 year (60% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted"
+        },
+        {
+          "code": "IUMBV34",
+          "description": "Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 2 year (75% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted"
+        },
+        {
+          "code": "IUMZICR",
+          "description": "Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 2 year (85% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted"
+        },
+        {
+          "code": "IUMB482",
+          "description": "Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 2 year (90% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted"
+        },
+        {
+          "code": "IUM2WTL",
+          "description": "Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 2 year (95% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted"
+        },
+        {
+          "code": "IUMZO27",
+          "description": "Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 5 year (60% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted"
+        },
+        {
+          "code": "IUMBV42",
+          "description": "Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 5 year (75% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted"
+        },
+        {
+          "code": "IUMZO28",
+          "description": "Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 5 year (90% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted"
+        },
+        {
+          "code": "IUM5WTL",
+          "description": "Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 5 year (95% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted"
+        }
+      ]
+    },
+    {
+      "id": "ons-la-codes",
+      "dataset": "Local authority district names and codes (LAD_APR_2025_UK_NC_v2)",
+      "publisher": "ONS Open Geography Portal",
+      "url": "https://geoportal.statistics.gov.uk/",
+      "licence": "Open Government Licence v3.0",
+      "licenceUrl": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+      "asOf": "2025-04",
+      "notes": "Area names, codes and slugs. Source: Office for National Statistics licensed under the Open Government Licence v.3.0. Contains OS data © Crown copyright and database right."
+    }
+  ]
+}
