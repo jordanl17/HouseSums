@@ -1,1 +1,50 @@
-/* .button: see src/components/ui and docs/decisions.md, "Design system (phase 2)". */
+/*
+ * .button: pill button or link.
+ *   .button--primary    hi-vis with ink text. At most one per view.
+ *   .button--secondary  ink outline on whatever it sits on.
+ * Focus uses the global :focus-visible ring from base.css.
+ */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  padding: 0 var(--space-5);
+  border: var(--border-control) solid transparent;
+  border-radius: var(--radius-pill);
+  background-color: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-md);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.button:hover {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+/* Hi-vis only ever carries ink text. The ink edge keeps the pill crisp on light concrete. */
+.button--primary {
+  background-color: var(--color-hi-vis);
+  border-color: var(--color-on-hi-vis);
+  color: var(--color-on-hi-vis);
+}
+
+.button--secondary {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+}
+
+.button:disabled,
+.button[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.5;
+  text-decoration-line: none;
+}

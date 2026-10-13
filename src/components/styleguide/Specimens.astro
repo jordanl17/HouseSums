@@ -1,0 +1,201 @@
+---
+/**
+ * Every UI primitive once, for the /styleguide/ theme panels. Rendered twice on the
+ * page (light panel and dark panel), so ids and radio names take a suffix.
+ * All figures are examples, not calculations.
+ */
+import AnswerNumeral from '../ui/AnswerNumeral.astro';
+import Button from '../ui/Button.astro';
+import Card from '../ui/Card.astro';
+import DataTable from '../ui/DataTable.astro';
+import Disclosure from '../ui/Disclosure.astro';
+import ExampleChart from '../ui/ExampleChart.astro';
+import Field from '../ui/Field.astro';
+import KeyNumber from '../ui/KeyNumber.astro';
+import Segmented from '../ui/Segmented.astro';
+import Slider from '../ui/Slider.astro';
+import Tag from '../ui/Tag.astro';
+import type { DataTableColumn } from '../ui/types';
+import { exampleBuy, exampleRent } from './example-data';
+
+interface Props {
+  /** Appended to every id and radio name, e.g. 'light'. */
+  suffix: string;
+}
+
+const { suffix } = Astro.props;
+const id = (name: string) => `${name}-${suffix}`;
+
+const tableColumns: DataTableColumn[] = [
+  { key: 'year', label: 'Year' },
+  { key: 'buy', label: 'Buy, if sold', numeric: true },
+  { key: 'rent', label: 'Rent', numeric: true },
+  { key: 'diff', label: 'Difference', numeric: true },
+];
+const money = (k: number) => `£${Math.round(k * 1000).toLocaleString('en-GB')}`;
+const signed = (k: number) => `${k < 0 ? '-' : '+'}${money(Math.abs(k))}`;
+const tableRows = [4, 5, 6, 7].map((year) => {
+  const buy = exampleBuy[year] ?? 0;
+  const rent = exampleRent[year] ?? 0;
+  return { year: `Year ${year}`, buy: money(buy), rent: money(rent), diff: signed(buy - rent) };
+});
+---
+
+<div class="specimens">
+  <section class="specimen" aria-labelledby={id('sg-buttons')}>
+    <h4 class="specimen__title" id={id('sg-buttons')}>
+      Button
+    </h4>
+    <div class="specimen__row">
+      <Button>Show me my break-even year</Button>
+      <Button variant="secondary">Copy link</Button>
+      <Button variant="secondary" disabled>
+        Reset all
+      </Button>
+    </div>
+  </section>
+
+  <section class="specimen" aria-labelledby={id('sg-tags')}>
+    <h4 class="specimen__title" id={id('sg-tags')}>
+      Tag
+    </h4>
+    <div class="specimen__row">
+      <Tag variant="local" title="UK House Price Index, Jul 2026">
+        Local figure
+      </Tag>
+      <Tag variant="typical" title="Typical first-time buyer loan-to-value">
+        Typical figure
+      </Tag>
+    </div>
+  </section>
+
+  <section class="specimen" aria-labelledby={id('sg-fields')}>
+    <h4 class="specimen__title" id={id('sg-fields')}>
+      Field and slider
+    </h4>
+    <div class="fields">
+      <div class="fields__grid">
+        <Field
+          id={id('sg-price')}
+          label="Property price"
+          prefix="£"
+          value="245,000"
+          readonly
+          class="fields__wide"
+        >
+          <Tag slot="tag" variant="local" title="UK House Price Index, Jul 2026">
+            Local figure
+          </Tag>
+          <Slider
+            id={id('sg-price-slider')}
+            label="Property price slider"
+            min={50000}
+            max={1000000}
+            step={5000}
+            value={245000}
+            valuetext="£245,000"
+          />
+        </Field>
+        <Field id={id('sg-area')} label="Area" kind="text" value="Leeds" readonly />
+        <Field
+          id={id('sg-rate')}
+          label="Mortgage rate, 5-year fix"
+          suffix="%"
+          value="4.30"
+          hint="Matched to your loan-to-value"
+          readonly
+        />
+        <Field
+          id={id('sg-deposit')}
+          label="Deposit"
+          prefix="£"
+          value="260,000"
+          error="Deposit can't be more than the price"
+          readonly
+          class="fields__wide"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="specimen" aria-labelledby={id('sg-segmented')}>
+    <h4 class="specimen__title" id={id('sg-segmented')}>
+      Segmented control
+    </h4>
+    <div class="stack">
+      <Segmented
+        name={id('sg-buyer')}
+        legend="Buyer"
+        value="first-time"
+        options={[
+          { value: 'first-time', label: 'First-time' },
+          { value: 'moving', label: 'Moving' },
+          { value: 'additional', label: 'Additional' },
+        ]}
+      />
+      <Segmented
+        name={id('sg-outlook')}
+        legend="Outlook"
+        value="typical"
+        options={[
+          { value: 'cautious', label: 'Cautious' },
+          { value: 'typical', label: 'Typical' },
+          { value: 'optimistic', label: 'Optimistic' },
+        ]}
+      />
+    </div>
+  </section>
+
+  <section class="specimen" aria-labelledby={id('sg-card')}>
+    <h4 class="specimen__title" id={id('sg-card')}>
+      Card, answer and key numbers
+    </h4>
+    <Card>
+      <div class="stack">
+        <AnswerNumeral lead="Buying pulls ahead after" value="6" unit="years">
+          Example figures. If you sold in year 6 or later, buying would leave you with more.
+        </AnswerNumeral>
+        <dl class="key-numbers">
+          <KeyNumber label="Cash needed" value="£38,699" unit="upfront" />
+          <KeyNumber label="First month" value="£1,421" unit="to own, v £1,180 rent" />
+          <KeyNumber label="After 10 years" value="+£30,886" unit="buying ahead" />
+        </dl>
+      </div>
+    </Card>
+  </section>
+
+  <section class="specimen" aria-labelledby={id('sg-chart')}>
+    <h4 class="specimen__title" id={id('sg-chart')}>
+      Chart
+    </h4>
+    <Card>
+      <ExampleChart
+        buy={exampleBuy}
+        rent={exampleRent}
+        breakEven={6}
+        yMax={250}
+        yStep={50}
+        xTicks={[0, 5, 10, 15]}
+        caption="Example figures: what you'd walk away with if you sold, £ thousands"
+        summary="Example chart. Buying starts below renting and pulls ahead in year 6."
+      />
+    </Card>
+  </section>
+
+  <section class="specimen" aria-labelledby={id('sg-disclosure')}>
+    <h4 class="specimen__title" id={id('sg-disclosure')}>
+      Disclosure and data table
+    </h4>
+    <Disclosure summary="Year by year" open>
+      <DataTable
+        caption="Example figures: what you'd walk away with if you sold"
+        columns={tableColumns}
+        rows={tableRows}
+        rowHeader
+      />
+    </Disclosure>
+    <Disclosure summary="Adjust every assumption (18)">
+      <p>The advanced inputs go here.</p>
+    </Disclosure>
+  </section>
+</div>

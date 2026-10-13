@@ -103,6 +103,40 @@
   /* ======== shell additions (append below, do not edit above) ======== */
 
   /* ======== primitives additions (append below, do not edit above) ======== */
+
+  /*
+   * Edge of pill inputs and the segmented track. 3:1 against concrete and surface in
+   * both themes (WCAG 1.4.11), quieter than ink so a column of fields stays calm.
+   */
+  --color-control-edge: #777672;
+
+  /*
+   * Fixed copies of each theme's colours, for the /styleguide/ panels that show the
+   * primitives in light and dark side by side (.theme-panel--light / --dark). Nothing
+   * else uses them. scripts/theme-panels.test.ts fails if they drift from the tokens above.
+   */
+  --theme-light-concrete: #d8d6d1;
+  --theme-light-surface: #e9e7e2;
+  --theme-light-ink: #1a1a1a;
+  --theme-light-muted: #4e4e4e;
+  --theme-light-hi-vis: #d4ff00;
+  --theme-light-on-hi-vis: #1a1a1a;
+  --theme-light-tag-alt: #ffffff;
+  --theme-light-buy: #1f5aa6;
+  --theme-light-rent: #e85a0c;
+  --theme-light-buy-fill: rgb(31 90 166 / 0.14);
+  --theme-light-control-edge: #777672;
+  --theme-dark-concrete: #1c1c1b;
+  --theme-dark-surface: #262624;
+  --theme-dark-ink: #eceae5;
+  --theme-dark-muted: #b3b1ab;
+  --theme-dark-hi-vis: #d4ff00;
+  --theme-dark-on-hi-vis: #1a1a1a;
+  --theme-dark-tag-alt: #3a3a37;
+  --theme-dark-buy: #5b8fe0;
+  --theme-dark-rent: #db5e14;
+  --theme-dark-buy-fill: rgb(91 143 224 / 0.14);
+  --theme-dark-control-edge: #7a7873;
 }
 
 @media (min-width: 48rem) {
@@ -132,5 +166,6 @@
     /* ======== shell dark additions ======== */
 
     /* ======== primitives dark additions ======== */
+    --color-control-edge: #7a7873;
   }
 }

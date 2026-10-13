@@ -1,1 +1,49 @@
-/* .disclosure: see src/components/ui and docs/decisions.md, "Design system (phase 2)". */
+/*
+ * .disclosure: styled <details>/<summary>, for "Adjust every assumption (18)"
+ * and the year-by-year table. Closed by default.
+ *
+ *   .disclosure           a thin ink rule above
+ *   .disclosure__summary  a full-width row with a small triangle that turns when open
+ *   .disclosure__body     the content
+ */
+.disclosure {
+  border-top: var(--border-thin) solid var(--color-rule);
+}
+
+.disclosure__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  list-style: none;
+}
+
+.disclosure__summary::-webkit-details-marker {
+  display: none;
+}
+
+/* A CSS triangle in currentColor, so it follows the theme and forced colours. */
+.disclosure__summary::before {
+  content: '';
+  flex: none;
+  width: 0;
+  height: 0;
+  border-block: 0.3125rem solid transparent;
+  border-inline-start: 0.4375rem solid currentColor;
+}
+
+.disclosure[open] > .disclosure__summary::before {
+  transform: rotate(90deg);
+}
+
+.disclosure__summary:hover {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+.disclosure__body {
+  padding: var(--space-2) 0 var(--space-4);
+}

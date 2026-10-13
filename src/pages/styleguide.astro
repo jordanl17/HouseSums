@@ -1,0 +1,333 @@
+---
+/**
+ * /styleguide/: unlisted, noindex. Not linked from the nav or footer, and to be left
+ * out of the sitemap in phase 5. Shows a static example of the calculator's first
+ * screen and every UI primitive in a light and a dark panel. No client JS.
+ * Every figure here is an example, labelled as such.
+ */
+import Base from '../layouts/Base.astro';
+import Specimens from '../components/styleguide/Specimens.astro';
+import { exampleBuy, exampleRent } from '../components/styleguide/example-data';
+import AnswerNumeral from '../components/ui/AnswerNumeral.astro';
+import Card from '../components/ui/Card.astro';
+import Disclosure from '../components/ui/Disclosure.astro';
+import ExampleChart from '../components/ui/ExampleChart.astro';
+import Field from '../components/ui/Field.astro';
+import KeyNumber from '../components/ui/KeyNumber.astro';
+import Segmented from '../components/ui/Segmented.astro';
+import Slider from '../components/ui/Slider.astro';
+import Tag from '../components/ui/Tag.astro';
+---
+
+<Base
+  title="Style guide"
+  description="The House Sums design system: UI primitives and an example calculator layout."
+  noindex
+>
+  <div class="container styleguide">
+    <h1>Style guide</h1>
+
+    <section class="example" data-example="calculator" aria-labelledby="example-title">
+      <div class="example__head">
+        <h2 class="example__title" id="example-title">
+          Rent v buy: how long until buying beats renting?
+        </h2>
+        <p class="example__flag">Example figures, not a real calculation</p>
+      </div>
+
+      <div class="calc-layout">
+        <div class="calc-layout__primary fields">
+          <div class="fields__grid">
+            <Field
+              id="ex-area"
+              label="Area"
+              kind="text"
+              value="Leeds"
+              hint="Stamp duty rules for England"
+              readonly
+            />
+            <Field id="ex-price" label="Property price" prefix="£" value="245,000" readonly>
+              <Slider
+                id="ex-price-slider"
+                label="Property price slider"
+                min={50000}
+                max={1000000}
+                step={5000}
+                value={245000}
+                valuetext="£245,000"
+              />
+            </Field>
+          </div>
+        </div>
+
+        <Card as="section" class="calc-layout__answer example__answer" labelledby="ex-answer-title">
+          <h3 class="visually-hidden" id="ex-answer-title">
+            Answer
+          </h3>
+          <div class="stack">
+            <AnswerNumeral lead="Buying pulls ahead after" value="6" unit="years">
+              If you sold in year 6 or later, buying would leave you with more than renting and
+              investing the difference.
+            </AnswerNumeral>
+            <ExampleChart
+              buy={exampleBuy}
+              rent={exampleRent}
+              breakEven={6}
+              yMax={250}
+              yStep={50}
+              xTicks={[0, 5, 10, 15]}
+              caption="What you'd walk away with if you sold, £ thousands"
+              summary="Example chart. Buying starts below renting, pulls ahead in year 6 and is about £75k ahead by year 15."
+            />
+            <dl class="key-numbers">
+              <KeyNumber label="Cash needed" value="£38,699" unit="upfront" />
+              <KeyNumber label="First month" value="£1,421" unit="to own, v £1,180 rent" />
+              <KeyNumber label="After 10 years" value="+£30,886" unit="buying ahead" />
+            </dl>
+          </div>
+        </Card>
+
+        <div class="calc-layout__rest fields">
+          <div class="fields__grid">
+            <Segmented
+              class="fields__wide"
+              name="ex-buyer"
+              legend="Buyer"
+              value="first-time"
+              options={[
+                { value: 'first-time', label: 'First-time' },
+                { value: 'moving', label: 'Moving' },
+                { value: 'additional', label: 'Additional' },
+              ]}
+            />
+            <Field
+              id="ex-deposit"
+              label="Deposit"
+              prefix="£"
+              value="24,500"
+              hint="10% of the price"
+              readonly
+            />
+            <Field
+              id="ex-rent"
+              label="Monthly rent, similar home"
+              prefix="£"
+              value="1,180"
+              readonly
+            >
+              <Slider
+                id="ex-rent-slider"
+                label="Monthly rent slider"
+                min={300}
+                max={5000}
+                step={10}
+                value={1180}
+                valuetext="£1,180 a month"
+              />
+            </Field>
+            <Field id="ex-rate" label="Mortgage rate, 5-year fix" suffix="%" value="4.30" readonly>
+              <Slider
+                id="ex-rate-slider"
+                label="Mortgage rate slider"
+                min={0}
+                max={10}
+                step={0.05}
+                value={4.3}
+                valuetext="4.30%"
+              />
+            </Field>
+            <Field id="ex-growth" label="House price growth" suffix="% a year" value="3.0" readonly>
+              <Slider
+                id="ex-growth-slider"
+                label="House price growth slider"
+                min={0}
+                max={6}
+                step={0.1}
+                value={3}
+                valuetext="3.0% a year"
+              />
+            </Field>
+            <Segmented
+              class="fields__wide"
+              name="ex-outlook"
+              legend="Outlook"
+              value="typical"
+              options={[
+                { value: 'cautious', label: 'Cautious' },
+                { value: 'typical', label: 'Typical' },
+                { value: 'optimistic', label: 'Optimistic' },
+              ]}
+            />
+            <Disclosure class="fields__wide" summary="Adjust every assumption (18)">
+              <div class="fields__grid">
+                <Field id="ex-term" label="Mortgage term" suffix="years" value="30" readonly>
+                  <Tag slot="tag">Typical figure</Tag>
+                </Field>
+                <Field id="ex-fix" label="Initial fix length" suffix="years" value="5" readonly />
+                <Field id="ex-fee" label="Product fee" prefix="£" value="999" readonly />
+                <Field id="ex-legal" label="Legal fees, buying" prefix="£" value="1,800" readonly />
+              </div>
+            </Disclosure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="styleguide__primitives" aria-labelledby="primitives-title">
+      <div class="prose">
+        <h2 id="primitives-title">Primitives in both themes</h2>
+        <p>
+          The site follows the system light or dark setting. These two panels pin each theme so both
+          can be checked at once. Every figure on this page is an example.
+        </p>
+      </div>
+      <div class="theme-panels">
+        <div class="theme-panel theme-panel--light">
+          <h3 class="theme-panel__title">Light</h3>
+          <Specimens suffix="light" />
+        </div>
+        <div class="theme-panel theme-panel--dark">
+          <h3 class="theme-panel__title">Dark</h3>
+          <Specimens suffix="dark" />
+        </div>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .styleguide {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding-block: var(--space-4) var(--space-16);
+  }
+
+  .example__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  /* The real page sets this as its h1; here it is an h2 at h1 size. */
+  .example__title {
+    font-size: var(--size-2xl);
+  }
+
+  .example__flag {
+    padding: 0.0625rem var(--space-2);
+    border: var(--border-thin) dashed var(--color-ink);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: var(--size-xs);
+    line-height: var(--leading-body);
+  }
+
+  .styleguide__primitives {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    margin-top: var(--space-12);
+  }
+
+  .theme-panels {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  @media (min-width: 60rem) {
+    .theme-panels {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /*
+   * Pin a theme by pointing the colour tokens at the fixed copies in tokens.css.
+   * Derived tokens resolve at :root, so the ones built from these are re-declared here.
+   * scripts/theme-panels.test.ts checks every copied colour is set in both panels.
+   */
+  .theme-panel {
+    --color-rule: var(--color-ink);
+    --color-focus-ring: var(--color-hi-vis);
+
+    min-width: 0;
+    padding: var(--space-5) var(--space-4);
+    border: var(--border-thin) solid var(--color-control-edge);
+    border-radius: var(--radius-card);
+    background-color: var(--color-concrete);
+    color: var(--color-ink);
+  }
+
+  .theme-panel--light {
+    color-scheme: light;
+    --color-concrete: var(--theme-light-concrete);
+    --color-surface: var(--theme-light-surface);
+    --color-ink: var(--theme-light-ink);
+    --color-muted: var(--theme-light-muted);
+    --color-hi-vis: var(--theme-light-hi-vis);
+    --color-on-hi-vis: var(--theme-light-on-hi-vis);
+    --color-tag-alt: var(--theme-light-tag-alt);
+    --color-buy: var(--theme-light-buy);
+    --color-rent: var(--theme-light-rent);
+    --color-buy-fill: var(--theme-light-buy-fill);
+    --color-control-edge: var(--theme-light-control-edge);
+  }
+
+  .theme-panel--dark {
+    color-scheme: dark;
+    --color-concrete: var(--theme-dark-concrete);
+    --color-surface: var(--theme-dark-surface);
+    --color-ink: var(--theme-dark-ink);
+    --color-muted: var(--theme-dark-muted);
+    --color-hi-vis: var(--theme-dark-hi-vis);
+    --color-on-hi-vis: var(--theme-dark-on-hi-vis);
+    --color-tag-alt: var(--theme-dark-tag-alt);
+    --color-buy: var(--theme-dark-buy);
+    --color-rent: var(--theme-dark-rent);
+    --color-buy-fill: var(--theme-dark-buy-fill);
+    --color-control-edge: var(--theme-dark-control-edge);
+  }
+
+  .theme-panel__title {
+    margin-bottom: var(--space-4);
+    font-size: var(--size-lg);
+  }
+
+  /* Specimens markup lives in a child component, so these reach it as globals. */
+  .theme-panel :global(.specimens) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+  }
+
+  .theme-panel :global(.specimen) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .theme-panel :global(.specimen__title) {
+    font-family: var(--font-mono);
+    font-size: var(--size-sm);
+    font-weight: var(--weight-regular);
+    letter-spacing: 0;
+    color: var(--color-muted);
+  }
+
+  .theme-panel :global(.specimen__row) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  @media (min-width: 48rem) {
+    .theme-panel {
+      padding: var(--space-6);
+    }
+  }
+</style>

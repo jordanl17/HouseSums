@@ -1,1 +1,64 @@
-/* .key-number: see src/components/ui and docs/decisions.md, "Design system (phase 2)". */
+/*
+ * .key-numbers / .key-number: the three figures under the answer.
+ *
+ *   <dl class="key-numbers">
+ *     <div class="key-number">
+ *       <dt class="key-number__label">Cash needed</dt>
+ *       <dd class="key-number__value">
+ *         <span class="key-number__figure">£38,699</span>
+ *         <span class="key-number__unit">upfront</span>
+ *       </dd>
+ *     </div>
+ *   </dl>
+ *
+ * Each sits under a thin ink rule. As many columns as fit, at least 9rem each.
+ * Each .key-number is a two-row subgrid, so the figures line up across a row even
+ * when one label wraps onto two lines.
+ */
+.key-numbers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.key-number {
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  row-gap: var(--space-1);
+  align-content: start;
+  min-width: 0;
+  padding-top: var(--space-2);
+  border-top: var(--border-thin) solid var(--color-rule);
+}
+
+.key-number__label {
+  font-family: var(--font-mono);
+  font-size: var(--size-sm);
+  line-height: var(--leading-tight);
+  color: var(--color-muted);
+}
+
+.key-number__value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+  margin: 0;
+}
+
+.key-number__figure {
+  font-family: var(--font-mono);
+  font-size: var(--size-lg);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+}
+
+.key-number__unit {
+  font-family: var(--font-mono);
+  font-size: var(--size-sm);
+  color: var(--color-muted);
+}

@@ -1,1 +1,58 @@
-/* .data-table: see src/components/ui and docs/decisions.md, "Design system (phase 2)". */
+/*
+ * .data-table: a plain table. Thin ink rules, no zebra stripes, numbers right-aligned
+ * in mono tabular figures (.data-table__num on both the th and the td of a numeric column).
+ */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--size-sm);
+  line-height: var(--leading-tight);
+}
+
+.data-table__caption {
+  caption-side: top;
+  padding-bottom: var(--space-2);
+  text-align: start;
+  font-weight: var(--weight-bold);
+}
+
+.data-table th,
+.data-table td {
+  padding: var(--space-2);
+  border-bottom: var(--border-thin) solid var(--color-rule);
+  text-align: start;
+  vertical-align: baseline;
+}
+
+.data-table th:first-child,
+.data-table td:first-child {
+  padding-inline-start: 0;
+}
+
+.data-table th:last-child,
+.data-table td:last-child {
+  padding-inline-end: 0;
+}
+
+.data-table tbody th {
+  font-weight: var(--weight-regular);
+}
+
+.data-table thead th {
+  font-family: var(--font-mono);
+  font-weight: var(--weight-regular);
+  color: var(--color-muted);
+  border-bottom-width: var(--border-control);
+  vertical-align: bottom;
+}
+
+.data-table .data-table__num {
+  text-align: end;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Body cells never break across lines; column headings may. */
+.data-table tbody :is(td, th) {
+  white-space: nowrap;
+}
