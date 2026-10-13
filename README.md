@@ -70,9 +70,18 @@ docs/               product brief, build decisions and phase notes
 
 ## How deploys work
 
-- **CI** runs on every pull request and every push to any branch. It installs dependencies, then runs the type check, lint, unit tests, build, JavaScript budget check and the Playwright tests. If the end-to-end tests fail, the Playwright report is uploaded as a build artefact.
-- **Deploy** runs on every push to `main` (and can be started by hand from the Actions tab). It builds the site with `BASE_PATH=/HouseSums` and `SITE_URL=https://jordanl17.github.io` and publishes `dist/` to GitHub Pages. The live site is at <https://jordanl17.github.io/HouseSums/>.
-- GitHub Pages must be set to deploy from GitHub Actions (Settings, Pages, Source: GitHub Actions). The deploy workflow tries to switch this on the first time it runs.
+- **CI** runs on every pull request and every push to any branch. It installs dependencies, then runs the type check, lint, unit tests, build, JavaScript budget check and the Playwright tests at 360px and 1280px. If a step fails, the Playwright report is uploaded with the run. A newer push to the same branch cancels the run it replaces.
+- **Deploy** runs on every push to `main`. You can also start it by hand from the Actions tab (Deploy to GitHub Pages, Run workflow). It builds the site with `BASE_PATH=/HouseSums` and `SITE_URL=https://jordanl17.github.io`, checks the JavaScript budget and publishes `dist/` to GitHub Pages. Only one deploy runs at a time, and a deploy in progress is never cancelled. The live site is at <https://jordanl17.github.io/HouseSums/>.
+- The deploy workflow does not run the tests again. It relies on CI having passed on the same commit.
+
+### Turning on GitHub Pages (one-off)
+
+Someone with admin rights on the repo has to do this once, before the first deploy:
+
+1. Go to Settings, Pages, and set Source to "GitHub Actions".
+2. The repo is private. Pages on a private repo needs a paid GitHub plan (Pro, Team or Enterprise). Without one, the repo has to be made public.
+
+The workflow asks `actions/configure-pages` to turn Pages on, but the built-in `GITHUB_TOKEN` is not allowed to do that, so until step 1 is done the deploy fails at "Configure Pages".
 
 Work happens on short-lived branches that are merged into `main` by pull request once CI passes.
 
