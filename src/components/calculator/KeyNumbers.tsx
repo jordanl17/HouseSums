@@ -1,35 +1,36 @@
 /**
- * Key numbers under the chart. STUB by the phase lead. Owner: results teammate.
- * Contract: one <dl class="key-numbers" data-testid="key-numbers"> with KeyNumber testIds
- * "key-cash", "key-first-month", "key-after". Render nothing (or a same-size placeholder) when
- * calc.result is null.
+ * Key numbers under the chart. Owner: results teammate.
+ *
+ *   Cash needed               deposit + upfront costs        "£34,099 upfront"
+ *   First month               owning cost / rent             "£1,615 / £1,250 own / rent"
+ *   After 10 years            buy minus rent, signed         "+£93,335 buying ahead"
+ *                             (After N years when the horizon is shorter; a true minus when
+ *                             renting is ahead)
+ *
+ * Renders nothing before there is a result (the empty state is the answer's message alone).
+ * data-testid hooks: key-numbers, key-cash, key-first-month, key-after.
  */
-import { formatMoney } from '../../lib/format';
+import { keyNumbersCopy } from '../../lib/copy';
 import { KeyNumber } from './ui';
 import type { CalcProps } from './types';
 
 export default function KeyNumbers({ calc }: CalcProps) {
   const { result } = calc;
-  if (!result) return null;
-  const year = Math.min(10, result.series.length - 1);
-  const point = result.series[year];
+  if (!result || calc.status !== 'ready') return null;
+  const copy = keyNumbersCopy(result);
   return (
     <dl class="key-numbers" data-testid="key-numbers">
-      <KeyNumber
-        label="Cash needed"
-        value={formatMoney(result.upfront.cashNeeded)}
-        unit="upfront"
-        testId="key-cash"
-      />
+      <KeyNumber label="Cash needed" value={copy.cash} unit="upfront" testId="key-cash" />
       <KeyNumber
         label="First month"
-        value={`${formatMoney(result.firstMonth.owning)} / ${formatMoney(result.firstMonth.rent)}`}
+        value={copy.firstMonth}
         unit="own / rent"
         testId="key-first-month"
       />
       <KeyNumber
-        label={`After ${year} years`}
-        value={point ? formatMoney(point.buyWealth - point.rentWealth, { signed: true }) : ''}
+        label={copy.afterLabel}
+        value={copy.after}
+        unit={copy.afterUnit}
         testId="key-after"
       />
     </dl>
