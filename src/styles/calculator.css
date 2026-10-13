@@ -1,0 +1,18 @@
+/*
+ * Calculator styles (phase 4). Imported by the island (src/components/calculator/Calculator.tsx),
+ * so only pages with the calculator load them. The phase 2 primitives (ui.css) and the layout
+ * (.calc-layout in base.css) are global and come first from Base.astro.
+ *
+ * One file per owner, so teammates never edit the same file:
+ *   calculator/primitives.css  lead: additions to the primitives (toggletip, Reset, table scroll)
+ *   calculator/layout.css      lead: the island's own frame
+ *   calculator/inputs.css      inputs teammate: area picker, fields, advanced panel
+ *   calculator/results.css     results teammate: answer, chart, key numbers, sensitivity, breakdown
+ *   calculator/share.css       followups teammate: the copy-link button
+ * Tokens only, no colour literals (npm run lint checks). BEM-lite global classes.
+ */
+@import './calculator/primitives.css';
+@import './calculator/layout.css';
+@import './calculator/inputs.css';
+@import './calculator/results.css';
+@import './calculator/share.css';

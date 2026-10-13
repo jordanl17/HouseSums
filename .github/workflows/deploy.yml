@@ -57,6 +57,8 @@ jobs:
           SITE_URL: https://jordanl17.github.io
           BASE_PATH: /HouseSums
           PUBLIC_BUILD_SHA: ${{ github.sha }}
+          # Cookieless analytics: off unless the GOATCOUNTER_CODE repository variable is set.
+          PUBLIC_GOATCOUNTER_CODE: ${{ vars.GOATCOUNTER_CODE }}
 
       - name: JS budget
         run: npm run budget

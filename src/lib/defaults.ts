@@ -23,9 +23,10 @@
  * then each field's override (if any) replaces the derived value.
  *
  * Provenance: "local" only for an area's own figure (clamping to the brief's range keeps it
- * local). A nation figure, a fixed default, a Bank of England rate (a UK figure) or a value the
+ * local, and the source then gives the raw figure and the bound it was held to). A nation figure, a fixed default, a Bank of England rate (a UK figure) or a value the
  * Outlook preset changed is "typical". Sample placeholder figures say so in the source.
  */
+import { formatPercent } from './format';
 import {
   DERIVED_INPUT_KEYS,
   NUMERIC_INPUT_KEYS,
@@ -45,11 +46,20 @@ import {
   type Selection,
 } from './types';
 
+/**
+ * An area as deriveInputs needs it. The ONS code is not used, so the client's compact area list
+ * (phase 4, src/lib/area-list.ts) can leave it out.
+ */
+export type DeriveArea = Omit<Area, 'code'>;
+
+/** The parts of areas.json deriveInputs reads: the data months and the nation-level figures. */
+export type AreasMeta = Pick<AreasFile, 'asOf' | 'nations'>;
+
 export interface DeriveOptions {
   /** The picked area, or null for none (nation-level figures are used). */
-  area: Area | null;
-  /** For nation-level figures and the data months. */
-  areas: AreasFile;
+  area: DeriveArea | null;
+  /** For nation-level figures and the data months. A whole AreasFile is fine. */
+  areas: AreasMeta | AreasFile;
   rates: RatesFile;
   defaults: DefaultsFile;
   selection: Selection;
@@ -70,6 +80,21 @@ const SAMPLE = ' (sample figure, not real data)';
 
 /** Allowance for floating-point loan-to-values such as 0.9000000000000001. */
 const LTV_EPSILON = 1e-9;
+
+/**
+ * Thrown by deriveInputs when the rates file has no quoted rates. There is no honest default for
+ * a mortgage rate, so the calculator stops rather than quietly modelling a 0% loan. Validated data
+ * never gets here: parseRatesFile rejects an empty list.
+ */
+export class NoMortgageRatesError extends Error {
+  constructor() {
+    super(
+      'deriveInputs: there are no mortgage rates to pick from (rates.rates is empty). ' +
+        'Load rates.json through parseRatesFile, which rejects an empty list.',
+    );
+    this.name = 'NoMortgageRatesError';
+  }
+}
 
 /** Find an area by slug, or null. */
 export function findArea(areas: AreasFile, slug: string | null): Area | null {
@@ -117,7 +142,10 @@ const tidy = (value: number): number => Math.round(value * 1e10) / 1e10;
 const isSample = (list: readonly AreaField[] | undefined, field: AreaField): boolean =>
   list?.includes(field) ?? false;
 
-/** Derive the full Inputs, the per-field reset values and provenance. Pure, never throws. */
+/**
+ * Derive the full Inputs, the per-field reset values and provenance. Pure. Throws
+ * NoMortgageRatesError if `rates.rates` is empty (validated data never is); otherwise never throws.
+ */
 export function deriveInputs(options: DeriveOptions): DerivedInputs {
   const { area, areas, rates, defaults, selection } = options;
   const overrides = options.overrides ?? {};
@@ -161,6 +189,12 @@ export function deriveInputs(options: DeriveOptions): DerivedInputs {
     return { value: nationFigures[field], provenance: typical(source, fileMonth) };
   };
 
+  /** "−2.15%", "6%", "1.5%": two decimals at most, no trailing zeros. */
+  const shortRate = (rate: number) =>
+    formatPercent(rate, { decimals: 2 })
+      .replace(/\.00%$/, '%')
+      .replace(/(\.\d)0%$/, '$1%');
+
   /** Clamp to the brief's range, apply the preset, clamp again. */
   const growth = (
     field: 'growth10y' | 'rentGrowth',
@@ -168,9 +202,20 @@ export function deriveInputs(options: DeriveOptions): DerivedInputs {
     dataset: string,
     monthKey: 'price' | 'rent',
   ) => {
-    const { value, provenance: origin } = areaFigure(field, dataset, monthKey);
+    const { value, provenance: figure } = areaFigure(field, dataset, monthKey);
     const { min, max } = defaults.areaClamps[key];
     const clamped = clamp(value, min, max);
+    // Say so when the brief's range held the figure: "..., 10-year average of −2.15%, shown at
+    // the 0% floor" (phase 4 review: a clamped figure must not pass as the raw local one).
+    const origin: Provenance =
+      clamped === value
+        ? figure
+        : {
+            ...figure,
+            source: `${figure.source} of ${shortRate(value)}, shown at the ${shortRate(clamped)} ${
+              clamped > value ? 'floor' : 'ceiling'
+            }`,
+          };
     const adjust = preset[key];
     const adjusted = tidy(clamp(Math.min(clamped + adjust.add, adjust.cap ?? Infinity), min, max));
     if (adjusted === clamped) return set(key, clamped, origin);
@@ -211,15 +256,13 @@ export function deriveInputs(options: DeriveOptions): DerivedInputs {
   // 5. Mortgage rate from the final loan-to-value and fix length.
   const ltv = price > 0 ? Math.max(0, price - deposit) / price : 0;
   const quoted = pickMortgageRate(rates, ltv, values.fixYears);
-  let rateSource = defaults.fields.mortgageRate.source;
-  if (quoted) {
-    rateSource = `${rates.source}: ${quoted.fixYears}-year fix, up to ${tidy(quoted.ltv * 100)}% loan-to-value`;
-    if (quoted.sample) rateSource += SAMPLE;
-  }
+  if (!quoted) throw new NoMortgageRatesError();
+  let rateSource = `${rates.source}: ${quoted.fixYears}-year fix, up to ${tidy(quoted.ltv * 100)}% loan-to-value`;
+  if (quoted.sample) rateSource += SAMPLE;
   const mortgageRate = set(
     'mortgageRate',
-    quoted?.rate ?? defaults.fields.mortgageRate.min,
-    typical(rateSource, quoted ? (quoted.asOf ?? rates.asOf) : null),
+    quoted.rate,
+    typical(rateSource, quoted.asOf ?? rates.asOf),
   );
 
   // 6. Rate after the fix and investment return, from the preset.

@@ -172,6 +172,15 @@ export const CONTRAST_PAIRS = [
     themes: ['dark'],
     use: 'focus ring in cards',
   },
+  // A hi-vis control's ring merges with its fill, so its outer edge carries the indicator
+  // against the page (it sits next to the hi-vis ring on purpose: the change is the edge).
+  {
+    fg: '--color-focus-edge-hi-vis',
+    bg: '--color-concrete',
+    min: 3,
+    themes: ['light', 'dark'],
+    use: 'focus outline round a hi-vis control on the page',
+  },
 ];
 
 /**

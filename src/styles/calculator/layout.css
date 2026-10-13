@@ -1,0 +1,74 @@
+/*
+ * The island's frame. The grid itself is .calc-layout in base.css.
+ *
+ *   .calculator         the island root (also .calc-layout)
+ *   .calc-card          the answer card: answer, chart, key numbers
+ *   .calc-section       a supporting section in .calc-layout__more (what moves the answer,
+ *                       breakdown, how this works): a plain block on the page, not a card
+ */
+.calc-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.calc-layout__more {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.calc-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.calc-section h2 {
+  font-size: var(--size-xl);
+}
+
+/* Before there is an answer: the message and an invisible copy of the answer's structure
+   (CardGhost.tsx) share one grid cell, so the card is already the size the answer will be. */
+.calc-card--waiting {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.calc-card--waiting > * {
+  grid-area: 1 / 1;
+}
+
+.calc-card__ghost {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  visibility: hidden;
+}
+
+/* A plain visit: no area is coming without an input, so the empty card stays compact. When the
+   page was opened with an area in its link, index.astro's inline script sets data-calc-link on
+   the root before first paint and the ghost keeps the answer's size from the first frame. */
+.calc-card--empty .calc-card__ghost {
+  display: none;
+}
+
+:root[data-calc-link] .calc-card--empty .calc-card__ghost {
+  display: flex;
+}
+
+/* While a link's area loads, the sections under the card wait too. Shown, "How this works"
+   would be pushed down when "What moves the answer" and the breakdown arrive above it, and the
+   footer would rise into view and drop again: shifts with no input. So nothing is shown there
+   yet, and the space holds at least a screen, which keeps the footer below the fold until the
+   sections arrive. */
+:root[data-calc-link] .calc-layout__more--waiting {
+  min-height: 100vh;
+}
+
+:root[data-calc-link] .calc-layout__more--waiting > * {
+  display: none;
+}

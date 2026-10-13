@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import areasJson from '../../data/areas.json';
 import defaultsJson from '../../data/defaults.json';
 import ratesJson from '../../data/rates.json';
-import { deriveInputs, findArea, pickMortgageRate, type DeriveOptions } from './defaults';
+import {
+  deriveInputs,
+  findArea,
+  NoMortgageRatesError,
+  pickMortgageRate,
+  type DeriveOptions,
+} from './defaults';
 import { parseAreasFile, parseDefaults, parseRatesFile } from './schema';
 import type {
   Area,
@@ -265,6 +271,20 @@ describe('deriveInputs: clamps and nation specifics', () => {
     expect(low.inputs.rentGrowth).toBe(0.01); // only rent falls back, rent growth is local
   });
 
+  it('says in the source when a growth figure was held to the range, and stays local', () => {
+    const high = deriveInputs(options({ area: hot })).provenance;
+    expect(high.houseGrowth.kind).toBe('local');
+    expect(high.houseGrowth.source).toMatch(/10-year average of [\d.]+%, shown at the 6% ceiling$/);
+    const low = deriveInputs(
+      options({ area: cold, selection: selection({ areaSlug: 'cold-city' }) }),
+    ).provenance;
+    expect(low.houseGrowth.source).toMatch(/10-year average of −[\d.]+%, shown at the 0% floor$/);
+    // An unclamped figure keeps the plain source.
+    expect(deriveInputs(options()).provenance.houseGrowth.source).toBe(
+      'UK House Price Index, 10-year average',
+    );
+  });
+
   it('uses the nation figure for a field listed in fallbacks, tagged typical', () => {
     const { inputs, provenance } = deriveInputs(options({ area: cold }));
     expect(inputs.rent).toBe(950);
@@ -454,6 +474,30 @@ describe('deriveInputs: overrides', () => {
     const { inputs } = deriveInputs(options({ overrides: { price: 0 } }));
     expect(inputs.deposit).toBe(0);
     expect(Number.isFinite(inputs.mortgageRate)).toBe(true);
+  });
+});
+
+describe('deriveInputs: no mortgage rates', () => {
+  const empty: RatesFile = { ...rates, rates: [] };
+
+  it('throws a clear error instead of defaulting to a 0% mortgage rate', () => {
+    expect(() => deriveInputs(options({ rates: empty }))).toThrow(NoMortgageRatesError);
+    expect(() => deriveInputs(options({ rates: empty }))).toThrow(/no mortgage rates/i);
+    expect(() => deriveInputs(options({ rates: empty }))).toThrow(/rates\.json/);
+  });
+
+  it('throws even when the mortgage rate is overridden (the rate after the fix and reset need a base)', () => {
+    expect(() =>
+      deriveInputs(options({ rates: empty, overrides: { mortgageRate: 0.04 } })),
+    ).toThrow(NoMortgageRatesError);
+  });
+
+  it('throws with no area picked too', () => {
+    expect(() => deriveInputs(options({ area: null, rates: empty }))).toThrow(NoMortgageRatesError);
+  });
+
+  it('parseRatesFile already rejects an empty list, so validated data never reaches this', () => {
+    expect(() => parseRatesFile({ ...rates, rates: [] })).toThrow(/at least one rate/);
   });
 });
 

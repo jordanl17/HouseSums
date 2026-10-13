@@ -1,0 +1,236 @@
+/*
+ * Inputs teammate: fields, the area picker (combobox and listbox) and the advanced panel.
+ * Tokens only, BEM-lite global classes. Builds on .field, .fields, .segmented and .disclosure
+ * from the phase 2 primitives.
+ *
+ *   .calc-field            a calculator field (Field with bodyClass="calc-field__body")
+ *   .calc-field__body      the pill and everything under it
+ *   .calc-field__meta      under the pill: the provenance tag, or "Reset" once changed
+ *   .calc-field--reserve   keeps its note line even when empty (area and price, above the
+ *                          answer card at 360px, must never change height)
+ *   .calc-segmented        buyer and outlook: the status line always takes one line
+ *   .calc-area             the area field, positioning the popup
+ *   .combo__popup          the listbox popup under the area pill
+ *   .combo__list           role=listbox
+ *   .combo__option         role=option: name, then the nation in muted mono
+ *   .combo__message        loading, failure or no-match copy in the popup
+ *   .calc-select           a native select in a pill (tax rules)
+ *   .calc-advanced         the "Adjust every assumption (N)" disclosure
+ *   .calc-group            a fieldset of related advanced inputs, with a small legend
+ */
+
+/* ---- Fields ---- */
+
+.calc-field__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+/*
+ * Two columns: each field spans two rows of the grid (label, then body) through subgrid, so
+ * labels that wrap ("Monthly rent for a similar home") never push their pill out of line with
+ * the neighbouring field's. The label sits at the foot of its row, next to the pill.
+ */
+@container (min-width: 26rem) {
+  .fields__grid > .calc-field {
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    row-gap: var(--space-1);
+  }
+
+  .calc-field > .field__head {
+    align-self: end;
+  }
+}
+
+/* Holds a tag or a Reset link; the same height either way, so nothing below moves. */
+.calc-field__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: calc(var(--size-xs) * var(--leading-body) + 0.125rem);
+}
+
+/* "Local figure" and "Typical figure" take the same width (the font is mono), so the info icon
+   stays put when a shared link's area arrives and a field's tag changes: no layout shift. */
+.calc-field__meta .tag__text {
+  min-width: 14ch;
+}
+
+/* The tag sits at the left of its field, so its bubble opens to the right. */
+.calc-field__meta .toggletip__bubble {
+  right: auto;
+  left: 0;
+}
+
+.calc-field--reserve .field__note[hidden] {
+  display: block;
+  visibility: hidden;
+}
+
+.calc-field--reserve .field__note:empty::before {
+  content: '\00a0';
+}
+
+.calc-field--reserve .field__hint {
+  min-height: calc(var(--size-sm) * var(--leading-tight));
+}
+
+.calc-segmented .segmented__status {
+  min-height: calc(var(--size-sm) * var(--leading-tight));
+  font-family: var(--font-sans);
+  line-height: var(--leading-tight);
+}
+
+/* ---- Area picker ---- */
+
+.calc-area .calc-field__body {
+  position: relative;
+}
+
+.combo__popup {
+  position: absolute;
+  top: calc(var(--control-height) + var(--space-1));
+  left: 0;
+  z-index: 3;
+  width: max(100%, min(24rem, calc(100vw - 2 * var(--layout-gutter))));
+  border: var(--border-thin) solid var(--color-ink);
+  border-radius: var(--space-4);
+  background-color: var(--color-surface);
+  overflow: hidden;
+}
+
+.combo__popup[hidden] {
+  display: none;
+}
+
+.combo__list {
+  max-height: min(18rem, 50vh);
+  margin: 0;
+  padding: var(--space-1);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+.combo__list[hidden] {
+  display: none;
+}
+
+.combo__option {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--space-10);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--space-3);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.combo__option[aria-selected='true'] {
+  background-color: var(--color-ink);
+  color: var(--color-surface);
+}
+
+.combo__option--picked .combo__name {
+  font-weight: var(--weight-bold);
+}
+
+.combo__nation {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--size-xs);
+  color: var(--color-muted);
+}
+
+.combo__option[aria-selected='true'] .combo__nation {
+  color: inherit;
+}
+
+.combo__message {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--size-sm);
+  color: var(--color-ink);
+}
+
+/* ---- Tax rules select ---- */
+
+.calc-select {
+  position: relative;
+}
+
+.calc-select__input {
+  padding-inline-end: var(--space-6);
+  appearance: none;
+  cursor: pointer;
+}
+
+.calc-select__input option {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+}
+
+/* The same small triangle as the disclosure, pointing down. */
+.calc-select::after {
+  content: '';
+  position: absolute;
+  inset-inline-end: var(--space-4);
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-inline: 0.3125rem solid transparent;
+  border-block-start: 0.4375rem solid currentColor;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* ---- Advanced panel ---- */
+
+.calc-advanced__groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.calc-group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.calc-group__title {
+  float: left;
+  width: 100%;
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-1);
+  border-bottom: var(--border-thin) solid var(--color-rule);
+  font-size: var(--size-sm);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+}
+
+.calc-group > .fields__grid {
+  clear: both;
+}
+
+/* Forced colours: keep the highlighted option visible. */
+@media (forced-colors: active) {
+  .combo__option[aria-selected='true'] {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
+}
+
+/* Print: the popup is screen-only. */
+@media print {
+  .combo__popup {
+    display: none;
+  }
+}

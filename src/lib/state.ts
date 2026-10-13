@@ -110,9 +110,10 @@ const clamp = (value: number, field: FieldSpec): number =>
 
 /**
  * The canonical URL text for a value in engine units, or null if it isn't a finite number.
- * Clamped to the field range, then rounded to the URL's precision.
+ * Clamped to the field range, then rounded to the URL's precision. Exported in phase 4 so the UI
+ * can tell whether an override still differs from its default by the same rule encodeState uses.
  */
-function encodeNumber(value: number, field: FieldSpec): string | null {
+export function encodeNumber(value: number, field: FieldSpec): string | null {
   if (typeof value !== 'number' || !Number.isFinite(value)) return null;
   const clamped = clamp(value, field);
   switch (kindOf(field)) {
@@ -123,6 +124,34 @@ function encodeNumber(value: number, field: FieldSpec): string | null {
     case 'money':
       return plain(roundTo(clamped, MONEY_DECIMALS), MONEY_DECIMALS);
   }
+}
+
+/** Decimal places of a percent a field shows and keeps when typed: 4.19%, never 4.3333%. */
+export const PERCENT_INPUT_DECIMALS = 2;
+
+/**
+ * A typed or slid value as the calculator keeps it (phase 4 review): clamped to the field and
+ * rounded to what the field can show (2 decimals of a percent, pence, whole years), which is
+ * also exact in the URL. So the figures on screen, the model's inputs and a shared link always
+ * agree: typing 4.33333 keeps 4.33%, and the link reproduces it exactly.
+ */
+export function canonicalInput(value: number, field: FieldSpec): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return value;
+  const clamped = clamp(value, field);
+  let result: number;
+  switch (kindOf(field)) {
+    case 'percent':
+      result = shift(roundTo(shift(clamped, 2), PERCENT_INPUT_DECIMALS), -2);
+      break;
+    case 'years':
+      result = roundTo(clamped, 0);
+      break;
+    case 'money':
+      result = roundTo(clamped, MONEY_DECIMALS);
+      break;
+  }
+  result = clamp(result, field);
+  return result === 0 ? 0 : result;
 }
 
 /** URL text (lenient: "300k", "4.3%") -> engine units, canonicalised and clamped, or null. */

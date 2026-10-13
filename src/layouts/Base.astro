@@ -58,6 +58,8 @@ const current = (href: string) => (withSlash(href) === here ? 'page' : undefined
     <meta name="description" content={description} />
     {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
     <meta name="hs-build" content={buildSha} />
+    <!-- Never more than our origin in a Referer: links carry figures in the query string. -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
   </head>
   <body class="site">

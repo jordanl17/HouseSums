@@ -31,6 +31,7 @@
   --color-rule: var(--color-ink); /* thin table and divider rules */
   --color-focus-ring: var(--color-hi-vis); /* inner focus ring */
   --color-focus-edge: #1a1a1a; /* outer focus outline, both themes, gives 3:1 on light concrete */
+  --color-focus-edge-hi-vis: #1a1a1a; /* outer focus outline round a hi-vis control */
 
   /* ---- Contour background (the only gradient allowed on the site) ---- */
   --contour-background: repeating-radial-gradient(
@@ -167,6 +168,8 @@
     --color-contour: rgb(236 234 229 / 0.1); /* light ink at 10% */
     --color-buy-fill: rgb(91 143 224 / 0.14);
     --color-focus-edge: #1a1a1a;
+    /* On a hi-vis control the hi-vis ring merges with the fill, so the edge is light ink. */
+    --color-focus-edge-hi-vis: #eceae5;
 
     /* ======== shell dark additions ======== */
     --color-logo-sun-edge: var(--color-hi-vis); /* hi-vis already stands out on dark concrete */

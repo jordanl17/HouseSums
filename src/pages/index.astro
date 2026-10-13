@@ -1,10 +1,39 @@
 ---
+/**
+ * Home: the Rent v buy calculator. The heading, then the island; nothing else above it.
+ *
+ * The island is hydrated with client:load, not client:idle: the calculator is the page, and
+ * idle hydration can wait seconds on a busy phone, leaving inputs that look live but do nothing.
+ * Its first render is server-rendered here (the empty state), so nothing jumps on hydration.
+ *
+ * Data: defaults, tax rules, rates and the nation figures are validated at build time and passed
+ * as props (serialised into the HTML, not bundled as JS). The 361-area list is fetched from
+ * data/area-list.json on our own origin when it is needed.
+ *
+ * The inline script runs before first paint: when the link names an area (?a=...), it marks the
+ * root so the empty card already reserves the answer's height (CardGhost.tsx), and the answer
+ * arriving with the area list moves nothing. A plain visit gets a compact empty card.
+ */
 import Base from '../layouts/Base.astro';
+import Calculator from '../components/calculator/Calculator';
+import { calculatorData } from '../lib/calculator-data';
+import { url } from '../lib/url';
 ---
 
 <Base description="Rent v buy: how long until buying beats renting? A plain-English UK calculator that starts from local figures.">
-  <div class="prose">
-    <h1>Rent v buy: how long until buying beats renting?</h1>
-    <p>The calculator for this question is being built and will appear on this page.</p>
-  </div>
+  <h1 class="calc-title">Rent v buy: how long until buying beats renting?</h1>
+  <script is:inline>
+    if (/[?&]a=[^&]/.test(location.search)) document.documentElement.dataset.calcLink = '';
+  </script>
+  <Calculator
+    client:load
+    data={calculatorData()}
+    links={{ areaList: url('data/area-list.json'), howItWorks: url('how-it-works') }}
+  />
 </Base>
+
+<style>
+  .calc-title {
+    margin-block: var(--space-2) var(--space-5);
+  }
+</style>
