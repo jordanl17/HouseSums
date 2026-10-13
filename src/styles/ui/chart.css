@@ -1,0 +1,239 @@
+/*
+ * .chart: buy v rent over time. See src/components/ui/ExampleChart.astro for the markup.
+ * Buy is a line over a 14% fill, rent a plain line; both carry direct labels in ink
+ * (rent orange is never text on a light surface). The break-even year is a dashed
+ * hi-vis line with an ink edge and an ink-on-hi-vis label. Data colours are used for
+ * data only.
+ */
+.chart {
+  --chart-height: 12rem;
+  --chart-y-axis: 3rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.chart__caption {
+  font-size: var(--size-sm);
+  line-height: var(--leading-tight);
+  color: var(--color-muted);
+}
+
+.chart__frame {
+  display: grid;
+  grid-template-columns: var(--chart-y-axis) minmax(0, 1fr);
+  grid-template-rows: var(--chart-height) auto;
+  /* Room above the plot for the break-even label. */
+  padding-top: var(--space-6);
+}
+
+.chart__y-axis {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.chart__plot {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.chart__x-axis {
+  position: relative;
+  grid-column: 2;
+  grid-row: 2;
+  height: var(--space-6);
+}
+
+.chart__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.chart__tick {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: var(--size-xs);
+  line-height: 1;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.chart__tick--y {
+  right: var(--space-2);
+  bottom: var(--y);
+  transform: translateY(50%);
+}
+
+.chart__tick--x {
+  top: var(--space-2);
+  left: var(--x);
+  transform: translateX(-50%);
+}
+
+.chart__tick--x:first-child {
+  transform: none;
+}
+
+.chart__tick--x:last-child {
+  transform: translateX(-100%);
+}
+
+.chart__grid line {
+  stroke: var(--color-rule);
+  stroke-opacity: 0.15;
+  stroke-width: 1px;
+}
+
+.chart__baseline {
+  stroke: var(--color-rule);
+  stroke-width: 1px;
+}
+
+.chart__area--buy {
+  fill: var(--color-buy-fill);
+  stroke: none;
+}
+
+.chart__line {
+  fill: none;
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart__line--buy {
+  stroke: var(--color-buy);
+}
+
+.chart__line--rent {
+  stroke: var(--color-rent);
+}
+
+/* Dashed hi-vis over a wider ink dash, so the marker holds 3:1 on light concrete and dark. */
+.chart__marker-edge,
+.chart__marker {
+  stroke-dasharray: 6 4;
+  stroke-linecap: butt;
+}
+
+.chart__marker-edge {
+  stroke: var(--color-on-hi-vis);
+  stroke-width: 4.5px;
+}
+
+.chart__marker {
+  stroke: var(--color-hi-vis);
+  stroke-width: 2px;
+}
+
+.chart__marker-label {
+  position: absolute;
+  bottom: 100%;
+  left: var(--x);
+  transform: translate(-50%, -0.25rem);
+  padding: 0.0625rem var(--space-2);
+  border: var(--border-thin) solid var(--color-on-hi-vis);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-hi-vis);
+  color: var(--color-on-hi-vis);
+  font-family: var(--font-mono);
+  font-size: var(--size-xs);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-body);
+  white-space: nowrap;
+}
+
+/*
+ * Direct labels sit at --x on their line, in ink with a short key line in the series
+ * colour. Both series rise to the right, so a label above its line hangs to the left of
+ * the point (the line there is lower) and a label below hangs to the right (the line
+ * there is higher). Centred labels collided with the steeper buy line at 360px.
+ */
+.chart__series-label {
+  position: absolute;
+  left: var(--x);
+  bottom: var(--y);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--size-sm);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+
+.chart__series-label--above {
+  margin-bottom: var(--space-2);
+  transform: translateX(calc(-100% - var(--space-1)));
+}
+
+.chart__series-label--below {
+  transform: translate(var(--space-1), calc(100% + var(--space-2)));
+}
+
+/* The key line is a border, not a background, so it still prints with background graphics off. */
+.chart__series-label::before {
+  content: '';
+  width: var(--space-3);
+  height: 0;
+  border-top: 3px solid currentColor;
+  border-radius: var(--radius-pill);
+}
+
+.chart__series-label--buy::before {
+  border-top-color: var(--color-buy);
+}
+
+.chart__series-label--rent::before {
+  border-top-color: var(--color-rent);
+}
+
+@media (min-width: 48rem) {
+  .chart {
+    --chart-height: 13rem;
+  }
+}
+
+/* Beside the inputs (two-column calculator), a shorter plot keeps the key numbers above the fold at 1280x800. */
+@media (min-width: 60rem) {
+  .chart {
+    --chart-height: 11rem;
+  }
+}
+
+/*
+ * Print, often in black and white: dash the rent line so the two series differ by more
+ * than lightness, and keep the hi-vis Year label and buy fill when backgrounds are off.
+ */
+@media print {
+  .chart__line--rent {
+    stroke-dasharray: 6 3;
+  }
+
+  .chart__marker-label,
+  .chart__area--buy {
+    print-color-adjust: exact;
+  }
+}
+
+@media (forced-colors: active) {
+  .chart__line--buy,
+  .chart__line--rent,
+  .chart__baseline,
+  .chart__marker-edge {
+    stroke: CanvasText;
+  }
+
+  .chart__marker {
+    stroke: Canvas;
+  }
+}

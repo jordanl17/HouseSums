@@ -1,0 +1,14 @@
+---
+/** Styled details/summary. Styles in src/styles/ui/ (global classes, reused by phase 4 Preact). */
+import type { DisclosureProps } from './types';
+
+type Props = DisclosureProps;
+const { summary, open = false, class: className } = Astro.props;
+---
+
+<details class:list={['disclosure', className]} open={open}>
+  <summary class="disclosure__summary">{summary}</summary>
+  <div class="disclosure__body">
+    <slot />
+  </div>
+</details>

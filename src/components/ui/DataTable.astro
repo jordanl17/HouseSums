@@ -1,0 +1,48 @@
+---
+/**
+ * Plain table: thin ink rules, no zebra stripes, right-aligned tabular numbers.
+ * Styles: src/styles/ui/data-table.css. With rowHeader, the first column is a
+ * <th scope="row"> (for example "Year 6" in the year-by-year table).
+ */
+import type { DataTableProps } from './types';
+
+type Props = DataTableProps;
+const {
+  caption,
+  captionHidden = false,
+  columns,
+  rows,
+  rowHeader = false,
+  class: className,
+} = Astro.props;
+---
+
+<table class:list={['data-table', className]}>
+  <caption class:list={['data-table__caption', { 'visually-hidden': captionHidden }]}>
+    {caption}
+  </caption>
+  <thead>
+    <tr>
+      {columns.map((column) => (
+        <th scope="col" class:list={{ 'data-table__num': column.numeric }}>
+          {column.label}
+        </th>
+      ))}
+    </tr>
+  </thead>
+  <tbody>
+    {rows.map((row) => (
+      <tr>
+        {columns.map((column, index) =>
+          rowHeader && index === 0 ? (
+            <th scope="row" class:list={{ 'data-table__num': column.numeric }}>
+              {row[column.key] ?? ''}
+            </th>
+          ) : (
+            <td class:list={{ 'data-table__num': column.numeric }}>{row[column.key] ?? ''}</td>
+          ),
+        )}
+      </tr>
+    ))}
+  </tbody>
+</table>

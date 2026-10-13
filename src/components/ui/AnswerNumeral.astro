@@ -1,0 +1,21 @@
+---
+/** The answer sentence with the giant numeral. Styles in src/styles/ui/ (global classes, reused by phase 4 Preact). */
+import type { AnswerNumeralProps } from './types';
+
+type Props = AnswerNumeralProps;
+const { lead, value, unit, class: className } = Astro.props;
+const hasNote = Astro.slots.has('default');
+---
+
+<div class:list={['answer', className]}>
+  <p class="answer__sentence">
+    <span class="answer__lead">{lead}</span>
+    <span class="answer__numeral">{value}</span>
+    <span class="answer__unit">{unit}</span>
+  </p>
+  {hasNote && (
+    <p class="answer__note">
+      <slot />
+    </p>
+  )}
+</div>

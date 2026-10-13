@@ -1,0 +1,86 @@
+/*
+ * .slider: native range input. Thin ink track, hi-vis thumb with an ink outline.
+ * Pair it with a .field for the typed value by placing it in the Field's default slot,
+ * where it sits under the pill. Focus uses the global :focus-visible ring round the control.
+ */
+.slider {
+  --slider-thumb: 1.25rem;
+  --slider-track: 2px;
+
+  display: block;
+  width: 100%;
+  height: var(--space-6);
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  appearance: none;
+}
+
+.slider::-webkit-slider-runnable-track {
+  height: var(--slider-track);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-ink);
+}
+
+.slider::-moz-range-track {
+  height: var(--slider-track);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-ink);
+}
+
+/* The thumb's edge is always dark ink (on-hi-vis), like the sun in the logo. */
+.slider::-webkit-slider-thumb {
+  width: var(--slider-thumb);
+  height: var(--slider-thumb);
+  margin-top: calc((var(--slider-track) - var(--slider-thumb)) / 2);
+  border: var(--border-control) solid var(--color-on-hi-vis);
+  border-radius: 50%;
+  background-color: var(--color-hi-vis);
+  appearance: none;
+}
+
+.slider::-moz-range-thumb {
+  box-sizing: border-box;
+  width: var(--slider-thumb);
+  height: var(--slider-thumb);
+  border: var(--border-control) solid var(--color-on-hi-vis);
+  border-radius: 50%;
+  background-color: var(--color-hi-vis);
+}
+
+.slider:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.field > .slider {
+  margin-top: var(--space-1);
+}
+
+/*
+ * Print: the track is a background, so it would vanish with background graphics off and
+ * leave a floating thumb. Draw it as a border instead, and keep the thumb's fill.
+ */
+@media print {
+  .slider {
+    print-color-adjust: exact;
+  }
+
+  .slider::-webkit-slider-runnable-track {
+    height: 0;
+    border-top: var(--slider-track) solid var(--color-ink);
+    background-color: transparent;
+  }
+
+  .slider::-moz-range-track {
+    height: 0;
+    border-top: var(--slider-track) solid var(--color-ink);
+    background-color: transparent;
+  }
+
+  .slider::-webkit-slider-thumb {
+    margin-top: calc(-1 * (var(--slider-thumb) + var(--slider-track)) / 2);
+  }
+}

@@ -1,0 +1,171 @@
+---
+/**
+ * Static buy v rent chart: hand-rolled SVG, no client JS. Used on /styleguide/ with
+ * example figures so the look can be judged before the real chart lands in phase 4.
+ * Phase 4 can port the markup and reuse src/styles/ui/chart.css as it is.
+ *
+ * Layout: the SVG draws only lines and fills, stretched to the plot box
+ * (preserveAspectRatio none, non-scaling strokes), so it fits any width. Text
+ * (axis ticks, direct series labels, the break-even label) is HTML laid over it,
+ * placed with --x / --y percentages, so it stays at its real size at 360px and 1280px.
+ *
+ *   .chart                    <figure>
+ *   .chart__caption           what the chart shows, with units
+ *   .chart__frame             grid: y ticks | plot, then x ticks; role="img" with a summary
+ *   .chart__plot              the plot box; holds the SVG and the overlaid labels
+ *   .chart__grid              horizontal gridlines; .chart__baseline is the £0 line
+ *   .chart__area--buy         buy fill (14%)
+ *   .chart__line--buy/--rent  series lines
+ *   .chart__marker(-edge)     dashed break-even line: hi-vis dashes over an ink edge
+ *   .chart__marker-label      "Year 6": ink on hi-vis
+ *   .chart__series-label      direct labels "Buy" / "Rent", ink text with a key line
+ *   .chart__tick--x / --y     axis tick labels
+ */
+import type { WithClass } from './types';
+
+interface Props extends WithClass {
+  /** Wealth if you sold at each year-end, in £ thousands. Index 0 is now. */
+  buy: number[];
+  /** Same for renting. Must be the same length as buy. */
+  rent: number[];
+  /** Year the buy line first ends above the rent line. Omit when there is none. */
+  breakEven?: number;
+  /** Top of the y axis in £ thousands. */
+  yMax: number;
+  /** Gap between y gridlines in £ thousands. */
+  yStep: number;
+  /** Years to label on the x axis, e.g. [0, 5, 10, 15]. 0 is labelled "Now". */
+  xTicks: number[];
+  /** Year at which to place the direct series labels. Default: three quarters along. */
+  labelAt?: number;
+  /** Caption shown above the chart. */
+  caption: string;
+  /** One-sentence summary read by screen readers in place of the drawing. */
+  summary: string;
+}
+
+const {
+  buy,
+  rent,
+  breakEven,
+  yMax,
+  yStep,
+  xTicks,
+  labelAt,
+  caption,
+  summary,
+  class: className,
+} = Astro.props;
+
+const years = Math.max(buy.length, rent.length) - 1;
+const round = (n: number) => Math.round(n * 100) / 100;
+const xOf = (year: number) => round((year / years) * 100);
+const yOf = (value: number) => round(100 - (value / yMax) * 100);
+const points = (series: number[]) => series.map((v, i) => `${xOf(i)},${yOf(v)}`).join(' ');
+
+const buyPoints = points(buy);
+const rentPoints = points(rent);
+const buyArea = `M0,100 L${buyPoints.replaceAll(' ', ' L')} L100,100 Z`;
+
+const gridValues: number[] = [];
+for (let v = 0; v <= yMax; v += yStep) gridValues.push(v);
+
+const labelYear = labelAt ?? Math.round(years * 0.75);
+const buyAtLabel = buy[labelYear] ?? 0;
+const rentAtLabel = rent[labelYear] ?? 0;
+const buyOnTop = buyAtLabel >= rentAtLabel;
+const xTickLabel = (year: number) => (year === 0 ? 'Now' : `Yr ${year}`);
+---
+
+<figure class:list={['chart', className]}>
+  <figcaption class="chart__caption">{caption}</figcaption>
+  <div class="chart__frame" role="img" aria-label={summary}>
+    <div class="chart__y-axis" aria-hidden="true">
+      {gridValues.map((v) => (
+        <span class="chart__tick chart__tick--y" style={`--y: ${round((v / yMax) * 100)}%`}>
+          £{v}k
+        </span>
+      ))}
+    </div>
+    <div class="chart__plot" aria-hidden="true">
+      <svg class="chart__svg" viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
+        <g class="chart__grid">
+          {gridValues
+            .filter((v) => v > 0)
+            .map((v) => (
+              <line x1="0" x2="100" y1={yOf(v)} y2={yOf(v)} vector-effect="non-scaling-stroke" />
+            ))}
+        </g>
+        <path class="chart__area chart__area--buy" d={buyArea}></path>
+        <polyline
+          class="chart__line chart__line--rent"
+          points={rentPoints}
+          vector-effect="non-scaling-stroke"
+        ></polyline>
+        <polyline
+          class="chart__line chart__line--buy"
+          points={buyPoints}
+          vector-effect="non-scaling-stroke"
+        ></polyline>
+        <line
+          class="chart__baseline"
+          x1="0"
+          x2="100"
+          y1="100"
+          y2="100"
+          vector-effect="non-scaling-stroke"
+        ></line>
+        {breakEven !== undefined && (
+          <>
+            <line
+              class="chart__marker-edge"
+              x1={xOf(breakEven)}
+              x2={xOf(breakEven)}
+              y1="0"
+              y2="100"
+              vector-effect="non-scaling-stroke"
+            />
+            <line
+              class="chart__marker"
+              x1={xOf(breakEven)}
+              x2={xOf(breakEven)}
+              y1="0"
+              y2="100"
+              vector-effect="non-scaling-stroke"
+            />
+          </>
+        )}
+      </svg>
+      {breakEven !== undefined && (
+        <span class="chart__marker-label" style={`--x: ${xOf(breakEven)}%`}>
+          Year {breakEven}
+        </span>
+      )}
+      <span
+        class:list={[
+          'chart__series-label chart__series-label--buy',
+          buyOnTop ? 'chart__series-label--above' : 'chart__series-label--below',
+        ]}
+        style={`--x: ${xOf(labelYear)}%; --y: ${round((buyAtLabel / yMax) * 100)}%`}
+      >
+        Buy
+      </span>
+      <span
+        class:list={[
+          'chart__series-label chart__series-label--rent',
+          buyOnTop ? 'chart__series-label--below' : 'chart__series-label--above',
+        ]}
+        style={`--x: ${xOf(labelYear)}%; --y: ${round((rentAtLabel / yMax) * 100)}%`}
+      >
+        Rent
+      </span>
+    </div>
+    <div class="chart__x-axis" aria-hidden="true">
+      {xTicks.map((year) => (
+        <span class="chart__tick chart__tick--x" style={`--x: ${xOf(year)}%`}>
+          {xTickLabel(year)}
+        </span>
+      ))}
+    </div>
+  </div>
+</figure>

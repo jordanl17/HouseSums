@@ -1,0 +1,26 @@
+/*
+ * Narrow punctuation for the mono figures.
+ *
+ * B612 Mono gives the thousands comma and the decimal point a full character cell, so
+ * "245,000" reads as "245, 000" and "4.30" as "4. 30". This face borrows only the comma
+ * and full stop (unicode-range) from B612, whose punctuation is narrow, and sits first in
+ * --font-mono. Digits stay B612 Mono and tabular. Every comma and point is the same width,
+ * so right-aligned columns of figures still line up. Same self-hosted files as B612 itself.
+ */
+@font-face {
+  font-family: 'B612 Mono Punctuation';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('../../node_modules/@fontsource/b612/files/b612-latin-400-normal.woff2') format('woff2');
+  unicode-range: U+002C, U+002E;
+}
+
+@font-face {
+  font-family: 'B612 Mono Punctuation';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('../../node_modules/@fontsource/b612/files/b612-latin-700-normal.woff2') format('woff2');
+  unicode-range: U+002C, U+002E;
+}

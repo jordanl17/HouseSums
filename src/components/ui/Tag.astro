@@ -1,0 +1,11 @@
+---
+/** Small mono pill naming where a figure comes from. Styles in src/styles/ui/ (global classes, reused by phase 4 Preact). */
+import type { TagProps } from './types';
+
+type Props = TagProps;
+const { variant = 'typical', title, class: className } = Astro.props;
+---
+
+<span class:list={['tag', `tag--${variant}`, className]} title={title}>
+  <slot />
+</span>

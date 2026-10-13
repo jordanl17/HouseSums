@@ -1,0 +1,16 @@
+/*
+ * UI primitives stylesheet. Owned by the primitives teammate in phase 2.
+ * One file per primitive under ./ui/, plain global classes (BEM-lite) so the
+ * phase 4 Preact components can reuse them by class name. Tokens only, no colour literals.
+ */
+@import './ui/card.css';
+@import './ui/button.css';
+@import './ui/field.css';
+@import './ui/slider.css';
+@import './ui/segmented.css';
+@import './ui/tag.css';
+@import './ui/disclosure.css';
+@import './ui/key-number.css';
+@import './ui/answer.css';
+@import './ui/data-table.css';
+@import './ui/chart.css';

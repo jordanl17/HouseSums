@@ -1,0 +1,35 @@
+/*
+ * .tag: small mono pill naming where a figure comes from. Sentence case, never upper case.
+ *   .tag--local    "Local figure": hi-vis with ink text
+ *   .tag--typical  "Typical figure": tag-alt with ink text
+ */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.0625rem var(--space-2);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: var(--size-xs);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+  white-space: nowrap;
+  color: var(--color-ink);
+  background-color: var(--color-tag-alt);
+}
+
+.tag--local {
+  background-color: var(--color-hi-vis);
+  color: var(--color-on-hi-vis);
+}
+
+.tag--typical {
+  background-color: var(--color-tag-alt);
+  color: var(--color-ink);
+}
+
+@media (forced-colors: active) {
+  .tag {
+    border: var(--border-thin) solid CanvasText;
+  }
+}

@@ -1,9 +1,22 @@
 ---
 /**
- * Base page shell. Phase 2 restyles this with the brand; the props are the contract.
+ * Base page shell. The props are the contract; keep them.
  * Pages pass a plain title (e.g. "Sources"); the site name is added here.
+ *
+ * Stylesheet order matters and is part of the phase 2 contract: self-hosted fonts
+ * (latin subset only, font-display swap), narrow mono punctuation (fonts.css), tokens,
+ * base, UI primitives, page shell.
  */
+import '@fontsource/b612/latin-400.css';
+import '@fontsource/b612/latin-700.css';
+import '@fontsource/b612-mono/latin-400.css';
+import '@fontsource/b612-mono/latin-700.css';
+import '../styles/fonts.css';
+import '../styles/tokens.css';
 import '../styles/base.css';
+import '../styles/ui.css';
+import '../styles/shell.css';
+import Logo from '../components/Logo.astro';
 import { url } from '../lib/url';
 
 interface Props {
@@ -21,6 +34,19 @@ const fullTitle = title ? `${title} | House Sums` : 'House Sums';
 // Commit the build came from. The deploy workflow waits for this before testing the live site.
 const buildSha = import.meta.env.PUBLIC_BUILD_SHA ?? 'dev';
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
+
+// Header nav and footer links. Paths go through url() so they work under any base path.
+const withSlash = (path: string) => (path.endsWith('/') ? path : `${path}/`);
+const here = withSlash(Astro.url.pathname);
+const nav = [
+  { label: 'How it works', href: url('how-it-works') },
+  { label: 'Sources', href: url('sources') },
+];
+const footerLinks = [
+  { label: 'About', href: url('about') },
+  { label: 'Sources', href: url('sources') },
+];
+const current = (href: string) => (withSlash(href) === here ? 'page' : undefined);
 ---
 
 <!doctype html>
@@ -34,15 +60,49 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     <meta name="hs-build" content={buildSha} />
     <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
   </head>
-  <body>
+  <body class="site">
+    <a class="skip-link" href="#main">
+      Skip to main content
+    </a>
     <header class="site-header">
-      <a href={url()}>House Sums</a>
+      <div class="container site-header__inner">
+        <a class="site-header__home" href={url()} aria-current={current(url())}>
+          <Logo />
+        </a>
+        <nav class="site-nav" aria-label="Main">
+          <ul class="site-nav__list">
+            {nav.map((item) => (
+              <li>
+                <a class="site-nav__link" href={item.href} aria-current={current(item.href)}>
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
     </header>
-    <main>
+    <main id="main" class="site-main container" tabindex="-1">
       <slot />
     </main>
     <footer class="site-footer">
-      <p>This is a model, not financial advice.</p>
+      <div class="container">
+        <div class="site-footer__inner">
+          <div class="site-footer__about">
+            <p>This is a model, not financial advice.</p>
+            <ul class="site-footer__links" aria-label="About this site">
+              {footerLinks.map((item) => (
+                <li>
+                  <a class="site-footer__link" href={item.href} aria-current={current(item.href)}>
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p class="site-footer__tagline">The maths of moving in.</p>
+        </div>
+      </div>
     </footer>
   </body>
 </html>

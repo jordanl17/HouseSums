@@ -1,0 +1,152 @@
+/*
+ * .field: label above, pill input with units, hint and error.
+ *
+ *   .field               flex column
+ *   .field__head         label and an optional Tag on one line (wraps when narrow)
+ *   .field__label        mono, small, ink
+ *   .field__control      the pill: surface with a quiet edge; holds the affixes and the
+ *                        input, and draws the focus ring round the whole pill
+ *   .field__affix        unit before (--prefix, e.g. £) or after (--suffix, e.g. %) the value
+ *   .field__input        borderless input; numbers right-aligned, mono, tabular
+ *   .field__input--text  left-aligned sans, for names such as the area
+ *   .field__hint         small muted line under the input
+ *   .field__error        small bold ink line with a marker under the input
+ *   .field--invalid      heavier ink edge on the pill (also follows aria-invalid="true")
+ *
+ * .fields lays fields out in a tight grid: one column when narrow, two once the
+ * container is 26rem wide. Put fields in .fields__grid; .fields__wide spans both columns.
+ */
+.fields {
+  container-type: inline-size;
+}
+
+.fields__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4) var(--space-3);
+  align-items: start;
+}
+
+@container (min-width: 26rem) {
+  .fields__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fields__wide {
+    grid-column: 1 / -1;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.field__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-2);
+}
+
+.field__label {
+  font-family: var(--font-mono);
+  font-size: var(--size-sm);
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+}
+
+.field__control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--control-height);
+  padding: 0 var(--space-4);
+  border: var(--border-thin) solid var(--color-control-edge);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface);
+  cursor: text;
+}
+
+.field__control:hover {
+  border-color: var(--color-ink);
+}
+
+/* The ring goes round the whole pill, not the bare input inside it. */
+.field__control:focus-within {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+  box-shadow: var(--focus-shadow);
+}
+
+.field__input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.field__affix {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--size-sm);
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.field__input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  height: calc(var(--control-height) - 2 * var(--border-control));
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: var(--size-md);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.field__input--text {
+  font-family: var(--font-sans);
+  text-align: start;
+}
+
+.field__input[readonly] {
+  cursor: default;
+}
+
+.field__hint,
+.field__error {
+  font-size: var(--size-sm);
+  line-height: var(--leading-tight);
+}
+
+.field__hint {
+  color: var(--color-muted);
+}
+
+/* Calm, and never colour alone: a short ink bar, the words, and a heavier edge on the pill. */
+.field__error {
+  display: flex;
+  gap: var(--space-2);
+  color: var(--color-ink);
+  font-weight: var(--weight-bold);
+}
+
+.field__error::before {
+  content: '';
+  flex: none;
+  width: var(--space-1);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-ink);
+}
+
+.field--invalid .field__control,
+.field__control:has([aria-invalid='true']) {
+  border-color: var(--color-ink);
+  border-width: var(--border-control);
+}

@@ -1,0 +1,120 @@
+/*
+ * .segmented: a radio group drawn as joined pills (buyer type, Outlook presets).
+ *
+ *   .segmented__legend   same look as .field__label
+ *   .segmented__options  the surface pill track
+ *   .segmented__option   one <label>; options share the width equally
+ *   .segmented__input    the real radio, transparent over its label, still focusable
+ *   .segmented__label    the visible pill; ink with surface text when checked
+ *
+ * The focus ring is drawn on the label next to the focused radio.
+ */
+.segmented {
+  min-width: 0;
+}
+
+/* Floating the legend takes it out of the fieldset border slot so it lays out like a label. */
+.segmented__legend {
+  float: left;
+  width: 100%;
+  margin-bottom: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--size-sm);
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+}
+
+.segmented__options {
+  clear: both;
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: var(--border-thin) solid var(--color-control-edge);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface);
+}
+
+.segmented__option {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+}
+
+.segmented__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.segmented__label {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(var(--control-height) - 2 * var(--space-1) - 2 * var(--border-thin));
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--size-sm);
+  line-height: var(--leading-tight);
+  text-align: center;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.segmented__option:hover .segmented__label {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+.segmented__input:checked + .segmented__label {
+  background-color: var(--color-ink);
+  color: var(--color-surface);
+  font-weight: var(--weight-bold);
+  text-decoration-line: none;
+}
+
+.segmented__input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.segmented__input:focus-visible + .segmented__label {
+  position: relative;
+  z-index: 1;
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+  box-shadow: var(--focus-shadow);
+}
+
+.segmented__input:disabled + .segmented__label {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/*
+ * Print: backgrounds usually drop out, which would leave the checked option as pale
+ * surface-coloured text, the least visible of the three. Mark it with an ink outline,
+ * ink text and bold instead, so the choice reads in black and white.
+ */
+@media print {
+  .segmented__input:checked + .segmented__label {
+    outline: var(--border-control) solid var(--color-ink);
+    outline-offset: calc(-1 * var(--border-control));
+    background-color: transparent;
+    color: var(--color-ink);
+  }
+}
+
+@media (forced-colors: active) {
+  .segmented__input:checked + .segmented__label {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
+}

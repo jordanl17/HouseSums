@@ -1,0 +1,17 @@
+/*
+ * .card: a plain surface on the concrete page. 26px radius, no border, no shadow.
+ * Depth comes from the surface sitting on concrete. Use sparingly: on the calculator
+ * the answer is a card and the inputs sit straight on the page.
+ */
+.card {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  border-radius: var(--radius-card);
+  padding: var(--space-5) var(--space-4);
+}
+
+@media (min-width: 48rem) {
+  .card {
+    padding: var(--space-6);
+  }
+}

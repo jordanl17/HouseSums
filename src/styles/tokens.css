@@ -1,0 +1,177 @@
+/*
+ * House Sums design tokens. The only file in the repo allowed to contain colour
+ * literals (scripts/check-tokens.mjs enforces this). Everything else uses var(--...).
+ *
+ * Colour values come straight from the Brand section of docs/brief.md.
+ * Light is the default; dark follows the system setting (prefers-color-scheme).
+ *
+ * Naming: --color-*, --space-*, --radius-*, --font-*, --size-*, --leading-*,
+ * --tracking-*, --focus-*, --layout-*. Teammates may append new tokens in the
+ * marked sections at the bottom; do not rename or re-value existing ones without
+ * recording why in docs/decisions.md.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- Colour: brief tokens (light) ---- */
+  --color-concrete: #d8d6d1; /* page background */
+  --color-surface: #e9e7e2; /* cards, inputs */
+  --color-ink: #1a1a1a; /* text, outlines */
+  --color-muted: #4e4e4e; /* secondary text */
+  --color-hi-vis: #d4ff00; /* primary button, tags, focus, break-even marker. Never text on light. */
+  --color-on-hi-vis: #1a1a1a; /* text on hi-vis, both themes */
+  --color-tag-alt: #ffffff; /* second tag colour */
+  --color-buy: #1f5aa6; /* buy series and answer numeral */
+  --color-rent: #e85a0c; /* rent series. Never text on light surfaces; always directly labelled. */
+
+  /* ---- Colour: derived (light) ---- */
+  --color-contour: rgb(26 26 26 / 0.09); /* contour circle lines: ink at 9% */
+  --color-buy-fill: rgb(31 90 166 / 0.14); /* buy area under the line: 14% */
+  --color-rule: var(--color-ink); /* thin table and divider rules */
+  --color-focus-ring: var(--color-hi-vis); /* inner focus ring */
+  --color-focus-edge: #1a1a1a; /* outer focus outline, both themes, gives 3:1 on light concrete */
+
+  /* ---- Contour background (the only gradient allowed on the site) ---- */
+  --contour-background: repeating-radial-gradient(
+    circle at 85% 12%,
+    transparent 0 26px,
+    var(--color-contour) 26px 27.5px
+  );
+
+  /* ---- Spacing: 4px base ---- */
+  --space-0: 0;
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px */
+
+  /* ---- Radius ---- */
+  --radius-card: 26px;
+  --radius-pill: 999px;
+
+  /* ---- Borders ---- */
+  --border-thin: 1px; /* table rules, input outlines on hover */
+  --border-control: 1.5px; /* secondary button outline, slider thumb outline */
+
+  /* ---- Type families ---- */
+  --font-sans: 'B612', ui-sans-serif, system-ui, sans-serif; /* all text */
+  /* Figures, tags, labels. The first face supplies only a narrow , and . (see fonts.css). */
+  --font-mono: 'B612 Mono Punctuation', 'B612 Mono', ui-monospace, monospace;
+  --weight-regular: 400;
+  --weight-bold: 700;
+
+  /* ---- Type scale (rem, 16px root). Modest headings; only the answer numeral is big. ---- */
+  --size-xs: 0.75rem; /* 12px: tags, chart axis labels */
+  --size-sm: 0.875rem; /* 14px: labels, hints, footer, key number labels */
+  --size-md: 1rem; /* 16px: body, input values */
+  --size-lg: 1.125rem; /* 18px: h3, key number figures */
+  --size-xl: 1.375rem; /* 22px: h2 */
+  --size-2xl: clamp(1.5rem, 1.3rem + 0.6vw, 1.75rem); /* 24-28px: h1 */
+  --size-answer: clamp(5rem, 2.5rem + 7vw, 8.5rem); /* 80-136px: the answer numeral, nothing else */
+
+  --leading-tight: 1.15; /* headings */
+  --leading-body: 1.5;
+  --leading-numeral: 0.9;
+  --tracking-heading: -0.02em;
+
+  /* ---- Focus (WCAG 2.2): hi-vis ring inside an ink outline ---- */
+  /*
+   * Apply with:
+   *   outline: var(--focus-outline); outline-offset: var(--focus-offset); box-shadow: var(--focus-shadow);
+   * The box-shadow fills the gap between the element and the outline with hi-vis,
+   * and the ink outline sits outside it. In forced-colours mode the shadow is dropped
+   * and the outline remains.
+   */
+  --focus-ring-width: 3px;
+  --focus-edge-width: 2px;
+  --focus-offset: var(--focus-ring-width);
+  --focus-outline: var(--focus-edge-width) solid var(--color-focus-edge);
+  --focus-shadow: 0 0 0 var(--focus-ring-width) var(--color-focus-ring);
+
+  /* ---- Layout ---- */
+  --layout-max: 75rem; /* 1200px content width */
+  --layout-gutter: var(--space-4); /* 16px on mobile */
+  --layout-gap: var(--space-6); /* between calculator columns and stacked cards */
+  --control-height: 2.75rem; /* 44px pill inputs and buttons, comfortable touch target */
+
+  /* ======== shell additions (append below, do not edit above) ======== */
+  /* Ink outline keeps the hi-vis sun legible on light concrete. */
+  --color-logo-sun-edge: var(--color-ink);
+  --logo-word-ratio: 0.5625; /* wordmark size relative to the mark: 18px next to a 32px mark */
+
+  /* ======== primitives additions (append below, do not edit above) ======== */
+
+  /*
+   * Edge of pill inputs and the segmented track. 3:1 against concrete and surface in
+   * both themes (WCAG 1.4.11), quieter than ink so a column of fields stays calm.
+   */
+  --color-control-edge: #777672;
+
+  /*
+   * Fixed copies of each theme's colours, for the /styleguide/ panels that show the
+   * primitives in light and dark side by side (.theme-panel--light / --dark). Nothing
+   * else uses them. scripts/theme-panels.test.ts fails if they drift from the tokens above.
+   */
+  --theme-light-concrete: #d8d6d1;
+  --theme-light-surface: #e9e7e2;
+  --theme-light-ink: #1a1a1a;
+  --theme-light-muted: #4e4e4e;
+  --theme-light-hi-vis: #d4ff00;
+  --theme-light-on-hi-vis: #1a1a1a;
+  --theme-light-tag-alt: #ffffff;
+  --theme-light-buy: #1f5aa6;
+  --theme-light-rent: #e85a0c;
+  --theme-light-buy-fill: rgb(31 90 166 / 0.14);
+  --theme-light-control-edge: #777672;
+  --theme-dark-concrete: #1c1c1b;
+  --theme-dark-surface: #262624;
+  --theme-dark-ink: #eceae5;
+  --theme-dark-muted: #b3b1ab;
+  --theme-dark-hi-vis: #d4ff00;
+  --theme-dark-on-hi-vis: #1a1a1a;
+  --theme-dark-tag-alt: #3a3a37;
+  --theme-dark-buy: #5b8fe0;
+  --theme-dark-rent: #db5e14;
+  --theme-dark-buy-fill: rgb(91 143 224 / 0.14);
+  --theme-dark-control-edge: #7a7873;
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --layout-gutter: var(--space-6); /* 24px from tablet up */
+  }
+}
+
+/* Screen only: printing always uses the light tokens, so ink stays dark on paper. */
+@media screen and (prefers-color-scheme: dark) {
+  :root {
+    /* ---- Colour: brief tokens (dark) ---- */
+    --color-concrete: #1c1c1b;
+    --color-surface: #262624;
+    --color-ink: #eceae5;
+    --color-muted: #b3b1ab;
+    --color-hi-vis: #d4ff00;
+    --color-on-hi-vis: #1a1a1a;
+    --color-tag-alt: #3a3a37;
+    --color-buy: #5b8fe0;
+    --color-rent: #db5e14;
+
+    /* ---- Colour: derived (dark) ---- */
+    --color-contour: rgb(236 234 229 / 0.1); /* light ink at 10% */
+    --color-buy-fill: rgb(91 143 224 / 0.14);
+    --color-focus-edge: #1a1a1a;
+
+    /* ======== shell dark additions ======== */
+    --color-logo-sun-edge: var(--color-hi-vis); /* hi-vis already stands out on dark concrete */
+
+    /* ======== primitives dark additions ======== */
+    --color-control-edge: #7a7873;
+  }
+}

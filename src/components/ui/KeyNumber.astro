@@ -1,0 +1,15 @@
+---
+/** Label, figure and unit. Place inside <dl class="key-numbers">. Styles in src/styles/ui/ (global classes, reused by phase 4 Preact). */
+import type { KeyNumberProps } from './types';
+
+type Props = KeyNumberProps;
+const { label, value, unit, class: className } = Astro.props;
+---
+
+<div class:list={['key-number', className]}>
+  <dt class="key-number__label">{label}</dt>
+  <dd class="key-number__value">
+    <span class="key-number__figure">{value}</span>
+    {unit && <span class="key-number__unit">{unit}</span>}
+  </dd>
+</div>
