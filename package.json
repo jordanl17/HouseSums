@@ -16,6 +16,7 @@
     "format": "prettier --write . && eslint . --fix",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:live": "node scripts/wait-for-deploy.mjs && playwright test",
     "budget": "node scripts/check-budget.mjs"
   },
   "dependencies": {

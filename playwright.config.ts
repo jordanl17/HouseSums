@@ -15,14 +15,17 @@ const HOST = '127.0.0.1';
 // Same default as astro.config.mjs. The preview gets the raw value, exactly as the build did.
 const basePath = process.env.BASE_PATH || '/HouseSums';
 const base = normaliseBase(basePath);
-const baseURL = `http://${HOST}:${PORT}${base}`;
+// LIVE_URL runs the same suite against a deployed site (the deploy workflow sets it
+// to the GitHub Pages URL). No local server is started in that mode.
+const liveURL = process.env.LIVE_URL ? process.env.LIVE_URL.replace(/\/?$/, '/') : undefined;
+const baseURL = liveURL ?? `http://${HOST}:${PORT}${base}`;
 const isCI = Boolean(process.env.CI);
 
 export default defineConfig({
   testDir: 'tests/e2e',
   fullyParallel: true,
   forbidOnly: isCI,
-  retries: isCI ? 1 : 0,
+  retries: liveURL ? 2 : isCI ? 1 : 0,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL,
@@ -39,17 +42,19 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
     },
   ],
-  webServer: {
-    // --ignore-lock keeps `astro preview` in the foreground. Without it, Astro 7 moves the
-    // server to the background when it detects a coding agent, and Playwright sees the
-    // command exit early. It also skips the lock file, so stray background servers do not clash.
-    command: `npm run preview -- --port ${PORT} --host ${HOST} --ignore-lock`,
-    url: baseURL,
-    reuseExistingServer: !isCI,
-    timeout: 60_000,
-    env: {
-      BASE_PATH: basePath,
-      ASTRO_TELEMETRY_DISABLED: '1',
-    },
-  },
+  webServer: liveURL
+    ? []
+    : {
+        // --ignore-lock keeps `astro preview` in the foreground. Without it, Astro 7 moves the
+        // server to the background when it detects a coding agent, and Playwright sees the
+        // command exit early. It also skips the lock file, so stray background servers do not clash.
+        command: `npm run preview -- --port ${PORT} --host ${HOST} --ignore-lock`,
+        url: baseURL,
+        reuseExistingServer: !isCI,
+        timeout: 60_000,
+        env: {
+          BASE_PATH: basePath,
+          ASTRO_TELEMETRY_DISABLED: '1',
+        },
+      },
 });

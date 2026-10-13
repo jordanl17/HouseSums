@@ -16,6 +16,7 @@ export default defineConfig(
     'playwright-report/',
     'blob-report/',
     'coverage/',
+    '.claude/',
   ]),
   js.configs.recommended,
   tseslint.configs.recommended,

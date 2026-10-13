@@ -71,7 +71,7 @@ docs/               product brief, build decisions and phase notes
 ## How deploys work
 
 - **CI** runs on every pull request and every push to any branch. It installs dependencies, then runs the type check, lint, unit tests, build, JavaScript budget check and the Playwright tests at 360px and 1280px. If a step fails, the Playwright report is uploaded with the run. A newer push to the same branch cancels the run it replaces.
-- **Deploy** runs on every push to `main`. You can also start it by hand from the Actions tab (Deploy to GitHub Pages, Run workflow). It builds the site with `BASE_PATH=/HouseSums` and `SITE_URL=https://jordanl17.github.io`, checks the JavaScript budget and publishes `dist/` to GitHub Pages. Only one deploy runs at a time, and a deploy in progress is never cancelled. The live site is at <https://jordanl17.github.io/HouseSums/>.
+- **Deploy** runs on every push to `main`. It runs the full CI suite first and only deploys if that passes. After deploying, it waits for the new build to appear on the live site and runs the end-to-end tests against it (`npm run test:live`). You can also start it by hand from the Actions tab (Deploy to GitHub Pages, Run workflow). It builds the site with `BASE_PATH=/HouseSums` and `SITE_URL=https://jordanl17.github.io`, checks the JavaScript budget and publishes `dist/` to GitHub Pages. Only one deploy runs at a time, and a deploy in progress is never cancelled. The live site is at <https://jordanl17.github.io/HouseSums/>.
 - The deploy workflow does not run the tests again. It relies on CI having passed on the same commit.
 
 ### Turning on GitHub Pages (one-off)

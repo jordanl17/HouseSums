@@ -6,6 +6,7 @@ test-results/
 playwright-report/
 blob-report/
 coverage/
+.claude/
 package-lock.json
 
 # Markdown docs are hand-written prose; keep them out of formatting churn.

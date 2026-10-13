@@ -18,6 +18,8 @@ interface Props {
 const DEFAULT_DESCRIPTION = 'Plain-English UK home-buying calculators. The maths of moving in.';
 const { title, description = DEFAULT_DESCRIPTION, noindex = false } = Astro.props;
 const fullTitle = title ? `${title} | House Sums` : 'House Sums';
+// Commit the build came from. The deploy workflow waits for this before testing the live site.
+const buildSha = import.meta.env.PUBLIC_BUILD_SHA ?? 'dev';
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 ---
 
@@ -29,6 +31,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <meta name="hs-build" content={buildSha} />
     <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
   </head>
   <body>

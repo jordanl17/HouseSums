@@ -49,3 +49,9 @@ Users asked to be able to choose between more cautious and more optimistic outlo
 - **JS budget:** `scripts/check-budget.mjs` counts raw bytes of every `.js`/`.mjs`/`.cjs` file in `dist/` (not gzip), including the Preact renderer chunks no page loads yet. Limit 102400 bytes. `--max-bytes` and `JS_BUDGET_BYTES` exist for experiments only; CI uses the default.
 - **Playwright's webServer runs `astro preview --ignore-lock`** on port 4322 at 127.0.0.1. Without the flag, Astro 7 moves preview to the background when it detects a coding agent, and Playwright sees the command exit early. If you run plain `npm run preview` from an agent session it starts in the background; stop it with `npx astro preview stop`.
 - **`url()` edge cases:** a bare `//` or `///path` (no host) is treated as an internal path, and repeated slashes inside the base are collapsed. `//host/path` is still treated as external and returned unchanged.
+
+## Deploy gate and live tests (phase 1 gate)
+- `deploy.yml` calls `ci.yml` first (`workflow_call`) and only builds and deploys if the whole CI suite passes. `ci.yml` no longer runs on pushes to `main`, so each main commit is checked once, by the deploy run.
+- After every deploy, a `live` job runs the full Playwright suite against the real GitHub Pages URL (`npm run test:live` with `LIVE_URL`). `scripts/wait-for-deploy.mjs` first waits until the live page's `<meta name="hs-build">` matches the commit, so the tests never hit the previous deploy in the CDN. A red deploy run means production is broken. Fix it before starting anything else.
+- e2e tests must therefore work against both `astro preview` and the live site: navigate with relative paths and don't depend on local-only behaviour.
+- Permissions are per job: only the deploy job gets `pages: write` and `id-token: write`. Checkouts use `persist-credentials: false`.
