@@ -16,7 +16,7 @@
  */
 import Base from '../layouts/Base.astro';
 import Calculator from '../components/calculator/Calculator';
-import { calculatorData } from '../lib/calculator-data';
+import { calculatorData, calculatorLinks } from '../lib/calculator-data';
 import { absoluteUrl, webApplicationLd } from '../lib/seo';
 import { url } from '../lib/url';
 import { nationName, nationPath } from '../lib/areas';
@@ -37,11 +37,7 @@ const jsonLd = webApplicationLd({
   <script is:inline>
     if (/[?&]a=[^&]/.test(location.search)) document.documentElement.dataset.calcLink = '';
   </script>
-  <Calculator
-    client:load
-    data={calculatorData()}
-    links={{ areaList: url('data/area-list.json'), howItWorks: url('how-it-works') }}
-  />
+  <Calculator client:load data={calculatorData()} links={calculatorLinks()} />
   <p class="nation-links" data-testid="nation-links">
     Rent v buy by nation:{' '}
     {NATIONS.map((nation, index) => (

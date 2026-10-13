@@ -16,3 +16,5 @@ package-lock.json
 data/areas.json
 data/rates.json
 data/sources.json
+stats/
+lighthouse/

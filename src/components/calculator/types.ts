@@ -62,6 +62,14 @@ export interface CalculatorLinks {
   areaList: string;
   /** url('how-it-works'). */
   howItWorks: string;
+  /**
+   * Phase 6: url('rent-vs-buy'), the folder of the per-area pages ("/HouseSums/rent-vs-buy/").
+   * On an area page, picking a different area navigates to `${areaPages}${slug}/` (keeping the
+   * user's overrides in the query) instead of leaving the old page's heading and summary.
+   * Optional so older callers and fixtures still type-check; both pages pass it through
+   * calculatorLinks() in src/lib/calculator-data.ts.
+   */
+  areaPages?: string;
 }
 
 export interface CalculatorProps {

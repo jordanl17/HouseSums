@@ -23,3 +23,7 @@ coverage/
 !.env.example
 .DS_Store
 *.log
+
+# Bundle analysis and Lighthouse reports (phase 6)
+stats/
+lighthouse/

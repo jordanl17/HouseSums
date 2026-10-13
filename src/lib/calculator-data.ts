@@ -13,7 +13,7 @@ import areasJson from '../../data/areas.json';
 import defaultsJson from '../../data/defaults.json';
 import ratesJson from '../../data/rates.json';
 import taxRulesJson from '../../data/taxRules.json';
-import type { CalculatorData } from '../components/calculator/types';
+import type { CalculatorData, CalculatorLinks } from '../components/calculator/types';
 import type { ClientArea } from './area-list';
 import {
   parseAreaNames,
@@ -23,6 +23,7 @@ import {
   parseTaxRules,
 } from './schema';
 import type { AreasFile } from './types';
+import { url } from './url';
 
 let cached: { data: CalculatorData; areas: AreasFile } | null = null;
 
@@ -45,6 +46,18 @@ function load(): { data: CalculatorData; areas: AreasFile } {
 /** Props for <Calculator data={...} />. */
 export function calculatorData(): CalculatorData {
   return load().data;
+}
+
+/**
+ * Props for <Calculator links={...} />: the same on every page that has the island (phase 6), so
+ * pages never spell the URLs out by hand.
+ */
+export function calculatorLinks(): CalculatorLinks {
+  return {
+    areaList: url('data/area-list.json'),
+    howItWorks: url('how-it-works'),
+    areaPages: url('rent-vs-buy'),
+  };
 }
 
 /** The validated areas file, for build-time pages (phase 5 area pages). */

@@ -17,6 +17,8 @@ export default defineConfig(
     'blob-report/',
     'coverage/',
     '.claude/',
+    'stats/',
+    'lighthouse/',
   ]),
   js.configs.recommended,
   tseslint.configs.recommended,

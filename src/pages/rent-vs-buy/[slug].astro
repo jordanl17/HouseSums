@@ -36,7 +36,7 @@ import {
 } from '../../lib/areas';
 import { NATIONS } from '../../lib/types';
 import '../../styles/area.css';
-import { calculatorData } from '../../lib/calculator-data';
+import { calculatorData, calculatorLinks } from '../../lib/calculator-data';
 import { formatMoney } from '../../lib/format';
 import {
   absoluteUrl,
@@ -109,7 +109,7 @@ const jsonLd =
       <Calculator
         client:load
         data={calculatorData()}
-        links={{ areaList: url('data/area-list.json'), howItWorks: url('how-it-works') }}
+        links={calculatorLinks()}
         initialArea={islandArea(page.area)}
       />
       <AreaSummary area={page.area} />

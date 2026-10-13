@@ -8,8 +8,8 @@ Each phase lands as one PR into `main`. The phase team appends its handoff notes
 | 2 | Brand and layout shell | `phase/2-brand` | Merged |
 | 3 | Engine and data pipeline | `phase/3-engine` | Merged |
 | 4 | Calculator UI | `phase/4-calculator` | Merged |
-| 5 | Area, nation and content pages, SEO | `phase/5-pages` | In review |
-| 6 | Accessibility, performance and end-to-end | `phase/6-hardening` | Not started |
+| 5 | Area, nation and content pages, SEO | `phase/5-pages` | Merged |
+| 6 | Accessibility, performance and end-to-end | `phase/6-hardening` | In progress |
 
 ## Handoff notes
 

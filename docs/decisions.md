@@ -441,3 +441,66 @@ Shared rule: edit only your own files. If you need a change in someone else's fi
 - **OG card tags** read "Area-by-area figures across the UK" (default) and "Area-by-area figures" (nations), since not every area has local figures. PNGs regenerated with `npm run og`.
 - **Content-page meta descriptions** trimmed to 160 characters or fewer.
 - **Not taken:** dropping " | House Sums" from long area titles (the title contract in `PAGES` and `seo.ts` stays; revisit with search-console data), trimming island props on area pages (phase 6 if Lighthouse slips), area pages navigating to the picked area's page (phase 6), and tagging clamped growth differently in the island (phase 6).
+
+## Phase 6 baseline (lead)
+Measured on `origin/main` at c5de61f (phase 5 merged) on 13 October 2026, in the build container, before any phase 6 change. Commands: `npm run build`, `npm run budget`, `npm run analyze` (new), `npm run lighthouse` (new).
+
+**Facts the older docs have wrong.** The repository is public, GitHub Pages is switched on and live at `https://jordanl17.github.io/HouseSums/`, and every deploy runs the whole e2e suite against the live site (all green so far). Statements in README, `docs/phases.md` and earlier sections here saying otherwise are stale; the docs-acceptance teammate fixes them.
+
+**Client JS** (raw bytes on disk, what `npm run budget` counts):
+
+| File | Bytes | Gzip | Loaded by a page? |
+|---|---|---|---|
+| `Calculator.*.js` (the island) | 61,805 | 21,166 | yes, `/` and every area page |
+| `preact.module.*.js` | 10,470 | | yes |
+| `signals.module.*.js` | 7,808 | | no: `@astrojs/preact`'s client imports it only for signal props, which we never pass, but it is emitted and counted |
+| `client.*.js` (Astro's Preact renderer) | 3,049 | | yes |
+| `hooks.module.*.js` | 2,684 | | yes |
+| **Total** | **85,816 of 102,400** | | 78,008 loaded per page |
+
+**Island composition** (`npm run analyze`, rollup's rendered length before minification, 104.5 KB rendered, 37.8 KB gzip): `Calculator.tsx` 9.8 KB, `copy.ts` 8.9, `Chart.tsx` 8.1, `model.ts` 6.4, `inputs.ts` 6.3, `state.ts` 5.6, `defaults.ts` 5.5, `chart.ts` 4.8, `InputsPanel.tsx` 4.8, `AreaPicker.tsx` 4.4, `Breakdown.tsx` 4.4, then `area-list.ts`, `format.ts`, `ShareLink.tsx`, `AdvancedPanel.tsx`, `ui/Field.tsx`, `ui/units.ts` at about 2.6 KB each, `AnswerCard`, `tax.ts`, `ui/Tag`, `Sensitivity` about 2 KB each, and the rest under 2 KB. No `preact/compat`, no JSON and no third-party code in the island: it is all our own code. The weight is the engine (model, defaults, state, tax, format: about 27 KB rendered, needed on the client to recalculate), copy, the chart and the inputs. `area-list.ts` carries a validator for the fetched list; `copy.ts` holds every answer case, including the flip hint's model re-runs.
+
+**HTML** (372 pages; 365 under `rent-vs-buy/`): area pages median 87,477 bytes (min 13,246 for the index, max 89,518), Leeds 87,220 (15,862 gzip), home 63,365 (11,538 gzip), England nation page 86,679, How it works 37,577. **dist/ is 32,764,363 bytes (34 MB)**, of which `rent-vs-buy/` is 31.8 MB.
+
+Leeds page breakdown (87,220 bytes):
+- head and page top before the island: 11.3 KB (meta, OG, JSON-LD 1.1 KB, area page `<style>` 1.9 KB);
+- the `<astro-island>` open tag: 19.9 KB, almost all the `props` attribute (12.7 KB of JSON once unescaped: `defaults` 6.1 KB, `taxRules` 5.0 KB, `rates` 0.9 KB, `areasMeta` 0.5 KB, `slugAliases` 0.1 KB, `initialArea` 0.2 KB). Everything but `initialArea` is the same on all 362 island pages: about 19.5 KB of HTML-escaped attribute each, about 7 MB of dist;
+- the island's server-rendered markup: 50.0 KB. Of that, the advanced panel (17 fields with hints, closed by default) is about 20 KB, the year-by-year table about 7 KB, the chart's hidden table about 3.4 KB, sensitivity and breakdown about 4 KB, key numbers and the share row about 1 KB;
+- after the island (summary, related areas, footer): 5.8 KB; Astro's inline island loader scripts: 5.1 KB.
+So removing the shared props alone takes Leeds to about 67 KB. Reaching 45 KB also needs the server-rendered markup cut, most obviously not rendering the closed advanced panel's fields and the closed year table into the HTML.
+
+**CSS and fonts.** Two render-blocking stylesheets on calculator pages: `Base.*.css` 22,830 bytes (4,963 gzip) and `Calculator.*.css` 9,458 (2,486 gzip); one on the other pages. Fonts: four latin woff2 files (B612 400 21.2 KB, 700 13.2 KB; B612 Mono 400 19.0 KB, 700 19.0 KB), `font-display: swap`, no preload, discovered only after the CSS arrives. `.woff` fallbacks are emitted too but never fetched. The area page also fetches `data/area-list.json` (25.9 KB) when idle.
+
+**Lighthouse** (`npm run lighthouse`: Lighthouse 13.5 with the container's Chromium 1194, `astro preview` on dist/, median of 3 runs):
+
+| Page | Form | Perf | A11y | Best pr. | SEO | LCP ms | TBT ms | CLS |
+|---|---|---|---|---|---|---|---|---|
+| `/` | mobile | 100 | 100 | 100 | 100 | 1,211 | 33 | 0.000 |
+| `/` | desktop | 100 | 100 | 100 | 100 | 338 | 0 | 0.005 |
+| `/rent-vs-buy/leeds/` | mobile | 100 | 100 | 100 | 100 | 1,361 | 69 | 0.000 |
+| `/rent-vs-buy/leeds/` | desktop | 100 | 100 | 100 | 100 | 372 | 0 | 0.008 |
+
+Flagged in every run: **render-blocking requests** (estimated savings 580 ms mobile, 160-170 ms desktop) and the network dependency tree (CSS, then fonts). The desktop CLS of 0.005-0.008 is the font swap. **Variance:** one extra single run of the Leeds page on mobile scored 94 with TBT 241 ms and 2.3 s of main-thread work (hydrating 50 KB of server-rendered markup under 4x CPU throttling), against 99-100 in the three-run set. So a single run can fail a 95 bar; the CI assertion must use the median and lean on the stable metrics as well (perf teammate).
+
+**axe** (`@axe-core/playwright` 4.13 with WCAG 2.0/2.1/2.2 A and AA tags; a throwaway scan of the nine page types in `A11Y_PAGES`, light and dark, at 360 and 1280): **no violations of any impact** on any page in any combination. The a11y-ux teammate adds the states this did not open (advanced panel, a tooltip, the year table) and keeps it in CI.
+
+## Phase 6 ownership (lead)
+Phase 6 runs as the lead plus three teammates on their own branches off `phase/6-hardening`. Shared tooling is in place: `@axe-core/playwright`, `lighthouse`, `chrome-launcher` and `rollup-plugin-visualizer` as devDependencies; `npm run analyze` (`scripts/analyze-bundle.mjs`, `ANALYZE=1` in `astro.config.mjs`, writes gitignored `stats/`); `npm run lighthouse` (`scripts/lighthouse.mjs`: preview or `--url`, `--runs`, `--paths`, `--forms`, `--report-only`, median run, `THRESHOLDS`, `summary.md` for PRs, writes gitignored `lighthouse/`); `tests/e2e/axe-helpers.ts` (`A11Y_PAGES`, `THEMES`, `waitForCalculator`, `axeViolations`, `expectNoSeriousViolations`); `npm run test:a11y`; a `scripts/screenshots.mjs` stub with its contract; `calculatorLinks()` in `src/lib/calculator-data.ts` and the new optional `links.areaPages` (both pages pass it).
+
+Shared rules: edit only your own files; for anything else make the smallest additive change and list it in your handoff. Record decisions in **your own section below** only (never edit another section of this file). No new runtime dependencies. Keep every existing test green; when a contract changes, change its tests with it and say so. Run `npm run check && npm run lint && npm test && npm run build && npm run budget && npm run check:links && npm run check:pages` and the e2e suite (use your own `E2E_PORT`) before handing off.
+
+| Owner | Owns (may create and edit) | Must not touch |
+|---|---|---|
+| lead | `docs/phases.md` (phase 6 notes and status table), this "Phase 6 baseline" and "ownership" text, `package.json` scripts (teammates may add their own), `tests/e2e/axe-helpers.ts` (a11y-ux may append helpers), integration | |
+| perf | `astro.config.mjs`, `src/lib/calculator-data.ts` (`calculatorData`, how shared data reaches the island; keep `calculatorLinks`), new shared-data endpoints or modules (e.g. `src/pages/data/*.json.ts`, `src/lib/*-client.ts`), the `data` / `CalculatorData` part of `src/components/calculator/types.ts`, the data-loading part of `Calculator.tsx` (imports, how `data` arrives, mount-time fetches; not `selectArea` or the live region), when collapsed content is rendered (the advanced panel's body, the year-by-year table, the chart's hidden table: render-on-open or similar, keeping markup, ids and test hooks the same once rendered), the `data=` / island prop lines in `src/pages/index.astro` and `src/pages/rent-vs-buy/[slug].astro`, `src/layouts/Base.astro` `<head>` (stylesheets, preloads, critical CSS), `src/styles/fonts.css` and font imports, CSS bundling and critical CSS, `scripts/lighthouse.mjs`, `scripts/analyze-bundle.mjs`, `scripts/check-budget.mjs` (an island-chunk limit), HTML-size checks in `tests/built/**` (new files), the Lighthouse steps in `.github/workflows/ci.yml` and the `live` job of `deploy.yml`, the "Performance (phase 6, perf)" section below | `selectArea`, the answer live region, `AreaPicker.tsx`, `Tag.tsx`, `src/lib/defaults.ts`, `src/lib/seo.ts`, a11y specs, docs other than your section |
+| a11y-ux | new `tests/e2e/a11y.spec.ts`, new `tests/e2e/forced-colors.spec.ts`, new or extended keyboard / screen reader / reduced-motion specs (`keyboard.spec.ts`, `focus.spec.ts` and new files), helpers appended to `axe-helpers.ts`; the UX fixes: `selectArea` in `Calculator.tsx` (area pages navigate to `${links.areaPages}${slug}/` with the overrides in the query) and the live region block, `AreaPicker.tsx`, `ui/Tag.tsx`, `ui/Field.tsx` (always-present notes), `InputsPanel.tsx` and `AdvancedPanel.tsx` markup (not when they render), `Chart.tsx` accessibility, the floored-growth provenance in `src/lib/defaults.ts` (+ tests; an additive optional field on `Provenance` in `src/lib/types.ts` if needed), `areaTitle` in `src/lib/seo.ts` (+ `seo.test.ts`), the titles in `PAGES` (`tests/e2e/helpers.ts`) and any `tests/built/**` title assertions, `@media (forced-colors: active)` and `prefers-reduced-motion` rules in `src/styles/**`, accessibility fixes at the source in components and CSS, the "Accessibility and UX (phase 6, a11y-ux)" section below | `astro.config.mjs`, `calculator-data.ts`, `Base.astro` head, `fonts.css`, the data-loading part of `Calculator.tsx`, Lighthouse and budget scripts, workflows, docs other than your section |
+| docs-acceptance | new `docs/acceptance.md`, `README.md`, stale statements in `docs/phases.md` phases 1-5 and in earlier sections of this file (facts only: public repo, Pages live, live e2e on every deploy; never rewrite another phase's decisions), `scripts/screenshots.mjs` (+ test if useful), the "Docs and acceptance (phase 6, docs-acceptance)" section below | code under `src/`, tests other than your own, workflows, the phase 6 notes in `docs/phases.md` |
+
+### Performance (phase 6, perf)
+_(The perf teammate fills this section: before and after numbers for the island, total JS, area page HTML and dist/; how shared data reaches the island and why; critical CSS and fonts; how Lighthouse runs in CI and what it asserts.)_
+
+### Accessibility and UX (phase 6, a11y-ux)
+_(The a11y-ux teammate fills this section: axe coverage, the UX fixes, keyboard, screen reader, reduced motion and forced-colours findings, and anything re-deferred with a reason.)_
+
+### Docs and acceptance (phase 6, docs-acceptance)
+_(The docs-acceptance teammate fills this section: how acceptance evidence is mapped, the screenshot set, stale statements fixed, and what still needs Jordan.)_
