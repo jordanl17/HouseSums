@@ -141,7 +141,50 @@ To be written by the tax teammate.
 To be written by the model teammate.
 
 ## URL state keys (phase 3)
-To be written by the format-state teammate.
+The calculator state (`Selection` + `Overrides`) is written to the query string by `encodeState` and read back by `decodeState` in `src/lib/state.ts`. The keys are exported as `SELECTION_PARAMS` and `INPUT_PARAMS`. They are part of every shared link, so **never rename or reuse a key**; add new ones instead.
+
+| Key | Field | Written as | Left out when |
+|---|---|---|---|
+| `a` | area slug | slug, e.g. `a=leeds` | no area |
+| `b` | buyer type | `first`, `moving`, `additional` | equal to `defaultBuyerType` |
+| `o` | outlook | `cautious`, `typical`, `optimistic` | equal to `defaultPreset` |
+| `n` | nation override | `eng`, `sco`, `wal`, `ni` | no override |
+| `p` | price | pounds, `p=300000` | equal to the derived default |
+| `d` | deposit | pounds | " |
+| `r` | monthly rent | pounds | " |
+| `mr` | mortgage rate | percentage, `mr=4.3` | " |
+| `g` | house price growth | percentage, `g=3` | " |
+| `t` | mortgage term | whole years | " |
+| `fx` | initial fix length | whole years | " |
+| `ra` | rate after fix | percentage | " |
+| `pf` | product fee | pounds | " |
+| `lb` | legal fees (buying) | pounds | " |
+| `sv` | survey | pounds | " |
+| `mv` | moving costs | pounds | " |
+| `mt` | maintenance | percentage of value a year | " |
+| `ins` | buildings insurance | pounds a year | " |
+| `sc` | service charge etc. | pounds a year | " |
+| `rg` | rent increases | percentage | " |
+| `ir` | investment return | percentage | " |
+| `inf` | inflation | percentage | " |
+| `ag` | estate agent fee | percentage | " |
+| `ls` | legal fees (selling) | pounds | " |
+| `hr` | Home Report | pounds | " |
+| `y` | years to compare | whole years | " |
+
+- **Units come from `defaults.json`, not code.** A field whose unit is `percent` or `percentPerYear` is written as a percentage (0.043 is `mr=4.3`), `years` as a whole number, and money as pounds. So a link reads like the form.
+- **Precision.** Percentages to 4 decimal places, money to the penny, years whole. Values are clamped to the field's `min`/`max` and rounded half away from zero (in decimal, so 1250.555 is `1250.56`) on the way out and on the way in. That makes `decodeState(encodeState(x))` exact for anything the UI can enter and makes encoding a decoded state stable. Both are fast-check properties in `state.test.ts`.
+- **"Differs from the default"** is decided on the written text: an override is left out when it writes the same as `base[key]` (the value its Reset link restores, from `deriveInputs`). Float noise such as `0.045000000000000005` never adds a parameter. The base is per field given the other overrides, so a link with only `d=` re-derives the same mortgage rate (see "Engine contracts").
+- **Order.** Selection keys first (`a`, `b`, `o`, `n`), then inputs in `NUMERIC_INPUT_KEYS` order, so the same state always gives the same link.
+- **Decoding never throws.** It accepts `?a=leeds`, `a=leeds`, a whole URL or a `URLSearchParams`, and drops the hash. Unknown keys (including `__proto__`, `utm_source`) are ignored. Unknown enum values fall back to the defaults (`o=custom` is the typical preset). Numbers are read leniently with `parseMoney`/`parsePercent` (`p=300k`, `mr=4.3%`), and anything else (`p=abc`, `p=`, `p=1e5`, `p=Infinity`) is dropped. Numbers are clamped to `min`/`max`. An area slug must be in `knownAreas` when that is passed (phase 4 should pass the slugs from `areas.json`), and otherwise must at least look like a slug. When a key repeats, the last valid value wins, so a value appended to a link takes effect and a junk one appended after it is ignored.
+- **Not the URL's job:** clamping the deposit to the price, and dropping a `nationOverride` equal to the area's own nation. Phase 4 should normalise those before encoding if it wants the shortest link.
+
+### Formatting (phase 3)
+`src/lib/format.ts`: `formatMoney` ("£300,000", pence only with `{ pence: true }`, "+£1,200" with `{ signed: true }`), `formatPercent` (decimal in, "4.30%" by default, `{ decimals: 1, perYear: true }` for "3.0% a year", `{ signed: true }` for "+1%"; the `signed` option is an addition to the phase lead's stub), `formatYears` ("1 year", "6 years", at most one decimal), `parseMoney`, `parsePercent`.
+- **Negatives use U+2212** (`MINUS`), before the pound sign: "−£1,200". A value that rounds to zero shows unsigned ("£0", never "−£0"). Output never contains a hyphen-minus.
+- **Rounding** is half away from zero on the decimal reading of the number (en-GB `Intl.NumberFormat`), the same both sides of zero.
+- **Non-finite values** format as an empty string rather than "NaN" or a throw; the UI decides what to show.
+- **parseMoney** accepts an optional sign (hyphen or U+2212, before or after "£", but only one), "£", digits that are either plain or correctly grouped in threes with commas, an optional decimal part, and a `k` or `m` suffix, with spaces around any of those. It rejects badly grouped commas ("3,00,000"), spaces inside the digits ("1 000"), exponents ("1e5"), hex, "Infinity" and trailing words ("300 pcm"). Suffixes are applied in decimal, so "1.15k" is exactly 1150. **parsePercent** takes the same digits with an optional "%" and "a year".
 
 ## Data pipeline (phase 3)
 To be written by the data teammate.
