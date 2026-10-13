@@ -33,7 +33,8 @@ const tableColumns: DataTableColumn[] = [
   { key: 'diff', label: 'Difference', numeric: true },
 ];
 const money = (k: number) => `£${Math.round(k * 1000).toLocaleString('en-GB')}`;
-const signed = (k: number) => `${k < 0 ? '-' : '+'}${money(Math.abs(k))}`;
+// A true minus sign (U+2212), the same width as + in the mono figures.
+const signed = (k: number) => `${k < 0 ? '\u2212' : '+'}${money(Math.abs(k))}`;
 const tableRows = [4, 5, 6, 7].map((year) => {
   const buy = exampleBuy[year] ?? 0;
   const rent = exampleRent[year] ?? 0;
@@ -42,20 +43,17 @@ const tableRows = [4, 5, 6, 7].map((year) => {
 ---
 
 <div class="specimens">
-  <section class="specimen" aria-labelledby={id('sg-buttons')}>
+  <div class="specimen">
     <h4 class="specimen__title" id={id('sg-buttons')}>
       Button
     </h4>
     <div class="specimen__row">
       <Button>Show me my break-even year</Button>
       <Button variant="secondary">Copy link</Button>
-      <Button variant="secondary" disabled>
-        Reset all
-      </Button>
     </div>
-  </section>
+  </div>
 
-  <section class="specimen" aria-labelledby={id('sg-tags')}>
+  <div class="specimen">
     <h4 class="specimen__title" id={id('sg-tags')}>
       Tag
     </h4>
@@ -67,9 +65,9 @@ const tableRows = [4, 5, 6, 7].map((year) => {
         Typical figure
       </Tag>
     </div>
-  </section>
+  </div>
 
-  <section class="specimen" aria-labelledby={id('sg-fields')}>
+  <div class="specimen">
     <h4 class="specimen__title" id={id('sg-fields')}>
       Field and slider
     </h4>
@@ -88,7 +86,7 @@ const tableRows = [4, 5, 6, 7].map((year) => {
           </Tag>
           <Slider
             id={id('sg-price-slider')}
-            label="Property price slider"
+            label="Property price"
             min={50000}
             max={1000000}
             step={5000}
@@ -116,9 +114,9 @@ const tableRows = [4, 5, 6, 7].map((year) => {
         />
       </div>
     </div>
-  </section>
+  </div>
 
-  <section class="specimen" aria-labelledby={id('sg-segmented')}>
+  <div class="specimen">
     <h4 class="specimen__title" id={id('sg-segmented')}>
       Segmented control
     </h4>
@@ -144,9 +142,9 @@ const tableRows = [4, 5, 6, 7].map((year) => {
         ]}
       />
     </div>
-  </section>
+  </div>
 
-  <section class="specimen" aria-labelledby={id('sg-card')}>
+  <div class="specimen">
     <h4 class="specimen__title" id={id('sg-card')}>
       Card, answer and key numbers
     </h4>
@@ -162,9 +160,9 @@ const tableRows = [4, 5, 6, 7].map((year) => {
         </dl>
       </div>
     </Card>
-  </section>
+  </div>
 
-  <section class="specimen" aria-labelledby={id('sg-chart')}>
+  <div class="specimen">
     <h4 class="specimen__title" id={id('sg-chart')}>
       Chart
     </h4>
@@ -180,9 +178,9 @@ const tableRows = [4, 5, 6, 7].map((year) => {
         summary="Example chart. Buying starts below renting and pulls ahead in year 6."
       />
     </Card>
-  </section>
+  </div>
 
-  <section class="specimen" aria-labelledby={id('sg-disclosure')}>
+  <div class="specimen">
     <h4 class="specimen__title" id={id('sg-disclosure')}>
       Disclosure and data table
     </h4>
@@ -197,5 +195,5 @@ const tableRows = [4, 5, 6, 7].map((year) => {
     <Disclosure summary="Adjust every assumption (18)">
       <p>The advanced inputs go here.</p>
     </Disclosure>
-  </section>
+  </div>
 </div>

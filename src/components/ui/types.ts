@@ -27,7 +27,11 @@ export interface CardProps extends WithClass {
 export interface ButtonProps extends WithClass {
   /** Default 'primary'. Use primary at most once per view (one hi-vis area per view). */
   variant?: 'primary' | 'secondary';
-  /** Renders an <a> instead of a <button> when set. Build it with url(). */
+  /**
+   * Renders an <a> instead of a <button> when set. Build it with url().
+   * A link cannot be disabled: `disabled` is ignored when `href` is set, so leave the
+   * link out (or render a <button>) when the action is not available.
+   */
   href?: string;
   /** Button type when rendering a <button>. Default 'button'. */
   type?: 'button' | 'submit' | 'reset';
@@ -43,14 +47,19 @@ export interface ButtonProps extends WithClass {
  *     <slot name="tag" />                       e.g. <Tag variant="local">
  *   </div>
  *   <div class="field__control">
- *     <span class="field__affix field__affix--prefix">£</span>
- *     <input class="field__input [field__input--text]" id={id} ... />
- *     <span class="field__affix field__affix--suffix">%</span>
+ *     <span class="field__affix field__affix--prefix" id={`${id}-prefix`}>£</span>
+ *     <input class="field__input [field__input--text]" id={id}
+ *            aria-describedby="{id}-prefix {id}-suffix {id}-hint {id}-error" ... />
+ *     <span class="field__affix field__affix--suffix" id={`${id}-suffix`}>%</span>
  *   </div>
  *   <slot />                                    e.g. a <Slider> under the input
  *   <p class="field__hint" id={`${id}-hint`}>...</p>
  *   <p class="field__error" id={`${id}-error`}>...</p>
  * </div>
+ *
+ * The units are part of the input's accessible description (aria-describedby lists
+ * the prefix and suffix first, then the hint and error, skipping any that are absent),
+ * so a screen reader hears "House price growth, 3.0, % a year" and not a bare number.
  */
 export interface FieldProps extends WithClass {
   /** Input id, also used to derive the hint and error ids. */
@@ -83,7 +92,10 @@ export interface FieldProps extends WithClass {
 /** `.slider`: styled native range. Ink track, hi-vis thumb with an ink outline. */
 export interface SliderProps extends WithClass {
   id: string;
-  /** Accessible name (aria-label), e.g. "Property price slider". */
+  /**
+   * Accessible name (aria-label): the same words as the field it moves, e.g.
+   * "Property price". Do not add "slider"; the role already says it.
+   */
   label: string;
   min: number;
   max: number;

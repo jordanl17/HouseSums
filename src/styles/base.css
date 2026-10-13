@@ -273,3 +273,27 @@ a:hover {
       'rest answer';
   }
 }
+
+/*
+ * ---- Print ----
+ * The brief's slop check asks that a page still makes complete sense printed in black
+ * and white. Printing always uses the light tokens (tokens.css limits dark to screen).
+ * Drop the contour background and the parts of the shell that only work on screen;
+ * the primitives that carry meaning in a background (segmented choice, slider track,
+ * chart key) have their own print rules in src/styles/ui/.
+ */
+@media print {
+  body {
+    background: none;
+  }
+
+  .skip-link,
+  .site-nav {
+    display: none;
+  }
+
+  .tag,
+  .button--primary {
+    print-color-adjust: exact;
+  }
+}

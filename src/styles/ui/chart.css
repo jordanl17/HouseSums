@@ -150,7 +150,12 @@
   white-space: nowrap;
 }
 
-/* Direct labels sit on the line at --x, above or below it, in ink with a short key line. */
+/*
+ * Direct labels sit at --x on their line, in ink with a short key line in the series
+ * colour. Both series rise to the right, so a label above its line hangs to the left of
+ * the point (the line there is lower) and a label below hangs to the right (the line
+ * there is higher). Centred labels collided with the steeper buy line at 360px.
+ */
 .chart__series-label {
   position: absolute;
   left: var(--x);
@@ -158,7 +163,6 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  transform: translateX(-50%);
   font-family: var(--font-mono);
   font-size: var(--size-sm);
   font-weight: var(--weight-bold);
@@ -169,30 +173,55 @@
 
 .chart__series-label--above {
   margin-bottom: var(--space-2);
+  transform: translateX(calc(-100% - var(--space-1)));
 }
 
 .chart__series-label--below {
-  transform: translate(-50%, calc(100% + var(--space-2)));
+  transform: translate(var(--space-1), calc(100% + var(--space-2)));
 }
 
+/* The key line is a border, not a background, so it still prints with background graphics off. */
 .chart__series-label::before {
   content: '';
   width: var(--space-3);
-  height: 3px;
+  height: 0;
+  border-top: 3px solid currentColor;
   border-radius: var(--radius-pill);
 }
 
 .chart__series-label--buy::before {
-  background-color: var(--color-buy);
+  border-top-color: var(--color-buy);
 }
 
 .chart__series-label--rent::before {
-  background-color: var(--color-rent);
+  border-top-color: var(--color-rent);
 }
 
 @media (min-width: 48rem) {
   .chart {
     --chart-height: 13rem;
+  }
+}
+
+/* Beside the inputs (two-column calculator), a shorter plot keeps the key numbers above the fold at 1280x800. */
+@media (min-width: 60rem) {
+  .chart {
+    --chart-height: 11rem;
+  }
+}
+
+/*
+ * Print, often in black and white: dash the rent line so the two series differ by more
+ * than lightness, and keep the hi-vis Year label and buy fill when backgrounds are off.
+ */
+@media print {
+  .chart__line--rent {
+    stroke-dasharray: 6 3;
+  }
+
+  .chart__marker-label,
+  .chart__area--buy {
+    print-color-adjust: exact;
   }
 }
 

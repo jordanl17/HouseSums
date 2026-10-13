@@ -17,9 +17,12 @@ const {
   readonly = false,
   class: className,
 } = Astro.props;
+const prefixId = prefix ? `${id}-prefix` : undefined;
+const suffixId = suffix ? `${id}-suffix` : undefined;
 const hintId = hint ? `${id}-hint` : undefined;
 const errorId = error ? `${id}-error` : undefined;
-const describedby = [hintId, errorId].filter(Boolean).join(' ') || undefined;
+// Units first, so they are announced with the value (WCAG 1.3.1), then hint and error.
+const describedby = [prefixId, suffixId, hintId, errorId].filter(Boolean).join(' ') || undefined;
 ---
 
 <div class:list={['field', { 'field--invalid': error }, className]}>
@@ -30,7 +33,11 @@ const describedby = [hintId, errorId].filter(Boolean).join(' ') || undefined;
     <slot name="tag" />
   </div>
   <div class="field__control">
-    {prefix && <span class="field__affix field__affix--prefix">{prefix}</span>}
+    {prefix && (
+      <span class="field__affix field__affix--prefix" id={prefixId}>
+        {prefix}
+      </span>
+    )}
     <input
       class:list={['field__input', { 'field__input--text': kind === 'text' }]}
       id={id}
@@ -42,7 +49,11 @@ const describedby = [hintId, errorId].filter(Boolean).join(' ') || undefined;
       aria-describedby={describedby}
       aria-invalid={error ? 'true' : undefined}
     />
-    {suffix && <span class="field__affix field__affix--suffix">{suffix}</span>}
+    {suffix && (
+      <span class="field__affix field__affix--suffix" id={suffixId}>
+        {suffix}
+      </span>
+    )}
   </div>
   <slot />
   {hint && (

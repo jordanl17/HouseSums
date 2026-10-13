@@ -25,7 +25,7 @@ import Tag from '../components/ui/Tag.astro';
   noindex
 >
   <div class="styleguide">
-    <h1>Style guide</h1>
+    <h1 class="styleguide__title">Style guide</h1>
 
     <section class="example" data-example="calculator" aria-labelledby="example-title">
       <div class="example__head">
@@ -49,7 +49,7 @@ import Tag from '../components/ui/Tag.astro';
             <Field id="ex-price" label="Property price" prefix="£" value="245,000" readonly>
               <Slider
                 id="ex-price-slider"
-                label="Property price slider"
+                label="Property price"
                 min={50000}
                 max={1000000}
                 step={5000}
@@ -76,7 +76,7 @@ import Tag from '../components/ui/Tag.astro';
               yMax={250}
               yStep={50}
               xTicks={[0, 5, 10, 15]}
-              caption="What you'd walk away with if you sold, £ thousands"
+              caption={`What you'd walk away with if you sold, in £\u00a0thousands`}
               summary="Example chart. Buying starts below renting, pulls ahead in year 6 and is about £75k ahead by year 15."
             />
             <dl class="key-numbers">
@@ -117,7 +117,7 @@ import Tag from '../components/ui/Tag.astro';
             >
               <Slider
                 id="ex-rent-slider"
-                label="Monthly rent slider"
+                label="Monthly rent, similar home"
                 min={300}
                 max={5000}
                 step={10}
@@ -128,7 +128,7 @@ import Tag from '../components/ui/Tag.astro';
             <Field id="ex-rate" label="Mortgage rate, 5-year fix" suffix="%" value="4.30" readonly>
               <Slider
                 id="ex-rate-slider"
-                label="Mortgage rate slider"
+                label="Mortgage rate, 5-year fix"
                 min={0}
                 max={10}
                 step={0.05}
@@ -139,7 +139,7 @@ import Tag from '../components/ui/Tag.astro';
             <Field id="ex-growth" label="House price growth" suffix="% a year" value="3.0" readonly>
               <Slider
                 id="ex-growth-slider"
-                label="House price growth slider"
+                label="House price growth"
                 min={0}
                 max={6}
                 step={0.1}
@@ -196,11 +196,20 @@ import Tag from '../components/ui/Tag.astro';
 </Base>
 
 <style>
+  /*
+   * Kept tight above the example so that, under the site header and this page's own
+   * title, the whole answer card (numeral, chart, key numbers) still ends above the
+   * fold at 1280x800. The real calculator page has no extra title, so it has more room.
+   */
   .styleguide {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
-    padding-block: var(--space-4) var(--space-16);
+    gap: var(--space-2);
+    padding-block: 0 var(--space-16);
+  }
+
+  .styleguide__title {
+    font-size: var(--size-lg);
   }
 
   .example__head {
@@ -209,7 +218,7 @@ import Tag from '../components/ui/Tag.astro';
     align-items: center;
     justify-content: space-between;
     gap: var(--space-2) var(--space-4);
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-3);
   }
 
   /* The real page sets this as its h1; here it is an h2 at h1 size. */
@@ -252,7 +261,6 @@ import Tag from '../components/ui/Tag.astro';
    */
   .theme-panel {
     --color-rule: var(--color-ink);
-    --color-focus-ring: var(--color-hi-vis);
 
     min-width: 0;
     padding: var(--space-5) var(--space-4);

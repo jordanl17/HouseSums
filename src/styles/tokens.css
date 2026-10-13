@@ -149,7 +149,8 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
+/* Screen only: printing always uses the light tokens, so ink stays dark on paper. */
+@media screen and (prefers-color-scheme: dark) {
   :root {
     /* ---- Colour: brief tokens (dark) ---- */
     --color-concrete: #1c1c1b;

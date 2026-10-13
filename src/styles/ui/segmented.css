@@ -97,6 +97,20 @@
   opacity: 0.5;
 }
 
+/*
+ * Print: backgrounds usually drop out, which would leave the checked option as pale
+ * surface-coloured text, the least visible of the three. Mark it with an ink outline,
+ * ink text and bold instead, so the choice reads in black and white.
+ */
+@media print {
+  .segmented__input:checked + .segmented__label {
+    outline: var(--border-control) solid var(--color-ink);
+    outline-offset: calc(-1 * var(--border-control));
+    background-color: transparent;
+    color: var(--color-ink);
+  }
+}
+
 @media (forced-colors: active) {
   .segmented__input:checked + .segmented__label {
     forced-color-adjust: none;

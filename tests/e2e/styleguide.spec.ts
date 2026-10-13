@@ -31,8 +31,9 @@ function example(page: Page) {
     answer: root.locator('.calc-layout__answer'),
     rest: root.locator('.calc-layout__rest'),
     numeral: root.locator('.answer__numeral'),
-    area: root.getByLabel('Area', { exact: true }),
-    price: root.getByLabel('Property price', { exact: true }),
+    area: root.getByRole('textbox', { name: 'Area', exact: true }),
+    price: root.getByRole('textbox', { name: 'Property price', exact: true }),
+    keyFigures: root.locator('.key-number__figure'),
     // Top-level inputs only: the fields inside the closed "Adjust every assumption" panel are hidden.
     inputs: root.locator(
       ':is(.calc-layout__primary, .calc-layout__rest) > .fields__grid > :is(.field, .segmented)',
@@ -105,6 +106,22 @@ test.describe('styleguide page', () => {
     await expectNoHorizontalScroll(page);
   });
 
+  test('announces each field unit with its input', async ({ page }) => {
+    await page.goto(PATH);
+    const { root } = example(page);
+    const textbox = (name: string) => root.getByRole('textbox', { name, exact: true });
+    await expect(textbox('Property price')).toHaveAccessibleDescription('£');
+    await expect(textbox('Deposit')).toHaveAccessibleDescription('£ 10% of the price');
+    await expect(textbox('Mortgage rate, 5-year fix')).toHaveAccessibleDescription('%');
+    await expect(textbox('House price growth')).toHaveAccessibleDescription('% a year');
+    // Inside the closed disclosure, so check the wiring rather than the computed description.
+    await expect(root.locator('#ex-term')).toHaveAttribute('aria-describedby', 'ex-term-suffix');
+    // Sliders are named after their field, without repeating the role.
+    await expect(
+      root.getByRole('slider', { name: 'House price growth', exact: true }),
+    ).toHaveAttribute('aria-valuetext', '3.0% a year');
+  });
+
   test('is not linked from the home page', async ({ page }) => {
     await page.goto('./');
     await expect(page.locator('a[href*="styleguide"]')).toHaveCount(0);
@@ -112,7 +129,7 @@ test.describe('styleguide page', () => {
 });
 
 test.describe('example calculator layout', () => {
-  test('at 1280x800 the inputs and the answer numeral are in the first viewport', async ({
+  test('at 1280x800 the inputs and the whole answer are in the first viewport', async ({
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop-1280', 'desktop layout only');
@@ -130,6 +147,16 @@ test.describe('example calculator layout', () => {
     }
     const numeral = await box(ex.numeral);
     expect(numeral.y + numeral.h).toBeLessThanOrEqual(viewportHeight);
+    // The whole answer card, down to the three key numbers, ends above the fold.
+    await expect(ex.keyFigures).toHaveCount(3);
+    for (const figure of await ex.keyFigures.all()) {
+      const b = await box(figure);
+      expect(b.y + b.h, 'key number figure ends in view').toBeLessThanOrEqual(viewportHeight);
+    }
+    const answerBox = await box(ex.answer);
+    expect(answerBox.y + answerBox.h, 'answer card ends in view').toBeLessThanOrEqual(
+      viewportHeight,
+    );
 
     // Inputs on the left, answer on the right.
     const primary = await box(ex.primary);

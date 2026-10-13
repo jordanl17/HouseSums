@@ -47,7 +47,7 @@ What the next phase must know:
 
 ### Phase 2: brand and layout shell
 
-In review. The whole visual identity is HTML and CSS only; no page ships client JS. Decisions are in `docs/decisions.md` under "Design system (phase 2)", "Page shell (phase 2)", "UI primitives (phase 2, primitives)" and "Integration (phase 2)".
+In review. The whole visual identity is HTML and CSS only; no page ships client JS. Decisions are in `docs/decisions.md` under "Design system (phase 2)", "Page shell (phase 2)", "UI primitives (phase 2, primitives)", "Integration (phase 2)" and "Review round 1 (phase 2)".
 
 What shipped:
 - **Tokens** (`src/styles/tokens.css`): every brief colour for light and dark (`prefers-color-scheme`), plus `--color-control-edge` for input edges, spacing (`--space-*`, 4px base), radius (`--radius-card` 26px, `--radius-pill` 999px), type families and scale (`--size-answer` for the answer numeral only), focus and layout tokens, and `--contour-background` (circle at 85% 12%, 1.5px lines every 26px, ink at 9% light and light ink at 10% dark), fixed to the body. `scripts/check-tokens.mjs` (in `npm run lint`) fails on any colour literal outside tokens.css.
@@ -71,6 +71,8 @@ What the next phase must know:
 - Pages put content straight into the `Base` slot: `<main>` already carries `.container`. Use `.prose` for text pages and `.calc-layout` for the calculator. Do not add a second `.container`.
 - Never write a colour literal outside tokens.css; add a token there (light and dark) and, if it is a new text/background pair, a row in `CONTRAST_PAIRS`.
 - Rent orange and hi-vis are never text. Label the rent line in ink; text on hi-vis is `--color-on-hi-vis`.
+- Print is part of the slop check. Dark tokens are screen-only, so print is always light; `base.css` holds the print block and each primitive whose meaning lives in a background (segmented, slider, chart) has its own `@media print` rule. Keep that pattern for anything new, and check with a PDF render with background graphics off.
+- The styleguide's 1280x800 fold test checks the whole answer card, down to the key numbers. The real page must keep the same: area, price and the answer card in the first 800px.
 - Phase 4 must update the no-JS assertions for `/` (in `smoke.spec.ts` and through `PAGES` in `pages.spec.ts`) when the island lands. Add new pages to `PAGES` in `tests/e2e/helpers.ts` to give them the shared checks.
 
 #### Primitives (for phase 4)
@@ -78,11 +80,12 @@ Files: `src/components/ui/*.astro` (Astro reference markup), `src/components/ui/
 
 How to build the calculator page from them:
 - Layout: `.calc-layout` with `__primary` (Area, Property price), `__answer` (a `.card` holding `.answer`, the chart and `<dl class="key-numbers">`) and `__rest` (Buyer, Deposit, Monthly rent, Mortgage rate, House price growth, Outlook, then the "Adjust every assumption (18)" disclosure). Put fields in `<div class="fields"><div class="fields__grid">`; give segmented controls and the disclosure `fields__wide`.
-- Field: `.field` > `.field__head` (`.field__label` + optional `.tag`), `.field__control` (`.field__affix--prefix`, `.field__input`, `.field__affix--suffix`), then an optional `.slider`, `.field__hint` and `.field__error`. Set `aria-invalid="true"` and `aria-describedby` on the input for errors; the pill draws the focus ring with `:focus-within`. Use `.field__input--text` for the area name.
+- Field: `.field` > `.field__head` (`.field__label` + optional `.tag`), `.field__control` (`.field__affix--prefix`, `.field__input`, `.field__affix--suffix`), then an optional `.slider`, `.field__hint` and `.field__error`. `aria-describedby` on the input lists `{id}-prefix` and `{id}-suffix` (the unit spans) first, then `{id}-hint` and `{id}-error`, so units are announced with the value; keep that order in Preact. Set `aria-invalid="true"` for errors; the pill draws the focus ring with `:focus-within`. Use `.field__input--text` for the area name.
 - Segmented: `fieldset.segmented` > `legend.segmented__legend` + `.segmented__options` > `label.segmented__option` > `input.segmented__input[type=radio]` + `span.segmented__label`. Native radios, so arrow keys work with no JS. Add a "Custom" option or label for the Outlook when a value is edited.
 - Tag: `.tag--local` (hi-vis) / `.tag--typical` (tag-alt); put the source and month in `title` or an adjacent hint, never in upper case. In a half-width field the tag wraps under the label; if that misaligns a row, move the tag to the hint line.
 - Answer: `.answer__sentence` with `__lead`, `__numeral`, `__unit`; `.answer__note` for the one explaining sentence. For "Renting comes out ahead for all 25 years" there is no numeral: render the sentence in `.answer__lead` only.
-- Chart: port `src/components/ui/ExampleChart.astro` (markup documented in its header) and keep `chart.css`. The hover tooltip is new work; keep the frame `role="img"` with a summary, and the year-by-year `DataTable` (with `rowHeader`) in a `.disclosure` as the table alternative.
+- Slider: `aria-label` is the field's label ("Property price"), never "... slider".
+- Chart: port `src/components/ui/ExampleChart.astro` (markup documented in its header) and keep `chart.css`. The hover tooltip is new work; direct labels hang left of the point when above the line and right when below (both series rise), so recheck that if a series can fall; keep the frame `role="img"` with a summary, and the year-by-year `DataTable` (with `rowHeader`) in a `.disclosure` as the table alternative.
 - Key numbers: `dl.key-numbers` > `.key-number` (dt label, dd with `__figure` and `__unit`). Each is a two-row subgrid so figures line up across a row.
 - Buttons: `.button--primary` at most once per view.
 

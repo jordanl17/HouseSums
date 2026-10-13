@@ -58,3 +58,29 @@
 .field > .slider {
   margin-top: var(--space-1);
 }
+
+/*
+ * Print: the track is a background, so it would vanish with background graphics off and
+ * leave a floating thumb. Draw it as a border instead, and keep the thumb's fill.
+ */
+@media print {
+  .slider {
+    print-color-adjust: exact;
+  }
+
+  .slider::-webkit-slider-runnable-track {
+    height: 0;
+    border-top: var(--slider-track) solid var(--color-ink);
+    background-color: transparent;
+  }
+
+  .slider::-moz-range-track {
+    height: 0;
+    border-top: var(--slider-track) solid var(--color-ink);
+    background-color: transparent;
+  }
+
+  .slider::-webkit-slider-thumb {
+    margin-top: calc(-1 * (var(--slider-thumb) + var(--slider-track)) / 2);
+  }
+}
