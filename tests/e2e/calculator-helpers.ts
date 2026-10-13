@@ -40,9 +40,12 @@ export function input(page: Page, key: string): Locator {
  */
 export async function pickArea(page: Page, name: string): Promise<void> {
   const picker = page.locator('#calc-area');
-  await picker.focus();
-  await expect(picker.locator('option', { hasText: name }).first()).toBeAttached();
-  await picker.selectOption({ label: name });
+  await picker.click();
+  await picker.fill(name);
+  // Options read "Leeds, England": match the name exactly, before the comma.
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  await page.getByRole('option', { name: new RegExp(`^${escaped},`) }).click();
+  await expect(picker).toHaveValue(name);
   await expectStatus(page, 'ready');
 }
 

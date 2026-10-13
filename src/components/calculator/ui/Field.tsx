@@ -44,6 +44,11 @@ export interface FieldProps {
   /** Extra ids appended to aria-describedby. */
   describedBy?: string;
   readOnly?: boolean;
+  /**
+   * Wrap the pill and everything under it in a div with this class (added by the inputs
+   * teammate), so a grid can align the label rows of neighbouring fields with subgrid.
+   */
+  bodyClass?: string;
 }
 
 export function Field(props: FieldProps) {
@@ -73,6 +78,8 @@ export function Field(props: FieldProps) {
     props.describedBy ?? '',
   ].filter(Boolean);
   const invalid = has(error);
+  const wrap = (body: ComponentChildren) =>
+    props.bodyClass ? <div class={props.bodyClass}>{body}</div> : body;
 
   return (
     <div
@@ -92,48 +99,57 @@ export function Field(props: FieldProps) {
           </span>
         )}
       </div>
-      <div class="field__control">
-        {prefix && (
-          <span class="field__affix field__affix--prefix" id={`${id}-prefix`}>
-            {prefix}
-          </span>
-        )}
-        <input
-          {...props.inputAttrs}
-          {...(props.inputRef ? { ref: props.inputRef } : {})}
-          class={kind === 'text' ? 'field__input field__input--text' : 'field__input'}
-          id={id}
-          name={id}
-          type="text"
-          inputMode={inputMode}
-          value={value}
-          readOnly={props.readOnly}
-          aria-describedby={ids.length > 0 ? ids.join(' ') : undefined}
-          aria-invalid={invalid ? 'true' : undefined}
-          onInput={(event) => props.onInput?.(event.currentTarget.value, event)}
-          onFocus={props.onFocus}
-          onBlur={props.onBlur}
-          onKeyDown={props.onKeyDown}
-        />
-        {suffix && (
-          <span class="field__affix field__affix--suffix" id={`${id}-suffix`}>
-            {suffix}
-          </span>
-        )}
-      </div>
-      {children}
-      {has(hint) && (
-        <p class="field__hint" id={`${id}-hint`}>
-          {hint}
-        </p>
-      )}
-      <p class="field__hint field__note" id={`${id}-note`} aria-live="polite" hidden={!has(note)}>
-        {note}
-      </p>
-      {invalid && (
-        <p class="field__error" id={`${id}-error`}>
-          {error}
-        </p>
+      {wrap(
+        <>
+          <div class="field__control">
+            {prefix && (
+              <span class="field__affix field__affix--prefix" id={`${id}-prefix`}>
+                {prefix}
+              </span>
+            )}
+            <input
+              {...props.inputAttrs}
+              {...(props.inputRef ? { ref: props.inputRef } : {})}
+              class={kind === 'text' ? 'field__input field__input--text' : 'field__input'}
+              id={id}
+              name={id}
+              type="text"
+              inputMode={inputMode}
+              value={value}
+              readOnly={props.readOnly}
+              aria-describedby={ids.length > 0 ? ids.join(' ') : undefined}
+              aria-invalid={invalid ? 'true' : undefined}
+              onInput={(event) => props.onInput?.(event.currentTarget.value, event)}
+              onFocus={props.onFocus}
+              onBlur={props.onBlur}
+              onKeyDown={props.onKeyDown}
+            />
+            {suffix && (
+              <span class="field__affix field__affix--suffix" id={`${id}-suffix`}>
+                {suffix}
+              </span>
+            )}
+          </div>
+          {children}
+          {has(hint) && (
+            <p class="field__hint" id={`${id}-hint`}>
+              {hint}
+            </p>
+          )}
+          <p
+            class="field__hint field__note"
+            id={`${id}-note`}
+            aria-live="polite"
+            hidden={!has(note)}
+          >
+            {note}
+          </p>
+          {invalid && (
+            <p class="field__error" id={`${id}-error`}>
+              {error}
+            </p>
+          )}
+        </>,
       )}
     </div>
   );
