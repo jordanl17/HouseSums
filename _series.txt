@@ -1,0 +1,18 @@
+IUM5WBS,End month weighted average interest rate - 5 year fixed mortgage (95% LTV) - Building Societies
+IUM5WCB,End month weighted average interest rate - 5 year fixed mortgage (95% LTV) - Banks
+IUM5WTL,Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 5 year (95% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted
+IUMABL60,Monthly average of yield from BoE Euro Treasury Note 4.625%  2010
+IUMB479,Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 2 year (90% LTV) variable rate mortgage to households (in percent) not seasonally adjusted
+IUMB482,Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 2 year (90% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted
+IUMBV37,Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 3 year (75% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted
+IUMBV38,End month weighted average interest rate - 5 year fixed mortgage (75% LTV) - Banks
+IUMBV39,End month weighted average interest rate - 5 year fixed mortgage (75% LTV) - Building Societies
+IUMBV42,Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 5 year (75% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted
+IUMLBL60,End month level of yield from BoE Euro Treasury Note 4.625%  2010
+IUMZICQ,Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 2 year (60% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted
+IUMZICR,Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 2 year (85% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted
+IUMZO27,Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 5 year (60% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted
+IUMZO28,Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 5 year (90% LTV) fixed rate mortgage to households (in percent) not seasonally adjusted
+IUMZO29,Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 2 year (60% LTV) buy to let fixed rate mortgage to households (in percent) not seasonally adjusted
+IUMZO2A,Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 5 year (60% LTV) buy to let fixed rate mortgage to households (in percent) not seasonally adjusted
+IUMZO2B,Monthly interest rate of UK monetary financial institutions (excl. Central Bank) sterling 5 year (75% LTV) buy to let fixed rate mortgage to households (in percent) not seasonally adjusted
