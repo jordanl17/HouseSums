@@ -1,18 +1,29 @@
 ---
 /**
- * /rent-vs-buy/: the four nation pages. Phase 5 skeleton by the lead; the areas teammate owns it.
+ * /rent-vs-buy/: the four nations, each with its number of areas, typical price and rent and the
+ * middle break-even year at typical assumptions, linking to the nation pages.
  */
 import Base from '../../layouts/Base.astro';
-import { areasByNation, nationName, nationPath, nationsIndexPath } from '../../lib/areas';
+import { monthLabel } from '../../lib/area-summary';
+import {
+  nationFigures,
+  nationOverview,
+  nationsIndexPath,
+  typicalAssumptions,
+} from '../../lib/areas';
 import { absoluteUrl, breadcrumbLd } from '../../lib/seo';
-import { NATIONS } from '../../lib/types';
 import { url } from '../../lib/url';
+import '../../styles/area.css';
 
 const site = Astro.site ?? Astro.url;
 const jsonLd = breadcrumbLd([
   { name: 'House Sums', url: absoluteUrl(url(), site) },
   { name: 'Rent v buy', url: absoluteUrl(nationsIndexPath(), site) },
 ]);
+const rows = nationOverview();
+const total = rows.reduce((sum, row) => sum + row.count, 0);
+const england = nationFigures('eng').months;
+const ni = nationFigures('ni').months;
 ---
 
 <Base
@@ -20,15 +31,54 @@ const jsonLd = breadcrumbLd([
   description="Rent v buy for every local authority in England, Scotland, Wales and Northern Ireland, from open government data."
   jsonLd={jsonLd}
 >
-  <div class="prose">
-    <h1>Rent v buy by nation</h1>
-    <ul>
-      {NATIONS.map((nation) => (
-        <li>
-          <a href={nationPath(nation)}>{nationName(nation)}</a> ({areasByNation(nation).length}{' '}
-          areas)
-        </li>
-      ))}
-    </ul>
+  <h1 class="area-title">Rent v buy by nation</h1>
+  <p class="area-lede">
+    {total} local authorities across the four nations, each with its own page. Pick a nation for its
+    areas, figures and property tax.
+  </p>
+  <div class="area-stack">
+    <div>
+      <table class="data-table area-table" data-testid="nations">
+        <caption class="data-table__caption visually-hidden">The four nations</caption>
+        <thead>
+          <tr>
+            <th scope="col">Nation</th>
+            <th scope="col" class="data-table__num">
+              Areas
+            </th>
+            <th scope="col" class="data-table__num">
+              Average price
+            </th>
+            <th scope="col" class="data-table__num">
+              Rent a month
+            </th>
+            <th scope="col" class="data-table__num area-table__answer">
+              Middle break-even
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr>
+              <th scope="row" class="area-table__name">
+                <a href={row.href}>{row.name}</a>
+              </th>
+              <td class="data-table__num">{row.count}</td>
+              <td class="data-table__num">{row.price}</td>
+              <td class="data-table__num">{row.rent}</td>
+              <td class="data-table__num area-table__answer">{row.middle}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div class="area-stack area-stack--tight">
+      <p class="area-note">
+        Prices for {monthLabel(england.price)} and rents for {monthLabel(england.rent)} (Northern
+        Ireland: prices for {monthLabel(ni.price)}, rents for {monthLabel(ni.rent)}). The middle
+        break-even is the middle of each area's answer at typical assumptions.
+      </p>
+      <p class="area-note">{typicalAssumptions()}</p>
+    </div>
   </div>
 </Base>

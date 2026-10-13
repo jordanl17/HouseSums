@@ -1,0 +1,62 @@
+---
+/**
+ * An area's figures beside its nation's (or a nation's figures alone), with the month each
+ * figure is for. Rows come from figureRows() in src/lib/area-summary.ts. A nation figure used
+ * because no local one is published gets a "*", explained under the table.
+ */
+import type { FigureRow } from '../../lib/area-summary';
+import { possessive } from '../../lib/area-summary';
+import '../../styles/area.css';
+
+interface Props {
+  rows: FigureRow[];
+  caption: string;
+  captionHidden?: boolean;
+  /** Column heading for the area's figures; leave out for a nation's figures alone. */
+  areaName?: string;
+  nationName: string;
+  testid?: string;
+}
+
+const { rows, caption, captionHidden = false, areaName, nationName, testid } = Astro.props;
+const anyFallback = areaName !== undefined && rows.some((row) => row.area.fallback);
+const owner = possessive(nationName);
+---
+
+<table class="data-table figures-table" data-testid={testid}>
+  <caption class:list={['data-table__caption', { 'visually-hidden': captionHidden }]}>
+    {caption}
+  </caption>
+  <thead>
+    <tr>
+      <th scope="col">Figure</th>
+      {areaName !== undefined && (
+        <th scope="col" class="data-table__num">
+          {areaName}
+        </th>
+      )}
+      <th scope="col" class="data-table__num">
+        {nationName}
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    {rows.map((row) => (
+      <tr data-figure={row.key}>
+        <th scope="row" class="figures-table__label">
+          {row.label}
+          {row.month && <span class="figures-table__month">{row.month}</span>}
+        </th>
+        {areaName !== undefined && (
+          <td class="data-table__num">
+            {row.area.fallback && <span aria-hidden="true">*</span>}
+            {row.area.text}
+            {row.area.fallback && <span class="visually-hidden"> ({nationName} figure)</span>}
+          </td>
+        )}
+        <td class="data-table__num">{row.nation.text}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+{anyFallback && <p class="area-note">* {owner} figure, used where no local figure is published.</p>}

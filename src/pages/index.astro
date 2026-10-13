@@ -19,6 +19,9 @@ import Calculator from '../components/calculator/Calculator';
 import { calculatorData } from '../lib/calculator-data';
 import { absoluteUrl, webApplicationLd } from '../lib/seo';
 import { url } from '../lib/url';
+import { nationName, nationPath } from '../lib/areas';
+import { NATIONS } from '../lib/types';
+import '../styles/area.css';
 
 const description =
   'Rent v buy: how long until buying beats renting? A plain-English UK calculator that starts from local figures.';
@@ -39,6 +42,15 @@ const jsonLd = webApplicationLd({
     data={calculatorData()}
     links={{ areaList: url('data/area-list.json'), howItWorks: url('how-it-works') }}
   />
+  <p class="nation-links" data-testid="nation-links">
+    Rent v buy by nation:{' '}
+    {NATIONS.map((nation, index) => (
+      <>
+        <a href={nationPath(nation)}>{nationName(nation)}</a>
+        {index < NATIONS.length - 1 ? ', ' : ''}
+      </>
+    ))}
+  </p>
 </Base>
 
 <style>

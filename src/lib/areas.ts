@@ -14,7 +14,27 @@
  * changed: the default buyer type and Outlook preset from defaults.json, no overrides, no nation
  * override. So the answer a page states always equals the island's server-rendered answer.
  */
+import {
+  assumptionsSentence,
+  breakEvenCell,
+  comparisonSentence,
+  figureRows,
+  middleSentence,
+  nationNotes,
+  nationSpread,
+  sourcesSentence,
+  summaryNotes,
+  taxLabel,
+  taxSummary,
+  typicalDefinition,
+  type FigureRow,
+  type NationSpread,
+  type SummaryInput,
+} from './area-summary';
 import { answerCopy, answerFacts, type AnswerCopy } from './copy';
+import { formatMoney } from './format';
+import sourcesJson from '../../data/sources.json';
+import { parseSourcesFile } from './schema';
 import { areaForPage, areasFile, calculatorData } from './calculator-data';
 import { deriveInputs } from './defaults';
 import { runModel } from './model';
@@ -25,6 +45,7 @@ import type {
   AreaFigures,
   AreasFile,
   DerivedInputs,
+  FieldSpec,
   ModelResult,
   Month,
   Nation,
@@ -240,4 +261,218 @@ export function rentVsBuyPaths(): { params: { slug: string }; props: RentVsBuyPa
 /** "England", "Northern Ireland". */
 export function nationName(nation: Nation): string {
   return NATION_NAMES[nation];
+}
+
+// ---------------------------------------------------------------------------------------------
+// Page summaries (phase 5, areas teammate). Built only from the committed data through the pure
+// helpers in src/lib/area-summary.ts.
+// ---------------------------------------------------------------------------------------------
+
+/** The data an area's summary is built from (see SummaryInput). */
+export function summaryInput(area: Area): SummaryInput {
+  const { derived } = typicalAnswer(area);
+  return {
+    name: area.name,
+    onsName: area.onsName,
+    nation: area.nation,
+    nationName: nationName(area.nation),
+    figures: {
+      price: area.price,
+      growth10y: area.growth10y,
+      rent: area.rent,
+      rentGrowth: area.rentGrowth,
+    },
+    fallbacks: area.fallbacks,
+    rentArea: area.rentArea,
+    months: monthsFor(area),
+    nationFigures: nationFigures(area.nation),
+    used: { houseGrowth: derived.inputs.houseGrowth, rentGrowth: derived.inputs.rentGrowth },
+    clamps: calculatorData().defaults.areaClamps,
+  };
+}
+
+const spreads = new Map<Nation, NationSpread>();
+
+/** How the break-even years at typical assumptions spread across a nation's areas (cached). */
+export function nationSpreadFor(nation: Nation): NationSpread {
+  const cached = spreads.get(nation);
+  if (cached) return cached;
+  const answers = areasByNation(nation).map((area) => typicalAnswer(area));
+  const horizon =
+    answers[0]?.derived.inputs.years ?? calculatorData().defaults.fields.years.default;
+  const spread = nationSpread(
+    answers.map((answer) => answer.result.breakEvenYear),
+    horizon ?? 0,
+  );
+  spreads.set(nation, spread);
+  return spread;
+}
+
+export interface AreaSummaryData {
+  rows: FigureRow[];
+  /** "An average home in Leeds costs 16% less than the England average, ..." */
+  comparison: string;
+  /** "That is a first-time buyer with a 10% deposit of ..." */
+  assumptions: string;
+  /** "Across England's 296 areas, the middle answer at typical assumptions is 3 years." */
+  middle: string;
+  notes: string[];
+}
+
+/** Everything the area summary shows apart from the answer sentence (typicalAnswer().sentence). */
+export function areaSummary(area: Area): AreaSummaryData {
+  const input = summaryInput(area);
+  const { derived, result } = typicalAnswer(area);
+  const { inputs, provenance } = derived;
+  return {
+    rows: figureRows(input),
+    comparison: comparisonSentence(input),
+    assumptions: assumptionsSentence({
+      buyerType: inputs.buyerType,
+      price: inputs.price,
+      deposit: inputs.deposit,
+      fixYears: inputs.fixYears,
+      mortgageRate: inputs.mortgageRate,
+      rateMonth: provenance.mortgageRate.month,
+      houseGrowth: inputs.houseGrowth,
+      rentGrowth: inputs.rentGrowth,
+      investmentReturn: inputs.investmentReturn,
+      years: inputs.years,
+      rentingOvertakesAgainYear: result.rentingOvertakesAgainYear,
+    }),
+    middle: middleSentence(nationSpreadFor(area.nation), input.nationName),
+    notes: summaryNotes(input),
+  };
+}
+
+/** A nation's own figures as table rows (the nation column of figureRows), with months. */
+export function nationFigureRows(nation: Nation): FigureRow[] {
+  const figures = nationFigures(nation);
+  const clamps = calculatorData().defaults.areaClamps;
+  return figureRows({
+    name: nationName(nation),
+    nation,
+    nationName: nationName(nation),
+    figures,
+    fallbacks: [],
+    months: figures.months,
+    nationFigures: figures,
+    used: { houseGrowth: figures.growth10y, rentGrowth: figures.rentGrowth },
+    clamps,
+  });
+}
+
+/** Notes under a nation's figures (NI quarterly prices, rents by Broad Rental Market Area). */
+export function nationPageNotes(nation: Nation): string[] {
+  return nationNotes({
+    nation,
+    nationName: nationName(nation),
+    months: nationFigures(nation).months,
+    rentsByArea: areasByNation(nation).some((area) => area.rentArea !== undefined),
+  });
+}
+
+/** One row of an area table (nation pages and related areas), pre-formatted. */
+export interface AreaTableRow {
+  name: string;
+  href: string;
+  price: string;
+  rent: string;
+  /** "2 years" or "None in 25 years", at typical assumptions. */
+  breakEven: string;
+  /** True when the figure is the nation's (no local figure published). */
+  priceFallback: boolean;
+  rentFallback: boolean;
+}
+
+export function areaTableRow(area: Area): AreaTableRow {
+  const { result, derived } = typicalAnswer(area);
+  return {
+    name: area.name,
+    href: areaPath(area),
+    price: formatMoney(area.price),
+    rent: formatMoney(area.rent),
+    breakEven: breakEvenCell(result.breakEvenYear, derived.inputs.years),
+    priceFallback: isFallback(area, 'price'),
+    rentFallback: isFallback(area, 'rent'),
+  };
+}
+
+/** The other nations under the same tax regime ("England" for Northern Ireland), or null. */
+function sharedRegimeWith(nation: Nation): string | null {
+  const { taxRules } = calculatorData();
+  const others = NATIONS.filter(
+    (other) => other !== nation && taxRules.nations[other] === taxRules.nations[nation],
+  );
+  return others.length === 0 ? null : others.map((other) => nationName(other)).join(' and ');
+}
+
+/** "Typical assumptions: a first-time buyer with a 10% deposit ..." from defaults.json. */
+export function typicalAssumptions(): string {
+  const { defaults } = calculatorData();
+  return typicalDefinition({
+    buyerType: defaults.defaultBuyerType,
+    depositFraction: defaults.depositFraction,
+    fixYears: defaults.fields.fixYears.default ?? 0,
+    investmentReturn: defaults.presets[defaults.defaultPreset].investmentReturn,
+    years: defaults.fields.years.default ?? 0,
+  });
+}
+
+/** A nation's row on /rent-vs-buy/: area count, typical figures and the middle answer. */
+export interface NationOverviewRow {
+  nation: Nation;
+  name: string;
+  href: string;
+  count: number;
+  price: string;
+  rent: string;
+  middle: string;
+}
+
+export function nationOverview(): NationOverviewRow[] {
+  return NATIONS.map((nation) => {
+    const figures = nationFigures(nation);
+    const spread = nationSpreadFor(nation);
+    return {
+      nation,
+      name: nationName(nation),
+      href: nationPath(nation),
+      count: spread.count,
+      price: formatMoney(figures.price),
+      rent: formatMoney(figures.rent),
+      middle: breakEvenCell(spread.middle, spread.horizon),
+    };
+  });
+}
+
+/** The datasets behind an area page's figures: prices, rents and mortgage rates. */
+export const SUMMARY_SOURCE_IDS = ['uk-hpi', 'ons-pipr', 'boe-quoted-rates'] as const;
+
+/** "Figures from the UK House Price Index (HM Land Registry with ONS), ..." (data/sources.json). */
+export function summarySources(): string {
+  const { sources } = parseSourcesFile(sourcesJson);
+  return sourcesSentence(
+    SUMMARY_SOURCE_IDS.map((id) => sources.find((source) => source.id === id)).filter(
+      (source) => source !== undefined,
+    ),
+  );
+}
+
+/** The property tax in a nation: its label ("Stamp duty (SDLT)") and plain sentences. */
+export function nationTax(nation: Nation): { label: string; lines: string[] } {
+  const { taxRules, defaults } = calculatorData();
+  const regime = taxRules.regimes[taxRules.nations[nation]];
+  const forNation = (field: FieldSpec) => field.byNation?.[nation] ?? field.default ?? 0;
+  return {
+    label: taxLabel(regime),
+    lines: taxSummary({
+      nationName: nationName(nation),
+      regime,
+      sharedWith: sharedRegimeWith(nation),
+      survey: forNation(defaults.fields.survey),
+      homeReport: forNation(defaults.fields.homeReport),
+      taxYear: taxRules.taxYear,
+    }),
+  };
 }
