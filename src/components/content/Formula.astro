@@ -1,0 +1,42 @@
+---
+/**
+ * One formula, set in readable HTML (no image, no maths library): a caption, the expression in
+ * mono, what each symbol means and an optional note. Expressions, symbols and notes use the
+ * notation of formulaHtml in src/lib/content.ts: {M} a symbol, _{..} a subscript, ^{..} a power.
+ * Styles: src/styles/content.css (.formula).
+ *
+ * <Formula caption="Monthly mortgage payment" lines={['{M} = {L} × {r} ÷ (1 − (1 + {r})^{−{n}})']}
+ *   terms={[{ symbol: '{M}', meaning: 'the monthly payment' }]} />
+ */
+import '../../styles/content.css';
+import { formulaHtml } from '../../lib/content';
+
+interface Props {
+  caption: string;
+  id?: string;
+  /** One expression per line. */
+  lines: string[];
+  terms?: { symbol: string; meaning: string }[];
+  note?: string;
+}
+
+const { caption, id, lines, terms = [], note } = Astro.props;
+---
+
+<figure class="formula" id={id}>
+  <figcaption class="formula__caption">{caption}</figcaption>
+  {lines.map((line) => (
+    <p class="formula__expr" set:html={formulaHtml(line)} />
+  ))}
+  {terms.length > 0 && (
+    <dl class="formula__terms">
+      {terms.map((term) => (
+        <>
+          <dt set:html={formulaHtml(term.symbol)} />
+          <dd set:html={formulaHtml(term.meaning)} />
+        </>
+      ))}
+    </dl>
+  )}
+  {note && <p class="formula__note" set:html={formulaHtml(note)} />}
+</figure>

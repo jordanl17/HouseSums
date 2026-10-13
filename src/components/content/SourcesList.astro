@@ -1,0 +1,77 @@
+---
+/**
+ * Every dataset in data/sources.json (via sourceEntries in src/lib/content.ts): publisher, link,
+ * licence with its link, what it covers, what House Sums uses it for, the latest month, the
+ * pipeline's notes and the attribution statement the licence asks for.
+ */
+import '../../styles/content.css';
+import type { SourceEntry } from '../../lib/content';
+import { linkLabel, splitLinks } from '../../lib/content';
+
+interface Props {
+  entries: SourceEntry[];
+}
+
+const { entries } = Astro.props;
+const host = (href: string) => new URL(href).host;
+---
+
+<ol class="sources-list" data-testid="sources-list">
+  {entries.map(({ source, asOf, geography, usedFor, attribution }) => (
+    <li class="source" data-testid="source" data-source-id={source.id}>
+      <h3 id={`source-${source.id}`}>{source.dataset}</h3>
+      <dl class="facts">
+        <div class="facts__row">
+          <dt>Publisher</dt>
+          <dd>{source.publisher}</dd>
+        </div>
+        <div class="facts__row">
+          <dt>Where to find it</dt>
+          <dd>
+            <a href={source.url}>{host(source.url)}</a>
+          </dd>
+        </div>
+        <div class="facts__row">
+          <dt>Licence</dt>
+          <dd>
+            {source.licenceUrl ? <a href={source.licenceUrl}>{source.licence}</a> : source.licence}
+          </dd>
+        </div>
+        {geography && (
+          <div class="facts__row">
+            <dt>Covers</dt>
+            <dd>{geography}</dd>
+          </div>
+        )}
+        {usedFor && (
+          <div class="facts__row">
+            <dt>What we use it for</dt>
+            <dd>{usedFor}</dd>
+          </div>
+        )}
+        <div class="facts__row">
+          <dt>Latest month used</dt>
+          <dd class="mono" data-testid="source-as-of">
+            {asOf}
+          </dd>
+        </div>
+        {source.notes && (
+          <div class="facts__row">
+            <dt>Notes</dt>
+            <dd class="facts__long">
+              {splitLinks(source.notes).map((part) =>
+                part.href ? <a href={part.href}>{linkLabel(part.href)}</a> : part.text,
+              )}
+            </dd>
+          </div>
+        )}
+        {attribution && (
+          <div class="facts__row">
+            <dt>Attribution</dt>
+            <dd>{attribution}</dd>
+          </div>
+        )}
+      </dl>
+    </li>
+  ))}
+</ol>
