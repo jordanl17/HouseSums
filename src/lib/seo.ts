@@ -30,9 +30,24 @@ export function fullTitle(title?: string): string {
 // `description`; Base appends " | House Sums" to the title.
 // ---------------------------------------------------------------------------------------------
 
-/** "Rent or buy in Leeds? See your break-even year" */
+/** Longest full title (with " | House Sums") an area page aims for, so search results show it whole. */
+export const MAX_TITLE_LENGTH = 65;
+
+/**
+ * "Rent or buy in Leeds? Your break-even year". Longer names drop words until the full title
+ * (with " | House Sums") fits MAX_TITLE_LENGTH: "Rent or buy in Kingston upon Hull? Break-even
+ * year", then "Rent or buy in Bournemouth, Christchurch and Poole?". Area names are
+ * unique and nation titles read differently, so the titles stay unique.
+ */
 export function areaTitle(name: string): string {
-  return `Rent or buy in ${name}? See your break-even year`;
+  const forms = [
+    `Rent or buy in ${name}? Your break-even year`,
+    `Rent or buy in ${name}? Break-even year`,
+    `Rent or buy in ${name}?`,
+  ];
+  return (
+    forms.find((form) => fullTitle(form).length <= MAX_TITLE_LENGTH) ?? `Rent or buy in ${name}?`
+  );
 }
 
 /**

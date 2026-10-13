@@ -204,7 +204,8 @@ test.describe('fields', () => {
     await expect(note(page, 'price')).toHaveText('The lowest this takes is £10,000');
 
     await enter(page, 'price', '250000');
-    await expect(note(page, 'price')).toBeHidden();
+    // The note is a standing live region (phase 6): emptied, not hidden.
+    await expect(note(page, 'price')).toBeEmpty();
 
     await enter(page, 'price', 'lots');
     await expect(input(page, 'price')).toHaveValue('250,000');

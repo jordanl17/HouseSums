@@ -22,8 +22,9 @@
  *   survey, homeReport: by nation
  * then each field's override (if any) replaces the derived value.
  *
- * Provenance: "local" only for an area's own figure (clamping to the brief's range keeps it
- * local, and the source then gives the raw figure and the bound it was held to). A nation figure, a fixed default, a Bank of England rate (a UK figure) or a value the
+ * Provenance: "local" only for an area's own figure. Clamping to the brief's range keeps it local
+ * but sets `held` (the raw figure and the bound), so the UI tags it "Floored at 0%" or "Capped at
+ * 6%" rather than "Local figure". A nation figure, a fixed default, a Bank of England rate (a UK figure) or a value the
  * Outlook preset changed is "typical". Sample placeholder figures say so in the source.
  */
 import { formatPercent } from './format';
@@ -35,6 +36,7 @@ import {
   type AreasFile,
   type DefaultsFile,
   type DerivedInputs,
+  type HeldFigure,
   type Inputs,
   type Month,
   type Nation,
@@ -136,6 +138,21 @@ export function pickMortgageRate(
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
 
+/** "−2.15%", "6%", "1.5%": two decimals at most, no trailing zeros. */
+export const shortRate = (rate: number): string =>
+  formatPercent(rate, { decimals: 2 })
+    .replace(/\.00%$/, '%')
+    .replace(/(\.\d)0%$/, '$1%');
+
+/**
+ * What the tooltip adds for a figure the brief's range held: "The actual figure is −2.15% a
+ * year; the calculator floors it at 0%." (or "caps it at 6%").
+ */
+export function heldNote(held: HeldFigure): string {
+  const verb = held.side === 'floor' ? 'floors' : 'caps';
+  return `The actual figure is ${shortRate(held.raw)} a year; the calculator ${verb} it at ${shortRate(held.bound)}.`;
+}
+
 /** Drops binary noise from sums such as 0.041 + 0.01, so derived values read and compare cleanly. */
 const tidy = (value: number): number => Math.round(value * 1e10) / 1e10;
 
@@ -189,12 +206,6 @@ export function deriveInputs(options: DeriveOptions): DerivedInputs {
     return { value: nationFigures[field], provenance: typical(source, fileMonth) };
   };
 
-  /** "−2.15%", "6%", "1.5%": two decimals at most, no trailing zeros. */
-  const shortRate = (rate: number) =>
-    formatPercent(rate, { decimals: 2 })
-      .replace(/\.00%$/, '%')
-      .replace(/(\.\d)0%$/, '$1%');
-
   /** Clamp to the brief's range, apply the preset, clamp again. */
   const growth = (
     field: 'growth10y' | 'rentGrowth',
@@ -205,25 +216,22 @@ export function deriveInputs(options: DeriveOptions): DerivedInputs {
     const { value, provenance: figure } = areaFigure(field, dataset, monthKey);
     const { min, max } = defaults.areaClamps[key];
     const clamped = clamp(value, min, max);
-    // Say so when the brief's range held the figure: "..., 10-year average of −2.15%, shown at
-    // the 0% floor" (phase 4 review: a clamped figure must not pass as the raw local one).
-    const origin: Provenance =
+    // When the brief's range held the figure, say so (phase 6): `held` carries the raw figure and
+    // the bound, so the tag reads "Floored at 0%" and the tooltip gives the real 10-year average
+    // (heldNote). A clamped figure never passes as the raw local one.
+    const held: HeldFigure | undefined =
       clamped === value
-        ? figure
-        : {
-            ...figure,
-            source: `${figure.source} of ${shortRate(value)}, shown at the ${shortRate(clamped)} ${
-              clamped > value ? 'floor' : 'ceiling'
-            }`,
-          };
+        ? undefined
+        : { raw: value, bound: clamped, side: clamped > value ? 'floor' : 'ceiling' };
+    const origin: Provenance = held ? { ...figure, held } : figure;
     const adjust = preset[key];
     const adjusted = tidy(clamp(Math.min(clamped + adjust.add, adjust.cap ?? Infinity), min, max));
     if (adjusted === clamped) return set(key, clamped, origin);
-    return set(
-      key,
-      adjusted,
-      typical(`${origin.source}, adjusted for the ${preset.label} outlook`, origin.month),
+    const outlook = typical(
+      `${origin.source}, adjusted for the ${preset.label} outlook`,
+      origin.month,
     );
+    return set(key, adjusted, held ? { ...outlook, held } : outlook);
   };
 
   // 1. Price and rent.

@@ -11,7 +11,10 @@
  * - Focus stays in the input throughout (aria-activedescendant); a click or tap on an option
  *   picks it without moving focus.
  * - The list is fetched by the island (calc.loadAreas) on focus; while it loads or if it fails,
- *   the popup and the one-line hint say so in plain words, with a "Try again" button.
+ *   the popup and the one-line hint say so in plain words, with a "Try again" button, which
+ *   moves focus back to the field (it disappears as the list loads).
+ * - On an area page, picking another place opens that place's page (Calculator.tsx); until it
+ *   does, the field shows the place's name and the hint says "Opening York".
  *
  * Renders one .field (input id "calc-area", data-testid "field-calc-area"). The hint line is
  * always one line, so the field never changes height above the answer card at 360px.
@@ -32,6 +35,7 @@ export default function AreaPicker({ calc }: CalcProps) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const list = useRef<HTMLUListElement>(null);
+  const field = useRef<HTMLInputElement>(null);
 
   const ready = areaList.status === 'ready';
   const matches = ready ? filterAreas(areaList.areas, query ?? '') : [];
@@ -99,6 +103,9 @@ export default function AreaPicker({ calc }: CalcProps) {
   });
   const failed = areaList.status === 'error';
   if (failed && calc.status !== 'error') hint = "Couldn't load places";
+  // An area page opening another area's page (phase 6).
+  const leaving = calc.leavingFor ?? null;
+  if (leaving) hint = `Opening ${leaving.name}`;
 
   let message: string | null = null;
   if (failed) message = "Couldn't load the list of places.";
@@ -127,7 +134,8 @@ export default function AreaPicker({ calc }: CalcProps) {
       id="calc-area"
       label="Area"
       kind="text"
-      value={query ?? calc.area?.name ?? ''}
+      value={leaving?.name ?? query ?? calc.area?.name ?? ''}
+      inputRef={field}
       class="calc-field calc-area"
       bodyClass="calc-field__body"
       hint={
@@ -136,7 +144,15 @@ export default function AreaPicker({ calc }: CalcProps) {
           {failed && (
             <>
               {' '}
-              <button type="button" class="field__reset" onClick={() => calc.loadAreas()}>
+              <button
+                type="button"
+                class="field__reset"
+                onClick={() => {
+                  calc.loadAreas();
+                  // The button goes once the list loads, so focus waits in the field (phase 6).
+                  field.current?.focus();
+                }}
+              >
                 Try again
               </button>
             </>
@@ -194,6 +210,8 @@ export default function AreaPicker({ calc }: CalcProps) {
                 onClick={() => pick(area)}
               >
                 <span class="combo__name">{area.name}</span>
+                {/* A word break between the two (invisible in the flex row), so the visible text
+                    reads "Leeds England" and sits inside the name "Leeds, England" (WCAG 2.5.3). */}{' '}
                 <span class="combo__nation">{NATION_NAMES[area.nation]}</span>
               </li>
             ))}

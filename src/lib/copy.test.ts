@@ -5,17 +5,13 @@ import {
   answerCopy,
   answerFacts,
   breakEvenText,
-  chartSummary,
   flipHint,
-  growthTable,
   hasNoMortgage,
   keyNumbersCopy,
-  rateTable,
   shortPercent,
-  taxName,
-  taxNote,
   type AnswerFacts,
 } from './copy';
+import { chartSummary, growthTable, rateTable, taxName, taxNote } from './copy-details';
 import { runModel } from './model';
 import { parseDefaults, parseTaxRules } from './schema';
 import { propertyTax } from './tax';

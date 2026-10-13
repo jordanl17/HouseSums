@@ -136,13 +136,10 @@ export function Field(props: FieldProps) {
               {hint}
             </p>
           )}
-          <p
-            class="field__hint field__note"
-            id={`${id}-note`}
-            aria-live="polite"
-            hidden={!has(note)}
-          >
-            {note}
+          {/* Always rendered and never `hidden`: a live region that appears and fills in one
+              render is missed by some screen readers. Empty, it takes no space (field.css). */}
+          <p class="field__hint field__note" id={`${id}-note`} aria-live="polite">
+            {has(note) ? note : null}
           </p>
           {invalid && (
             <p class="field__error" id={`${id}-error`}>

@@ -1,5 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { calculator, expectStatus, gotoCalculator, input, params } from './calculator-helpers';
+import {
+  calculator,
+  expectStatus,
+  gotoCalculator,
+  input,
+  openDisclosure,
+  params,
+} from './calculator-helpers';
 
 /**
  * "Copy link to these figures" and the URL round trip (followups teammate): a link copied from
@@ -8,6 +15,9 @@ import { calculator, expectStatus, gotoCalculator, input, params } from './calcu
 
 /** Everything a reader sees that depends on the state: answer, key numbers, every input. */
 async function snapshot(page: Page) {
+  // Phase 6: these render on first open, so open both to compare every field and figure.
+  await openDisclosure(page, 'advanced');
+  await openDisclosure(page, 'year-table');
   // One more frame, so the result (computed once per animation frame) has caught up.
   await page.evaluate(
     () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),

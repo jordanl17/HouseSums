@@ -4,19 +4,30 @@
  * Pages pass a plain title (e.g. "Sources"); the site name is added here.
  *
  * Stylesheet order matters and is part of the phase 2 contract: self-hosted fonts
- * (latin subset only, font-display swap), narrow mono punctuation (fonts.css), tokens,
+ * (latin subset only, font-display swap) and the narrow mono punctuation (fonts.css), tokens,
  * base, UI primitives, page shell.
+ *
+ * Phase 6 (perf): the four woff2 files are preloaded, so they download with the stylesheet
+ * rather than after it (no late swap, no shift); `preloads` lets a page add its own (the
+ * calculator's data file).
  */
-import '@fontsource/b612/latin-400.css';
-import '@fontsource/b612/latin-700.css';
-import '@fontsource/b612-mono/latin-400.css';
-import '@fontsource/b612-mono/latin-700.css';
 import '../styles/fonts.css';
 import '../styles/tokens.css';
 import '../styles/base.css';
 import '../styles/ui.css';
 import '../styles/shell.css';
+// Phase 6 (perf): the calculator's stylesheet joins the shared one (it was a second
+// render-blocking request on the home and area pages). See "Performance (phase 6, perf)" in
+// docs/decisions.md.
+import '../styles/calculator.css';
+// After the stylesheets: Astro orders a page's CSS by import order, and these imports first put
+// Base's stylesheet after the pages' inline styles, which then lost to it.
+import b612Regular from '@fontsource/b612/files/b612-latin-400-normal.woff2?url';
+import b612Bold from '@fontsource/b612/files/b612-latin-700-normal.woff2?url';
+import b612MonoRegular from '@fontsource/b612-mono/files/b612-mono-latin-400-normal.woff2?url';
+import b612MonoBold from '@fontsource/b612-mono/files/b612-mono-latin-700-normal.woff2?url';
 import Logo from '../components/Logo.astro';
+import type { Preload } from '../lib/preload';
 import { url } from '../lib/url';
 import {
   DEFAULT_DESCRIPTION,
@@ -47,6 +58,11 @@ interface Props {
   ogImageAlt?: string;
   /** Phase 5, optional. JSON-LD objects from the builders in src/lib/seo.ts. */
   jsonLd?: JsonLd | readonly JsonLd[];
+  /**
+   * Phase 6, optional. Extra <link rel="preload">s for this page, after the fonts (pages with
+   * the calculator pass calculatorPreloads() from src/lib/calculator-data.ts).
+   */
+  preloads?: readonly Preload[] | undefined;
 }
 
 const {
@@ -56,7 +72,13 @@ const {
   ogImage = ogImagePath(),
   ogImageAlt: imageAlt = ogImageAlt(),
   jsonLd,
+  preloads = [],
 } = Astro.props;
+const fontPreloads: readonly Preload[] = [b612Regular, b612Bold, b612MonoRegular, b612MonoBold].map(
+  (href) => ({ href, as: 'font', type: 'font/woff2' }),
+);
+// Fetches and fonts are requested in CORS mode, so their preloads need crossorigin to be used.
+const needsCors = (as: Preload['as']) => as === 'font' || as === 'fetch';
 const fullTitle = buildTitle(title);
 // Commit the build came from. The deploy workflow waits for this before testing the live site.
 const buildSha = import.meta.env.PUBLIC_BUILD_SHA ?? 'dev';
@@ -85,6 +107,15 @@ const current = (href: string) => (withSlash(href) === here ? 'page' : undefined
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
+    {[...fontPreloads, ...preloads].map((preload) => (
+      <link
+        rel="preload"
+        href={preload.href}
+        as={preload.as}
+        type={preload.type}
+        crossorigin={needsCors(preload.as) ? 'anonymous' : undefined}
+      />
+    ))}
     <meta name="description" content={description} />
     {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
     <meta property="og:site_name" content={SITE_NAME} />

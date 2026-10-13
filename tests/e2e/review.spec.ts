@@ -83,6 +83,12 @@ for (const query of [
     if (!plot) throw new Error('chart missing');
     const marker = page.getByTestId('chart-marker');
     const markerBox = (await marker.count()) > 0 ? await marker.boundingBox() : null;
+    // The "Year N" label stays over the plot, clear of the y-axis labels beside it (phase 6:
+    // a year 1 or 2 marker at 360 used to cover the top "£800k").
+    if (markerBox) {
+      expect(markerBox.x).toBeGreaterThanOrEqual(plot.x - 1.5);
+      expect(markerBox.x + markerBox.width).toBeLessThanOrEqual(plot.x + plot.width + 1.5);
+    }
     const labels = await chart.locator('.chart__series-label').all();
     expect(labels).toHaveLength(2);
     const boxes = [];

@@ -62,3 +62,14 @@ export async function answerBox(
 export function params(page: Page): URLSearchParams {
   return new URL(page.url()).searchParams;
 }
+
+/**
+ * Open a disclosure in the calculator by its test id ('advanced', 'year-table') if it is closed.
+ * Phase 6 (perf): their bodies render the first time they open, so open one before reading or
+ * counting what is inside it. Added by the perf teammate.
+ */
+export async function openDisclosure(page: Page, testId: string): Promise<void> {
+  const details = page.getByTestId(testId);
+  if ((await details.getAttribute('open')) === null) await details.locator('summary').click();
+  await expect(details).toHaveAttribute('open', '');
+}

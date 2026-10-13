@@ -159,6 +159,35 @@ a:hover {
   outline-color: var(--color-focus-edge-hi-vis);
 }
 
+/* Forced colours (Windows contrast themes, phase 6): the browser drops the box-shadow ring, so
+   the outline carries focus alone, thicker and in the system's Highlight colour. Controls that
+   opt out of forced colours (the sliders) keep it too. */
+@media (forced-colors: active) {
+  :focus-visible,
+  .focus-ring,
+  .tag--local:focus-visible,
+  .button--primary:focus-visible,
+  .skip-link:focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
+/* ---- Reduced motion (phase 6) ----
+   Nothing on the site animates today: no transitions, animations or smooth scrolling. This keeps
+   it that way for anyone who asks for less motion, whatever a later rule adds. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    /* none rather than a tiny duration: with the default transition-property (all) a tiny
+       duration would turn every style change into a transition. */
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ---- Utilities ---- */
 
 /* Hidden visually, still read by screen readers. */

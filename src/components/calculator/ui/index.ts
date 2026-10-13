@@ -1,6 +1,10 @@
-/** The calculator's Preact primitives. Same markup and classes as src/components/ui/*.astro. */
+/**
+ * The calculator's Preact primitives. Same markup and classes as src/components/ui/*.astro.
+ *
+ * DataTable is imported from './ui/DataTable' directly (phase 6, perf): only the island's
+ * deferred chunk uses it, and listing it here would put it in the island chunk.
+ */
 export { AnswerNumeral, type AnswerNumeralProps } from './AnswerNumeral';
-export { DataTable, type DataTableColumn, type DataTableProps } from './DataTable';
 export { Disclosure, type DisclosureProps } from './Disclosure';
 export { Field, ResetButton, type FieldProps } from './Field';
 export { KeyNumber, type KeyNumberProps } from './KeyNumber';

@@ -15,3 +15,10 @@
     padding: var(--space-6);
   }
 }
+
+/* Forced colours (phase 6): the surface colour is dropped, so give the card a visible edge. */
+@media (forced-colors: active) {
+  .card {
+    border: 1px solid CanvasText;
+  }
+}

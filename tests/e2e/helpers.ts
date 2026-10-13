@@ -36,13 +36,13 @@ export const PAGES: readonly { path: string; title: string; h1: string; island?:
   },
   {
     path: 'rent-vs-buy/leeds/',
-    title: 'Rent or buy in Leeds? See your break-even year | House Sums',
+    title: 'Rent or buy in Leeds? Your break-even year | House Sums',
     h1: 'Rent v buy in Leeds: how long until buying beats renting?',
     island: true,
   },
   {
     path: 'rent-vs-buy/kingston-upon-hull/',
-    title: 'Rent or buy in Kingston upon Hull? See your break-even year | House Sums',
+    title: 'Rent or buy in Kingston upon Hull? Break-even year | House Sums',
     h1: 'Rent v buy in Kingston upon Hull: how long until buying beats renting?',
     island: true,
   },

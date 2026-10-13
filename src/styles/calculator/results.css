@@ -14,6 +14,8 @@
  *   .chart__cursor / __dot  the inspected year: an ink guide line and a dot on each line
  *   .chart__tooltip         that year's figures, ink on surface with an ink edge (no shadow)
  *   .chart__marker-label--end  "Year N" hung left of the marker near the right edge
+ *   .chart__marker-label--start  "Year N" hung right of the marker near the left edge, so it
+ *                           never covers the top y-axis label (phase 6)
  *   .sensitivity__tables / .breakdown__tables  tables side by side when there is room
  *   .breakdown__note        a short note under an item (relief, surcharge, agent fee basis)
  *   .calc-section__intro / __small  a lead-in line and small print in a section
@@ -57,6 +59,11 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+}
+
+/* Scoped to the island's card (phase 6, perf): this stylesheet now ships with every page, and
+   the reserved lines are for the live answer only, not the styleguide's static example. */
+.calc-card .answer__note {
   min-height: calc(var(--answer-note-lines) * var(--leading-body) * 1em + var(--space-1));
 }
 
@@ -212,6 +219,10 @@
   transform: translate(calc(-100% + 1px), -0.25rem);
 }
 
+.chart__marker-label--start {
+  transform: translate(-1px, -0.25rem);
+}
+
 /* The lower line's label when that line runs too close to the axis to hang below it
    (src/lib/chart.ts, labelSides): over the line, right of the point, clear of the year labels. */
 .chart__series-label--above-right {
@@ -261,6 +272,13 @@
 }
 
 @media (forced-colors: active) {
+  /* The numeral's line box rises into the lead's line (leading 0.9), and the backplate the
+     browser draws behind forced-colour text would hide "Buying pulls ahead after". Phase 6. */
+  .answer__numeral {
+    forced-color-adjust: none;
+    color: CanvasText;
+  }
+
   .chart__cursor {
     border-left-color: CanvasText;
   }
