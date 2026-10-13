@@ -183,7 +183,7 @@
       "min": 0,
       "max": 0.1,
       "step": 0.001,
-      "source": "Applies to insurance and fixed fees"
+      "source": "Uprates buildings insurance and the service charge each year"
     },
     "agentFeeRate": {
       "label": "Estate agent fee",

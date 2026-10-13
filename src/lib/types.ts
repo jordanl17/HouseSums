@@ -396,6 +396,22 @@ export interface FieldSpec {
   hint?: string;
 }
 
+/**
+ * Inputs whose default is derived (from the area, the rates or the Outlook preset) rather than
+ * fixed: their FieldSpec.default is null. Every other field has a fixed default.
+ * (Added by the model teammate, phase 3.)
+ */
+export const DERIVED_INPUT_KEYS: readonly NumericInputKey[] = [
+  'price',
+  'deposit',
+  'rent',
+  'mortgageRate',
+  'houseGrowth',
+  'rateAfterFix',
+  'rentGrowth',
+  'investmentReturn',
+];
+
 /** Applied to a clamped area figure: min(value + add, cap ?? Infinity), then clamped again. */
 export interface PresetAdjust {
   add: number;
