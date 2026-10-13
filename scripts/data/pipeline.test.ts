@@ -23,7 +23,8 @@ import { parsePiprRows } from './pipr.ts';
 import { buildSources } from './sources.ts';
 import { renderSummary } from './summary.ts';
 import { validateDirectory } from './validate-files.ts';
-import { checkAreas, checkBrmaMap, checkRates, checkSources } from './validate.ts';
+import ratesJson from '../../data/rates.json';
+import { MAX_RATE_MOVE, checkAreas, checkBrmaMap, checkRates, checkSources } from './validate.ts';
 
 const dataDir = fileURLToPath(new URL('../../data/', import.meta.url));
 const GENERATED = '2026-10-20T06:17:00Z';
@@ -240,6 +241,35 @@ describe('checkAreas', () => {
     expect(checkAreas(next, null).errors.join('\n')).toMatch(/1 of 4 areas use a nation fallback/);
   });
 
+  it('warns, rather than skipping silently, when a field switches to a nation fallback', () => {
+    const next = areasFile();
+    Object.assign(next.areas[3]!, {
+      rent: 1450,
+      rentGrowth: 0.04,
+      fallbacks: ['rent', 'rentGrowth'],
+    });
+    const { warnings } = checkAreas(next, prev);
+    expect(warnings).toEqual([
+      'Leeds: rent switched from its local figure to the England figure (1150 to 1450); not compared month on month',
+      'Leeds: rentGrowth switched from its local figure to the England figure (0.042 to 0.04); not compared month on month',
+    ]);
+  });
+
+  it('warns when a field switches back from a nation fallback to a local figure', () => {
+    const before = areasFile();
+    Object.assign(before.areas[3]!, {
+      price: 300000,
+      growth10y: 0.03,
+      fallbacks: ['price', 'growth10y'],
+    });
+    const { errors, warnings } = checkAreas(areasFile(), before);
+    expect(errors).toEqual([]);
+    expect(warnings).toEqual([
+      'Leeds: price switched from the England figure to its local figure (300000 to 250000); not compared month on month',
+      'Leeds: growth10y switched from the England figure to its local figure (0.03 to 0.04); not compared month on month',
+    ]);
+  });
+
   it('skips the month-on-month checks against sample data', () => {
     const sample = { ...areasFile(), sample: true };
     sample.areas = sample.areas.map((a) => ({ ...a, price: 1 }));
@@ -259,12 +289,57 @@ describe('checkRates and checkSources', () => {
     expect(checkRates(missing, null).errors).toEqual(['rates: IUM2WTL (2 years, 95% LTV) missing']);
   });
 
-  it('fails when a rate moves more than 1.5 points in a month', () => {
-    const next: RatesFile = {
-      ...rates,
-      rates: rates.rates.map((r) => ({ ...r, rate: r.series === 'IUMBV34' ? 0.06 : r.rate })),
-    };
-    expect(checkRates(next, rates).errors).toEqual(['IUMBV34: rate moved from 0.041 to 0.06']);
+  const withRate = (file: RatesFile, series: string, rate: number): RatesFile => ({
+    ...file,
+    rates: file.rates.map((r) => ({ ...r, rate: r.series === series ? rate : r.rate })),
+  });
+
+  it('fails when a mortgage rate moves more than 15% month on month (relative)', () => {
+    const next = withRate(rates, 'IUMBV34', 0.06);
+    expect(checkRates(next, rates).errors).toEqual([
+      'IUMBV34: rate moved from 0.041 to 0.06 (+46.3%), limit 15%',
+    ]);
+  });
+
+  it('catches a 16% move that a 1.5-point rule would have let through', () => {
+    const before = withRate(rates, 'IUMBV34', 0.05);
+    const next = withRate(rates, 'IUMBV34', 0.058); // +16%, 0.8 points
+    expect(checkRates(next, before).errors).toEqual([
+      'IUMBV34: rate moved from 0.05 to 0.058 (+16.0%), limit 15%',
+    ]);
+    expect(checkRates(withRate(rates, 'IUMBV34', 0.042), before).errors).toEqual([
+      'IUMBV34: rate moved from 0.05 to 0.042 (-16.0%), limit 15%',
+    ]);
+  });
+
+  it('allows a 15% move exactly, despite floating-point noise', () => {
+    const before = withRate(rates, 'IUMBV34', 0.05);
+    expect(checkRates(withRate(rates, 'IUMBV34', 0.0575), before).errors).toEqual([]);
+    expect(checkRates(withRate(rates, 'IUMBV34', 0.0425), before).errors).toEqual([]);
+  });
+
+  it('keeps an absolute floor, so tiny rates do not trip the relative rule', () => {
+    expect(MAX_RATE_MOVE).toEqual({ relative: 0.15, floor: 0.0025 });
+    const before = withRate(rates, 'IUMBV34', 0.01);
+    // +20% but only 0.2 points: under the floor, so it passes.
+    expect(checkRates(withRate(rates, 'IUMBV34', 0.012), before).errors).toEqual([]);
+    // +30% and 0.3 points: over both, so it fails.
+    expect(checkRates(withRate(rates, 'IUMBV34', 0.013), before).errors).toEqual([
+      'IUMBV34: rate moved from 0.01 to 0.013 (+30.0%), limit 15%',
+    ]);
+  });
+
+  it('turns rate moves into warnings when allowed', () => {
+    const result = checkRates(withRate(rates, 'IUMBV34', 0.06), rates, { allowMoves: true });
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual([
+      'IUMBV34: rate moved from 0.041 to 0.06 (+46.3%), limit 15% (allowed)',
+    ]);
+  });
+
+  it('passes the committed rates against themselves', () => {
+    const committed = parseRatesFile(ratesJson);
+    expect(checkRates(committed, committed)).toEqual({ errors: [], warnings: [] });
   });
 
   it('checks every source is listed', () => {
@@ -316,6 +391,31 @@ describe('renderSummary', () => {
     expect(text).toContain('| Leeds | £250,000 | £260,000 | +4.0% |');
     expect(text).toContain('| 5 years | 90% | 4.30% | IUMZO28 |  |');
     expect(text).toContain('Isles of Scilly: not in UK HPI');
+  });
+
+  it('lists a field that switched between local and fallback as a warning', () => {
+    const prev = areasFile();
+    const next = areasFile();
+    Object.assign(next.areas[3]!, {
+      rent: 1450,
+      rentGrowth: 0.04,
+      fallbacks: ['rent', 'rentGrowth'],
+    });
+    const rates = buildRates(parseIadbCsv(IADB_TT), GENERATED).file;
+    const text = renderSummary({
+      mode: 'dry run',
+      next: {
+        areas: next,
+        rates,
+        sources: { schemaVersion: 1, generatedAt: GENERATED, sources: [] },
+      },
+      prev: { areas: prev, rates: null },
+      checks: checkAreas(next, prev),
+      notes: [],
+    });
+    expect(text).toMatch(
+      /Warnings:\n\n- Leeds: rent switched from its local figure to the England figure \(1150 to 1450\)/,
+    );
   });
 
   it('says the site keeps its last good data when the run fails', () => {
