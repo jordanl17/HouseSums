@@ -54,6 +54,27 @@ jobs:
       - name: JS budget
         run: npm run budget
 
+      # Every internal link, asset, og:image, canonical and sitemap entry resolves to a built file.
+      - name: Link check
+        run: npm run check:links
+
+      # Unique titles and descriptions, one h1, canonical, no em-dashes, JSON-LD shape, sitemap,
+      # and each area page's static answer equal to the engine at typical assumptions.
+      - name: Page quality
+        run: npm run check:pages
+
+      # The same build and checks at BASE_PATH=/ (the future custom domain), in a temp folder so
+      # the e2e tests below still run against the /HouseSums build.
+      - name: Build and check at the root base path
+        env:
+          BASE_PATH: /
+          SITE_URL: https://housesums.co.uk
+          DIST_DIR: ${{ runner.temp }}/dist-root
+        run: |
+          npx astro build --outDir "$DIST_DIR"
+          npm run check:links
+          npm run check:pages
+
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 

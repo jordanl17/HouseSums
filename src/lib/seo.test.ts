@@ -8,8 +8,11 @@ import {
   jsonLdText,
   nationTitle,
   ogImagePath,
+  robotsTxt,
+  sitemapXml,
   webApplicationLd,
   withTrailingSlash,
+  xmlEscape,
 } from './seo';
 
 describe('titles', () => {
@@ -94,5 +97,48 @@ describe('JSON-LD', () => {
     const text = jsonLdText({ name: '</script><b>' });
     expect(text).not.toContain('<');
     expect(JSON.parse(text)).toEqual({ name: '</script><b>' });
+  });
+});
+
+describe('sitemap', () => {
+  it('escapes the five XML special characters', () => {
+    expect(xmlEscape(`a&b<c>d"e'f`)).toBe('a&amp;b&lt;c&gt;d&quot;e&apos;f');
+  });
+
+  it('lists each URL once, in order, in a urlset', () => {
+    const xml = sitemapXml([
+      'https://x.test/HouseSums/',
+      'https://x.test/HouseSums/rent-vs-buy/leeds/',
+      'https://x.test/HouseSums/',
+    ]);
+    expect(xml).toBe(
+      [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        '<url><loc>https://x.test/HouseSums/</loc></url>',
+        '<url><loc>https://x.test/HouseSums/rent-vs-buy/leeds/</loc></url>',
+        '</urlset>',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  it('escapes a URL and rejects one that is not absolute', () => {
+    expect(sitemapXml(['https://x.test/?a=1&b=2'])).toContain(
+      '<loc>https://x.test/?a=1&amp;b=2</loc>',
+    );
+    expect(() => sitemapXml(['/HouseSums/'])).toThrow(/absolute/);
+  });
+});
+
+describe('robots.txt', () => {
+  it('allows everything and points at the sitemap', () => {
+    expect(robotsTxt('https://x.test/HouseSums/sitemap.xml')).toBe(
+      'User-agent: *\nAllow: /\n\nSitemap: https://x.test/HouseSums/sitemap.xml\n',
+    );
+  });
+
+  it('needs an absolute sitemap URL', () => {
+    expect(() => robotsTxt('sitemap.xml')).toThrow(/absolute/);
   });
 });
