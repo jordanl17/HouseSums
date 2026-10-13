@@ -8,7 +8,7 @@ Each phase lands as one PR into `main`. The phase team appends its handoff notes
 | 2 | Brand and layout shell | `phase/2-brand` | Merged |
 | 3 | Engine and data pipeline | `phase/3-engine` | Merged |
 | 4 | Calculator UI | `phase/4-calculator` | Merged |
-| 5 | Area, nation and content pages, SEO | `phase/5-pages` | In progress |
+| 5 | Area, nation and content pages, SEO | `phase/5-pages` | In review |
 | 6 | Accessibility, performance and end-to-end | `phase/6-hardening` | Not started |
 
 ## Handoff notes
@@ -192,7 +192,7 @@ Decisions: `docs/decisions.md`, "Calculator island (phase 4, lead)", "Inputs", "
 
 ### Phase 5: area, nation and content pages, SEO
 
-In progress. The lead laid the foundations below; three teammates (areas, content, seo) fill the templates in parallel. Decisions and file ownership: `docs/decisions.md`, "Pages and SEO (phase 5, lead)".
+In review. The lead laid the foundations below; three teammates (areas, content, seo) filled the templates in parallel and the branches merged without conflicts. Decisions and file ownership: `docs/decisions.md`, "Pages and SEO (phase 5, lead)".
 
 #### Foundations (lead)
 - **Slugs.** `bristol`, `kingston-upon-hull`, `herefordshire` (display names without ", City of" / ", County of"; ONS name kept as `onsName`), from `data/area-names.json`, applied by the pipeline on every refresh and by `npm run data:names` to the committed file. Old slugs are aliases: `?a=bristol-city-of` opens Bristol. Area slugs never equal nation slugs (checked).
@@ -213,3 +213,31 @@ In progress. The lead laid the foundations below; three teammates (areas, conten
 - **Island on area pages:** `<Calculator client:load data={calculatorData()} links={{ areaList: url('data/area-list.json'), howItWorks: url('how-it-works') }} initialArea={islandArea(area)} />`. One island per page; no other client JS on any page.
 - **OG images:** `og/default.png` and `og/{england,scotland,wales,northern-ireland}.png` under `public/`, 1200x630. Base already points at them (`ogImagePath(nation)` on area and nation pages).
 - **Links** always through `url()` or the path helpers in `areas.ts`. New pages that should get the shared e2e checks go in `PAGES` (tell the lead).
+
+#### What shipped (phase 5)
+Decisions: `docs/decisions.md`, "Pages and SEO (phase 5, lead)", "Area and nation pages", "Content pages", "SEO and quality gates" and "Integration (phase 5)".
+
+- **Area pages** (`/rent-vs-buy/{slug}/`, 361): the h1 "Rent v buy in Leeds: how long until buying beats renting?", the island pre-filled with `initialArea` (the whole answer, chart, key numbers, sensitivity and breakdown are in the static HTML; the island hydrates on top), then "{Area} in figures": the answer at typical assumptions (`area-summary-answer`, exactly `typicalAnswer(area).sentence`), what typical means for this area, the nation's middle answer, price and rent against the nation in per cent, and a figures table of the area beside its nation with the month of each figure. Plain notes for falling prices (with the 0% floor), rent change outside 1-6%, nation fallbacks ("*", "(England figure)"), NI quarterly prices, Broad Rental Market Areas, and the ONS name where it differs. Then the six closest areas by price in the same nation (table with each break-even), and links to the nation page, How it works and Sources. Code: `src/lib/area-summary.ts`, additions to `src/lib/areas.ts`, `src/components/area/**`, `src/styles/area.css`.
+- **Nation pages** (4) and **`/rent-vs-buy/`**: the nation's figures with months, how the answers spread, what typical assumptions mean, the property tax in plain sentences from `taxRules.json` (LBTT and the Home Report in Scotland, NI sharing SDLT with England), links to the other nations, and every area A to Z in a `.data-table` with price, rent and break-even. The index is a table of the four nations. The home page has one line of nation links under the island.
+- **Slugs**: `bristol`, `kingston-upon-hull`, `herefordshire` via `data/area-names.json` in the pipeline; old slugs work as `?a=` aliases (e2e `alias.spec.ts`).
+- **How it works**: the two households month by month, the break-even definition, seven formulas in plain HTML, a worked example computed at build, every default and preset from `defaults.json`, SDLT/LBTT/LTT bands with relief, surcharges, tax year and effective date from `taxRules.json`, the brief's assumptions plus the tax cases left out (2% non-resident surcharge, companies and trusts, shared ownership, linked purchases, refund of higher rates), known limits and "This is a model, not financial advice."
+- **Sources**: every dataset in `sources.json` (publisher, link, licence and licence link, coverage, use, month, notes, attribution), the nine Bank of England series with codes and descriptions (and the missing 5-year 85% band), the BRMA mapping tables for Scotland and NI, areas on nation fallbacks, the monthly refresh (schedule and thresholds read from the pipeline), the last refresh date and the OGL statements. **About**: an independent project by Jordan Lawrence, no lenders, adverts, lead forms or personal data, figures stay in the browser, cookieless counting (currently off), not advice, and the GitHub issues link.
+- **SEO**: unique titles and descriptions (area descriptions lead with the computed answer), canonical URLs with trailing slashes, `sitemap.xml` (370 URLs; no styleguide, 404 or old slugs), `robots.txt`, WebApplication JSON-LD on the home page and area pages, BreadcrumbList on area, nation and index pages, OG and Twitter tags everywhere, five committed 1200x630 OG cards (`npm run og`), `lang="en-GB"`.
+- **Quality gates in CI**: `npm run check:links` (broken internal links, assets, fragments, sitemap and canonical targets, and orphan pages all fail), `npm run check:pages` (22 tests over `dist/`, including every area page's static answer against an independent engine run), both repeated at `BASE_PATH=/`. e2e: `area-pages`, `nation-pages`, `alias`, `content-pages`, `seo` specs (answer with JS disabled, hydration and a working calculator, nation lists, the alias, sitemap and robots served). Expected values come from the data files, so the specs also hold against the live site.
+- **Numbers**: 577 unit tests, 22 page-quality tests, 395 e2e runs passed (5 skipped) at 360 and 1280. Build: 372 pages in about 6.5 s. Client JS 85,816 bytes of 102,400 (no new JS; area pages share the island bundle).
+
+#### Deferred (phase 5)
+- **The e2e suite has not run against the live site**: GitHub Pages is still not switched on (see phase 1). Run `npm run test:live` once it is.
+- **robots.txt only works at a host root**, so it does nothing until the custom domain (`BASE_PATH=/`). Submit the sitemap to search consoles by hand until then.
+- **Attribution wording and tax pages** were written from memory and search extracts, since gov hosts are unreachable from the container. Check the statements on /sources/ against each publisher and re-read the six tax pages in `taxRules.json` before launch.
+- **The issues link** on /about/ 404s for visitors until the repo is public.
+- **OG cards** are checked for names, size and that they are not empty, not pixel by pixel. Re-run `npm run og` after any logo, token or nation-name change.
+- The nation index note names England's and NI's months; it reads them from data but assumes those are the only two month sets.
+
+#### What phase 6 must know
+- **Every page except `/` and area pages ships zero JS**; area pages load exactly the home page's island bundle. Keep it that way: the shared e2e check fails on any other script.
+- **Lighthouse** should run on `/` and one area page (`/rent-vs-buy/leeds/`). Area pages are long (calculator, then summary, related areas): the answer card is still in the first screen at 1280x800.
+- **Accessibility work to look at**: the nation tables (A to Z, up to 296 rows in England) have `<caption>`s and row headers; fallback "*" marks have visually hidden text; StackTable keeps table roles when it stacks below 36rem. Check these with a screen reader, and the forced-colours items left from phase 4.
+- **Contracts the quality gates hold** (change the tests with the code): exactly one h1, unique description and title per page; only 404 and styleguide are noindex; WebApplication only on `/` and area pages; area meta descriptions start with the answer sentence then "Average price £X, rent £Y a month."; the `answer-*`, `area-summary-answer`, `related-areas` and `nation-areas` hooks.
+- **New pages** must be linked from somewhere reachable from the home page (orphans fail `check:links`), go in the sitemap endpoint (`check:pages` compares the sitemap with canonicals), and go in `PAGES` in `tests/e2e/helpers.ts` for the shared checks.
+- **Build time** is about 7 s for 372 pages; `typicalAnswer` and `nationSpreadFor` are cached per build, so new per-area work should reuse them rather than re-running the model.

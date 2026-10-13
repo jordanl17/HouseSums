@@ -20,7 +20,7 @@
     "test:e2e": "playwright test",
     "test:live": "node scripts/wait-for-deploy.mjs && playwright test",
     "budget": "node scripts/check-budget.mjs",
-    "check:links": "node scripts/check-links.mjs --orphans=warn",
+    "check:links": "node scripts/check-links.mjs",
     "check:pages": "vitest run --config vitest.dist.config.ts",
     "og": "tsx scripts/og/generate.ts",
     "data:refresh": "tsx scripts/refresh-data.ts",
