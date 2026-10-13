@@ -1,40 +1,32 @@
 /**
- * Validate the committed data files against the contracts in src/lib/types.ts.
+ * Validate the data files against the contracts in src/lib/types.ts and the brief's checks.
  *
- * Owner: data teammate. This is the lead's minimal starting point (schema checks only). The data
- * teammate adds the brief's checks: missing price or rent after fallbacks, any value moving more
- * than 15% month on month against the committed file, slug collisions, unexpected drops in counts.
+ * Run: npm run data:validate -- [--dir <data dir>] [--previous <dir>] [--allow-count-drop] [--allow-moves]
+ *   --dir        directory to check (default data/)
+ *   --previous   a directory holding last month's areas.json and rates.json, for the
+ *                month-on-month (15%) and count checks
  *
- * Run: npm run data:validate
+ * The refresh workflow runs the same checks in scripts/refresh-data.ts before writing anything.
+ * The checks live in scripts/data/validate.ts and are unit tested in scripts/data/*.test.ts.
  */
-import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import {
-  parseAreasFile,
-  parseDefaults,
-  parseRatesFile,
-  parseSourcesFile,
-  parseTaxRules,
-} from '../src/lib/schema.ts';
+import { parseArgs } from 'node:util';
+import { validateDirectory } from './data/validate-files.ts';
 
-const dataDir = fileURLToPath(new URL('../data/', import.meta.url));
+const { values: args } = parseArgs({
+  options: {
+    dir: { type: 'string', default: fileURLToPath(new URL('../data/', import.meta.url)) },
+    previous: { type: 'string' },
+    'allow-count-drop': { type: 'boolean', default: false },
+    'allow-moves': { type: 'boolean', default: false },
+  },
+});
 
-const files: [string, (value: unknown, path: string) => unknown][] = [
-  ['areas.json', parseAreasFile],
-  ['rates.json', parseRatesFile],
-  ['sources.json', parseSourcesFile],
-  ['taxRules.json', parseTaxRules],
-  ['defaults.json', parseDefaults],
-];
-
-let failed = false;
-for (const [name, parse] of files) {
-  try {
-    parse(JSON.parse(await readFile(`${dataDir}${name}`, 'utf8')), name);
-    console.log(`ok   ${name}`);
-  } catch (error) {
-    failed = true;
-    console.error(`FAIL ${name}: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-process.exitCode = failed ? 1 : 0;
+const result = await validateDirectory(args.dir ?? 'data', args.previous, {
+  allowCountDrop: args['allow-count-drop'],
+  allowMoves: args['allow-moves'],
+});
+for (const w of result.warnings) console.warn(`warn ${w}`);
+for (const e of result.errors) console.error(`FAIL ${e}`);
+if (result.errors.length === 0) console.log(`ok   ${args.dir}: every check passed`);
+process.exitCode = result.errors.length > 0 ? 1 : 0;

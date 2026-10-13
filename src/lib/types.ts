@@ -87,8 +87,15 @@ export interface AreasFile {
   generatedAt: string;
   /** Latest month of the price and rent data. */
   asOf: { price: Month; rent: Month };
-  /** Nation-level figures: the fallback for missing local figures and the no-area default. */
-  nations: Record<Nation, AreaFigures & { sample?: AreaField[] }>;
+  /**
+   * Nation-level figures: the fallback for missing local figures and the no-area default.
+   * `asOf` (data teammate, additive) gives the months when they differ from the file's: NI
+   * prices are quarterly and NI rents usually lag Great Britain by two months.
+   */
+  nations: Record<
+    Nation,
+    AreaFigures & { sample?: AreaField[]; asOf?: Partial<Record<'price' | 'rent', Month>> }
+  >;
   /** Sorted by name. */
   areas: Area[];
 }
