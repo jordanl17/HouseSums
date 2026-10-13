@@ -8,13 +8,20 @@
  * island or any client code. Phase 5's area pages use it too, with areaForPage() for the
  * area's own figures.
  */
+import areaNamesJson from '../../data/area-names.json';
 import areasJson from '../../data/areas.json';
 import defaultsJson from '../../data/defaults.json';
 import ratesJson from '../../data/rates.json';
 import taxRulesJson from '../../data/taxRules.json';
 import type { CalculatorData } from '../components/calculator/types';
 import type { ClientArea } from './area-list';
-import { parseAreasFile, parseDefaults, parseRatesFile, parseTaxRules } from './schema';
+import {
+  parseAreaNames,
+  parseAreasFile,
+  parseDefaults,
+  parseRatesFile,
+  parseTaxRules,
+} from './schema';
 import type { AreasFile } from './types';
 
 let cached: { data: CalculatorData; areas: AreasFile } | null = null;
@@ -29,6 +36,7 @@ function load(): { data: CalculatorData; areas: AreasFile } {
       taxRules: parseTaxRules(taxRulesJson),
       rates: parseRatesFile(ratesJson),
       areasMeta: { asOf: areas.asOf, nations: areas.nations },
+      slugAliases: { ...parseAreaNames(areaNamesJson).aliases },
     },
   };
   return cached;

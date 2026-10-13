@@ -1,0 +1,80 @@
+---
+/**
+ * One property tax regime from data/taxRules.json (via regimeSummaries in src/lib/content.ts):
+ * where it applies, a one-line plain explanation (the default slot), the main bands, first-time
+ * buyer relief and the rules for an additional property.
+ */
+import '../../styles/content.css';
+import DataTable from '../ui/DataTable.astro';
+import type { RegimeSummary } from '../../lib/content';
+import { formatDateLong, listText } from '../../lib/content';
+
+interface Props {
+  regime: RegimeSummary;
+}
+
+const { regime } = Astro.props;
+const columns = [
+  { key: 'range', label: 'Part of the price' },
+  { key: 'rate', label: 'Rate', numeric: true },
+];
+const rows = (list: RegimeSummary['main']) => list.map((row) => ({ ...row }));
+const headingId = `tax-${regime.id}`;
+const checked = regime.sources
+  .map((source) => source.checked)
+  .sort()
+  .at(-1);
+---
+
+<section class="content-section tax-regime" aria-labelledby={headingId}>
+  <h3 id={headingId}>{regime.name}</h3>
+  <p>
+    <strong>{listText(regime.nations)}.</strong> <slot />
+  </p>
+  <div class="tax-regime__tables">
+    <DataTable
+      caption="Main rates"
+      columns={columns}
+      rows={rows(regime.main)}
+      class="data-table--tax"
+    />
+    {regime.firstTimeBuyer ? (
+      <DataTable
+        caption="First-time buyers"
+        columns={columns}
+        rows={rows(regime.firstTimeBuyer.rows)}
+        class="data-table--tax"
+      />
+    ) : null}
+    {regime.additional.rows ? (
+      <DataTable
+        caption="Additional property"
+        columns={columns}
+        rows={rows(regime.additional.rows)}
+        class="data-table--tax"
+      />
+    ) : null}
+  </div>
+  <ul class="content-list">
+    <li>
+      {regime.firstTimeBuyer
+        ? regime.firstTimeBuyer.note
+        : 'No first-time buyer relief: first-time buyers pay the main rates.'}
+    </li>
+    <li>{regime.additional.note}</li>
+  </ul>
+  <div class="content-small">
+    <p>
+      {checked
+        ? `Official pages (rates checked ${formatDateLong(checked)} against search-engine copies of these pages):`
+        : 'Official pages:'}
+    </p>
+    <ul class="content-list">
+      {regime.sources.map((source) => (
+        <li>
+          <a href={source.url}>{source.title}</a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

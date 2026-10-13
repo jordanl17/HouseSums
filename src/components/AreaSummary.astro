@@ -1,0 +1,59 @@
+---
+/**
+ * The local summary under the calculator on an area page (phase 5). Built only from data:
+ * - the answer at typical assumptions (typicalAnswer(), the same deriveInputs + runModel call the
+ *   island makes), what "typical" means for this area, and the middle answer across its nation;
+ * - the area's price, 10-year growth, rent and rent change beside its nation's, with months;
+ * - plain notes: growth or rent change outside the calculator's range (said plainly, with what
+ *   it uses), nation fallbacks, NI quarterly prices, Broad Rental Market Areas, the ONS name;
+ * - the datasets behind the figures, with a link to /sources/.
+ *
+ * Test hooks: area-summary (the section), area-summary-answer (exactly typicalAnswer().sentence).
+ */
+import FiguresTable from './area/FiguresTable.astro';
+import { areaSummary, nationName, summarySources, typicalAnswer } from '../lib/areas';
+import type { Area } from '../lib/types';
+import { url } from '../lib/url';
+import '../styles/area.css';
+
+interface Props {
+  area: Area;
+}
+
+const { area } = Astro.props;
+const answer = typicalAnswer(area);
+const summary = areaSummary(area);
+const nation = nationName(area.nation);
+---
+
+<section class="area-block" aria-labelledby="area-summary-heading" data-testid="area-summary">
+  <div class="area-block__text">
+    <h2 id="area-summary-heading">{area.name} in figures</h2>
+    <p class="area-summary__answer" data-testid="area-summary-answer">
+      {answer.sentence}
+    </p>
+    {summary.overtake && <p data-testid="area-summary-overtake">{summary.overtake}</p>}
+    <p>{summary.assumptions}</p>
+    <p>{summary.middle}</p>
+    {summary.comparison && <p>{summary.comparison}</p>}
+    {summary.notes.length > 0 && (
+      <ul class="area-notes">
+        {summary.notes.map((note) => (
+          <li>{note}</li>
+        ))}
+      </ul>
+    )}
+    <p class="area-note">
+      {summarySources()} <a href={url('sources')}>Sources and licences</a>
+    </p>
+  </div>
+  <div class="area-block__table">
+    <FiguresTable
+      rows={summary.rows}
+      caption={`${area.name} beside ${nation}`}
+      areaName={area.name}
+      nationName={nation}
+      testid="area-figures"
+    />
+  </div>
+</section>

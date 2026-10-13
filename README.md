@@ -33,11 +33,14 @@ The dev server prints a local address. The site lives under the base path, so op
 | `npm test`         | Run the unit tests with Vitest (`src/**/*.test.ts`)                             |
 | `npm run test:e2e` | Run the Playwright end-to-end tests at 360px and 1280px against the built site |
 | `npm run budget`   | Fail if the client JavaScript in `dist/` adds up to more than 100KB             |
+| `npm run check:links` | Crawl `dist/` and fail on any broken internal link or asset, or a page no link reaches |
+| `npm run check:pages` | Page-quality tests over `dist/`: titles, descriptions, one h1, canonical, no em-dashes, JSON-LD, sitemap, each area's answer |
+| `npm run og`       | Re-render the Open Graph cards in `public/og/` with Playwright                 |
 
 Before pushing, run:
 
 ```sh
-npm run check && npm run lint && npm test && npm run build && npm run budget && npm run test:e2e
+npm run check && npm run lint && npm test && npm run build && npm run budget && npm run check:links && npm run check:pages && npm run test:e2e
 ```
 
 Run `npm run build` before `npm run test:e2e`, as the end-to-end tests serve the built site.
@@ -64,6 +67,7 @@ src/layouts/        page shells
 src/pages/          routes
 src/styles/         global CSS
 tests/e2e/          Playwright tests
+tests/built/        page-quality tests over the built dist/ (npm run check:pages)
 .github/workflows/  CI, deploy and data refresh workflows
 docs/               product brief, build decisions and phase notes
 ```

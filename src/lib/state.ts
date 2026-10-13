@@ -235,9 +235,18 @@ const oneOf =
   (value: string): T | null =>
     (allowed as readonly string[]).includes(value) ? (value as T) : null;
 
-function slugReader(knownAreas: ReadonlySet<string> | undefined): (value: string) => string | null {
+function slugReader(
+  knownAreas: ReadonlySet<string> | undefined,
+  aliases: Readonly<Record<string, string>> | undefined,
+): (value: string) => string | null {
   return (value) => {
-    const slug = value.trim().toLowerCase();
+    const typed = value.trim().toLowerCase();
+    // An old slug (data/area-names.json) reads as the area's current slug. Own keys only, so
+    // "__proto__" or "constructor" never resolve to anything.
+    const slug =
+      aliases !== undefined && Object.prototype.hasOwnProperty.call(aliases, typed)
+        ? (aliases[typed] ?? typed)
+        : typed;
     if (knownAreas !== undefined) return knownAreas.has(slug) ? slug : null;
     return slug.length <= MAX_SLUG_LENGTH && SLUG.test(slug) ? slug : null;
   };
@@ -249,11 +258,14 @@ function slugReader(knownAreas: ReadonlySet<string> | undefined): (value: string
  * in `knownAreas` (when given) becomes null, and without `knownAreas` a slug must at least look
  * like one (lowercase letters and digits joined by single hyphens). When a key appears more than
  * once, the last valid value wins. Numbers accept what people type: "p=300k", "mr=4.3%".
+ * `aliases` (phase 5) maps old area slugs to current ones (data/area-names.json), so links made
+ * before a slug changed keep working: `a=bristol-city-of` decodes as `bristol`.
  */
 export function decodeState(
   search: string | URLSearchParams,
   defaults: DefaultsFile,
   knownAreas?: ReadonlySet<string>,
+  aliases?: Readonly<Record<string, string>>,
 ): CalculatorState {
   const selection: Selection = {
     areaSlug: null,
@@ -270,7 +282,11 @@ export function decodeState(
     return { selection, overrides };
   }
 
-  selection.areaSlug = lastValid(params, SELECTION_PARAMS.areaSlug, slugReader(knownAreas));
+  selection.areaSlug = lastValid(
+    params,
+    SELECTION_PARAMS.areaSlug,
+    slugReader(knownAreas, aliases),
+  );
   selection.buyerType =
     lastValid(params, SELECTION_PARAMS.buyerType, oneOf(BUYER_TYPES)) ?? selection.buyerType;
   selection.outlook =

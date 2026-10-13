@@ -17,10 +17,22 @@
 import Base from '../layouts/Base.astro';
 import Calculator from '../components/calculator/Calculator';
 import { calculatorData } from '../lib/calculator-data';
+import { absoluteUrl, webApplicationLd } from '../lib/seo';
 import { url } from '../lib/url';
+import { nationName, nationPath } from '../lib/areas';
+import { NATIONS } from '../lib/types';
+import '../styles/area.css';
+
+const description =
+  'Rent v buy: how long until buying beats renting? A plain-English UK calculator that starts from local figures.';
+const jsonLd = webApplicationLd({
+  name: 'House Sums: Rent v buy',
+  url: absoluteUrl(url(), Astro.site ?? Astro.url),
+  description,
+});
 ---
 
-<Base description="Rent v buy: how long until buying beats renting? A plain-English UK calculator that starts from local figures.">
+<Base description={description} jsonLd={jsonLd}>
   <h1 class="calc-title">Rent v buy: how long until buying beats renting?</h1>
   <script is:inline>
     if (/[?&]a=[^&]/.test(location.search)) document.documentElement.dataset.calcLink = '';
@@ -30,6 +42,15 @@ import { url } from '../lib/url';
     data={calculatorData()}
     links={{ areaList: url('data/area-list.json'), howItWorks: url('how-it-works') }}
   />
+  <p class="nation-links" data-testid="nation-links">
+    Rent v buy by nation:{' '}
+    {NATIONS.map((nation, index) => (
+      <>
+        <a href={nationPath(nation)}>{nationName(nation)}</a>
+        {index < NATIONS.length - 1 ? ', ' : ''}
+      </>
+    ))}
+  </p>
 </Base>
 
 <style>

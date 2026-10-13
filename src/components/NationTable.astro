@@ -1,0 +1,28 @@
+---
+/**
+ * Every area in a nation, alphabetical, with its average price, monthly rent and the break-even
+ * year at typical assumptions (phase 5). Names link to the area pages.
+ *
+ * Test hook: nation-areas (the table).
+ */
+import AreaTable from './area/AreaTable.astro';
+import { monthLabel } from '../lib/area-summary';
+import { areaTableRow, areasByNation, nationFigures, nationName } from '../lib/areas';
+import type { Nation } from '../lib/types';
+
+interface Props {
+  nation: Nation;
+}
+
+const { nation } = Astro.props;
+const rows = areasByNation(nation).map(areaTableRow);
+const { months } = nationFigures(nation);
+const name = nationName(nation);
+const caption = `Every area in ${name}, A to Z. Prices for ${monthLabel(months.price)}, rents for ${monthLabel(months.rent)}.`;
+---
+
+<p class="area-note">
+  {rows.length} areas, A to Z. Prices for {monthLabel(months.price)}, rents for{' '}
+  {monthLabel(months.rent)}, break-even at typical assumptions.
+</p>
+<AreaTable rows={rows} caption={caption} captionHidden nationName={name} testid="nation-areas" />

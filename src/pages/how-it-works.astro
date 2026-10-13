@@ -1,21 +1,509 @@
 ---
+/**
+ * /how-it-works/: the method, formulas, defaults, Outlook presets, property tax, assumptions and
+ * known limits, in plain English. Every figure is read from data/ (defaults.json, taxRules.json,
+ * areas.json, rates.json) or computed by the engine at build time; none is typed here.
+ * Owner: phase 5 content teammate.
+ */
 import Base from '../layouts/Base.astro';
+import DataTable from '../components/ui/DataTable.astro';
+import Formula from '../components/content/Formula.astro';
+import StackTable from '../components/content/StackTable.astro';
+import TaxRegime from '../components/content/TaxRegime.astro';
+import { contentData } from '../components/content/content-data';
+import {
+  choiceDefaultRows,
+  defaultRows,
+  formatDateLong,
+  formatMonthLong,
+  listText,
+  presetTable,
+  regimeSummaries,
+} from '../lib/content';
+import { shortPercent } from '../lib/copy';
+import { deriveInputs, pickMortgageRate } from '../lib/defaults';
+import { formatMoney, formatPercent } from '../lib/format';
+import { runModel } from '../lib/model';
+import { NATION_NAMES } from '../lib/nations';
+import { url } from '../lib/url';
+import '../styles/content.css';
+
+const { defaults, taxRules, rates, areas } = contentData();
+const fields = defaults.fields;
+const { simple, advanced } = defaultRows(defaults);
+const presets = presetTable(defaults);
+const regimes = regimeSummaries(taxRules);
+const checked = regimes
+  .flatMap((regime) => regime.sources.map((source) => source.checked))
+  .sort()
+  .at(-1);
+
+// Worked example: the calculator's untouched state with no area picked (the default nation's
+// average figures, default buyer type and Outlook), run through the same engine as the island.
+const exampleNation = defaults.defaultNation;
+const example = deriveInputs({
+  area: null,
+  areas,
+  rates,
+  defaults,
+  selection: {
+    areaSlug: null,
+    buyerType: defaults.defaultBuyerType,
+    outlook: defaults.defaultPreset,
+    nationOverride: null,
+  },
+});
+const exampleResult = runModel(example.inputs, taxRules, { sensitivity: false });
+const ex = example.inputs;
+const loan = ex.price - exampleResult.upfront.deposit;
+const exampleMonths = {
+  price: areas.nations[exampleNation].asOf?.price ?? areas.asOf.price,
+  rent: areas.nations[exampleNation].asOf?.rent ?? areas.asOf.rent,
+};
+const pct = (rate: number) => shortPercent(rate);
+const exampleRate = pickMortgageRate(rates, loan / ex.price, ex.fixYears);
+const typicalLabel = defaults.presets[defaults.defaultPreset].label;
+const money = (value: number) => formatMoney(value);
+const pence = (value: number) => formatMoney(value, { pence: true });
+const exampleRows = [
+  {
+    item: `Property price (${NATION_NAMES[exampleNation]} average, ${formatMonthLong(exampleMonths.price)})`,
+    figure: money(ex.price),
+  },
+  {
+    item: `Deposit (${shortPercent(defaults.depositFraction)} of the price)`,
+    figure: money(exampleResult.upfront.deposit),
+  },
+  { item: 'Loan, L', figure: money(loan) },
+  {
+    item: exampleRate
+      ? `Mortgage rate (Bank of England average, ${exampleRate.fixYears}-year fix, ${pct(exampleRate.ltv)} loan-to-value band, ${formatMonthLong(rates.asOf)})`
+      : 'Mortgage rate',
+    figure: formatPercent(ex.mortgageRate),
+  },
+  { item: 'Monthly payment, M', figure: pence(exampleResult.firstMonth.mortgage) },
+  { item: 'Maintenance, first month', figure: pence(exampleResult.firstMonth.maintenance) },
+  {
+    item: 'Insurance and service charge, first month',
+    figure: pence(exampleResult.firstMonth.insuranceAndCharges),
+  },
+  { item: 'Owning cost, first month', figure: pence(exampleResult.firstMonth.owning) },
+  {
+    item: `Rent, first month (${NATION_NAMES[exampleNation]} average, ${formatMonthLong(exampleMonths.rent)})`,
+    figure: money(exampleResult.firstMonth.rent),
+  },
+  { item: 'Upfront costs on top of the deposit, U', figure: money(exampleResult.upfront.costs) },
+  {
+    item: `Wealth after 10 years, buying`,
+    figure: money(exampleResult.series[10]?.buyWealth ?? NaN),
+  },
+  {
+    item: `Wealth after 10 years, renting`,
+    figure: money(exampleResult.series[10]?.rentWealth ?? NaN),
+  },
+  {
+    item: 'Break-even year',
+    figure:
+      exampleResult.breakEvenYear === null
+        ? `None in ${ex.years} years`
+        : `Year ${exampleResult.breakEvenYear}`,
+  },
+];
+
+const defaultColumns = [
+  { key: 'label', label: 'Input' },
+  { key: 'value', label: 'Starts at' },
+  { key: 'reason', label: 'Why' },
+];
+const choices = choiceDefaultRows(defaults);
+const toRows = (rows: readonly { label: string; value: string; reason: string }[]) =>
+  rows.map(({ label, value, reason }) => ({ label, value, reason }));
+const clamps = defaults.areaClamps;
+const surveyScotland = fields.survey.byNation?.sco;
+const homeReportScotland = fields.homeReport.byNation?.sco;
+
+// Each formula in the notation of formulaHtml (src/lib/content.ts): {x} a symbol, _{..} a
+// subscript, ^{..} a power.
+const formulas = [
+  {
+    id: 'formula-payment',
+    caption: 'Monthly mortgage payment',
+    lines: ['{M} = {L} × {r} ÷ (1 − (1 + {r})^{−{n}})'],
+    terms: [
+      { symbol: '{M}', meaning: 'the monthly payment (capital and interest)' },
+      { symbol: '{L}', meaning: 'the loan: the price less the deposit' },
+      { symbol: '{r}', meaning: 'the yearly mortgage rate ÷ 12' },
+      { symbol: '{n}', meaning: 'the number of months left in the mortgage term' },
+    ],
+    note: 'At the end of the fix, {M} is worked out again with the balance left as {L}, the months left as {n} and the rate after the fix.',
+  },
+  {
+    id: 'formula-upfront',
+    caption: 'Upfront costs',
+    lines: ['{U} = property tax + legal fees + survey + moving costs + product fee'],
+    note: 'The product fee counts only when there is a mortgage. On day one the renter invests {D} + {U}, where {D} is the deposit.',
+  },
+  {
+    id: 'formula-owning',
+    caption: 'Owning cost in a month',
+    lines: [
+      'owning = {M} + maintenance × {V} ÷ 12 + (insurance + service charge) ÷ 12 × (1 + inflation)^{{t}}',
+    ],
+    terms: [
+      { symbol: '{V}', meaning: "the home's value at the start of the month" },
+      { symbol: '{t}', meaning: 'whole years since buying' },
+    ],
+    note: "Maintenance is a yearly share of the value, so it rises with the home's value rather than with inflation.",
+  },
+  {
+    id: 'formula-rent',
+    caption: 'Rent in a month',
+    lines: ['rent = {R} × (1 + rent increase)^{{t}}'],
+    terms: [
+      { symbol: '{R}', meaning: 'the starting monthly rent' },
+      { symbol: '{t}', meaning: 'whole years since buying' },
+    ],
+  },
+  {
+    id: 'formula-growth',
+    caption: 'Monthly growth',
+    lines: ['monthly rate = (1 + yearly rate)^{1/12} − 1'],
+    note: 'Used for house price growth and the investment return, so twelve months of growth add up to exactly the yearly rate.',
+  },
+  {
+    id: 'formula-selling',
+    caption: 'Selling costs',
+    lines: [
+      '{S}({V}) = {V} × estate agent fee + legal fees (selling) + Home Report (Scotland only)',
+    ],
+  },
+  {
+    id: 'formula-wealth',
+    caption: 'What each household walks away with at year-end y',
+    lines: [
+      '{W}_{buy}({y}) = {V}_{{y}} − {B}_{{y}} − {S}({V}_{{y}}) + {P}_{own,{y}}',
+      '{W}_{rent}({y}) = {P}_{rent,{y}}',
+    ],
+    terms: [
+      { symbol: '{V}_{{y}}', meaning: "the home's value" },
+      { symbol: '{B}_{{y}}', meaning: 'the mortgage balance still owed' },
+      {
+        symbol: '{P}_{own,{y}}',
+        meaning: "the buyer's investments, from months when owning cost less than renting",
+      },
+      { symbol: '{P}_{rent,{y}}', meaning: "the renter's investments" },
+    ],
+    note: 'Break-even is the first year-end {y} with {W}_{buy}({y}) greater than {W}_{rent}({y}).',
+  },
+];
+
+const ltvBands = [...new Set(rates.rates.map((rate) => rate.ltv))].sort((a, b) => a - b);
+const ltvSentence = `The Bank publishes bands up to ${listText(ltvBands.map(pct))}, and the calculator takes the smallest band at or above your loan-to-value.`;
+const presetColumns = [
+  { key: 'assumption', label: 'Assumption' },
+  ...presets.columns.map((column) => ({
+    key: column.name,
+    label: column.label,
+    ...(column.isDefault ? { note: '(start)' } : {}),
+  })),
+];
+const presetRows = presets.rows.map((row) => ({ assumption: row.assumption, ...row.values }));
+
+const toc = [
+  { id: 'method', label: 'The method' },
+  { id: 'formulas', label: 'The formulas' },
+  { id: 'example', label: 'A worked example' },
+  { id: 'defaults', label: 'Starting figures' },
+  { id: 'outlook', label: 'Outlook presets' },
+  { id: 'property-tax', label: 'Property tax' },
+  { id: 'assumptions', label: 'Assumptions' },
+  { id: 'limits', label: 'Known limits' },
+  { id: 'not-advice', label: 'Not advice' },
+];
 ---
 
 <Base
   title="How it works"
-  description="How the House Sums rent v buy calculator works: the method, the assumptions and the formulas, in plain English."
+  description="The rent v buy method in plain English: two households month by month, the formulas, every starting figure, the presets and the property tax bands."
 >
-  <div class="prose">
-    <h1>How it works</h1>
-    <p>
-      This page will explain, in plain English, how the Rent v buy calculator compares buying a home
-      with renting the same home and investing the money the buyer would have spent.
-    </p>
-    <p>
-      It will list every assumption the model makes, including how house prices, rents and mortgage
-      rates change over time, and set out the formulas behind the break-even year.
-    </p>
-    <p>This is a model, not financial advice.</p>
+  <div class="content-layout">
+    <div class="prose content-page content-layout__head">
+      <h1>How it works</h1>
+      <p class="content-lead">
+        The Rent v buy calculator answers one question: how many years you would need to own a home
+        before buying leaves you better off than renting. This page sets out how it gets there,
+        every figure it starts from and what it leaves out.
+      </p>
+    </div>
+
+    <nav class="content-toc" aria-labelledby="toc-title">
+      <h2 class="content-toc__title" id="toc-title">
+        On this page
+      </h2>
+      <ul class="content-toc__list">
+        {toc.map((item) => (
+          <li>
+            <a href={`#${item.id}`}>{item.label}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="prose content-page content-layout__body">
+      <section class="content-section" id="method" aria-labelledby="method-title">
+        <h2 id="method-title">The method</h2>
+        <p>
+          The calculator follows two households over the same years, month by month. One buys the
+          home with a mortgage. The other rents a similar home and invests the money the buyer spent
+          up front, in a global index fund held in an ISA (an individual savings account, where
+          returns are not taxed).
+        </p>
+        <h3>Day one</h3>
+        <ul class="content-list">
+          <li>
+            The buyer pays the deposit and the upfront costs: property tax, legal fees, a survey,
+            moving costs and the mortgage product fee (only when there is a mortgage).
+          </li>
+          <li>
+            The renter keeps that money and invests all of it: the deposit plus the upfront costs.
+          </li>
+          <li>The buyer starts with no investments of their own.</li>
+        </ul>
+        <h3>Each month</h3>
+        <ul class="content-list">
+          <li>
+            The buyer pays the mortgage, maintenance (a share of the home's value), buildings
+            insurance and any service charge, ground rent or factor fees.
+          </li>
+          <li>The renter pays the rent, which goes up once a year, on each anniversary.</li>
+          <li>
+            Whoever spent less that month invests the difference, so both households spend the same.
+          </li>
+          <li>
+            Both investment pots grow at the investment return, and the home's value grows at the
+            house price growth rate.
+          </li>
+          <li>
+            When the fixed rate ends, the mortgage payment is worked out again on the balance left,
+            at the rate after the fix.
+          </li>
+        </ul>
+        <h3>Each year-end</h3>
+        <p>
+          The calculator asks what each household would walk away with if the buyer sold at that
+          point. For the buyer, that is the home's value, less the mortgage still owed, less the
+          costs of selling (estate agent, legal fees and, in Scotland, the Home Report), plus
+          anything they invested. For the renter, it is their investments.
+        </p>
+        <h3>The break-even year</h3>
+        <p>
+          The break-even year is the first year-end when the buyer would walk away with more than
+          the renter. If that never happens within the years compared, the answer is that renting
+          comes out ahead for all of them. If renting catches up again later (for example when a
+          fixed rate ends at a higher rate), the calculator says in which year.
+        </p>
+      </section>
+
+      <section class="content-section" id="formulas" aria-labelledby="formulas-title">
+        <h2 id="formulas-title">The formulas</h2>
+        <p>
+          Money is in pounds and rates are yearly unless the formula says otherwise. Nothing is
+          rounded until a figure is shown.
+        </p>
+        {formulas.map((formula) => (
+          <Formula {...formula} />
+        ))}
+      </section>
+      <section class="content-section" id="example" aria-labelledby="example-title">
+        <h2 id="example-title">A worked example</h2>
+        <p>
+          The calculator's starting figures with no area picked: the{' '}
+          {`${NATION_NAMES[exampleNation]} average`} price and rent, a first-time buyer and the{' '}
+          {typicalLabel} outlook, with every other input at its starting figure. Worked out by the
+          same code as the calculator when this page was built.
+        </p>
+        <div data-testid="worked-example">
+          <DataTable
+            caption={`${NATION_NAMES[exampleNation]} average figures`}
+            columns={[
+              { key: 'item', label: 'Figure' },
+              { key: 'figure', label: 'Value', numeric: true },
+            ]}
+            rows={exampleRows}
+            rowHeader
+            class="data-table--wrap"
+          />
+        </div>
+      </section>
+
+      <section class="content-section" id="defaults" aria-labelledby="defaults-title">
+        <h2 id="defaults-title">Starting figures</h2>
+        <p>
+          Every input starts at a figure you can change. Next to each one the calculator shows a
+          "Local figure" tag when it is the area's own figure, or "Typical figure" when it is a
+          national figure or one of these defaults. A local figure comes from the area's data; see{' '}
+          <a href={url('sources')}>Sources</a> for each dataset and its month.
+        </p>
+        <StackTable
+          caption="The first inputs"
+          columns={defaultColumns}
+          rows={toRows([...choices, ...simple])}
+          class="data-table--defaults"
+          testid="defaults-simple"
+        />
+        <StackTable
+          caption="Adjust every assumption"
+          columns={defaultColumns}
+          rows={toRows(advanced)}
+          class="data-table--defaults"
+          testid="defaults-advanced"
+        />
+        <p class="content-small">
+          The mortgage rate is the Bank of England's average quoted rate for the loan-to-value band
+          (how much of the price you are borrowing) and the length of the fix. {ltvSentence}
+        </p>
+      </section>
+
+      <section class="content-section" id="outlook" aria-labelledby="outlook-title">
+        <h2 id="outlook-title">Outlook presets</h2>
+        <p>
+          Nobody knows how prices, rents and returns will move. The Outlook control sets four of the
+          assumptions at once. The calculator starts at{' '}
+          {presets.columns.find((column) => column.isDefault)?.label}. Each figure can still be
+          changed by hand, and the Outlook then shows "Custom".
+        </p>
+        <StackTable
+          caption="What each preset sets"
+          columns={presetColumns}
+          rows={presetRows}
+          testid="presets"
+        />
+        <p class="content-small">
+          "Area's figure" is the area's own figure after the usual limits: house price growth kept
+          between {pct(clamps.houseGrowth.min)} and {pct(clamps.houseGrowth.max)} a year, rent
+          increases between {pct(clamps.rentGrowth.min)} and {pct(clamps.rentGrowth.max)}. So a fall
+          in prices over the last 10 years starts at {pct(clamps.houseGrowth.min)}.
+        </p>
+        <ul class="content-list">
+          {presets.columns.map((column) => (
+            <li>
+              <strong>{column.label}:</strong> {column.description}.
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="content-section" id="property-tax" aria-labelledby="tax-title">
+        <h2 id="tax-title">Property tax</h2>
+        <p>
+          Buyers pay a tax on the purchase price, and it differs by nation. The calculator picks the
+          rules from the area's nation; the "Tax rules" input can change them. These are the
+          residential rates that apply in the {taxRules.taxYear} tax year, which started on{' '}
+          {formatDateLong(taxRules.effectiveFrom)}
+          {checked
+            ? `. They were last checked on ${formatDateLong(checked)} against search-engine copies of the official pages listed with each tax`
+            : ''}
+          . Each band's rate applies only to the part of the price within it.
+        </p>
+        <p>
+          The buyer types: <strong>first-time buyer</strong> (never owned a home anywhere);{' '}
+          <strong>moving</strong> (selling your current home by the time you complete, so no extra
+          charge applies); and <strong>additional property</strong> (keeping a home you already
+          own).
+        </p>
+        {regimes.map((regime) => (
+          <TaxRegime regime={regime}>
+            {regime.id === 'sdlt' &&
+              'Stamp duty is paid by the buyer when the purchase completes. Northern Ireland uses the same rules as England.'}
+            {regime.id === 'lbtt' &&
+              `Scotland's version of stamp duty. In Scotland the seller pays for a Home Report (a survey and valuation every seller must provide), so the buyer's survey starts at ${surveyScotland === undefined ? money(fields.survey.default ?? 0) : money(surveyScotland)} and the Home Report, ${homeReportScotland === undefined ? money(fields.homeReport.default ?? 0) : money(homeReportScotland)}, is added to the selling costs.`}
+            {regime.id === 'ltt' &&
+              "Wales's version of stamp duty, collected by the Welsh Revenue Authority."}
+          </TaxRegime>
+        ))}
+      </section>
+
+      <section class="content-section" id="assumptions" aria-labelledby="assumptions-title">
+        <h2 id="assumptions-title">Assumptions</h2>
+        <ul class="content-list">
+          <li>Your main home is free of capital gains tax when you sell it.</li>
+          <li>The renter's investments are in an ISA, so there is no tax on them.</li>
+          <li>
+            Rent and running costs are paid from income. Neither household draws on its investments.
+          </li>
+          <li>
+            When the fixed rate ends, the buyer remortgages to a new deal rather than paying the
+            lender's standard variable rate (SVR), which is usually higher.
+          </li>
+          <li>There is no Lifetime ISA bonus, Help to Buy loan or other government scheme.</li>
+          <li>
+            Inflation raises buildings insurance and the service charge each year. Selling legal
+            fees and the Home Report stay at today's figure.
+          </li>
+          <li>Rent goes up once a year. House prices and investments grow a little every month.</li>
+          <li>
+            The mortgage is a repayment mortgage, paid off over the term. Interest-only mortgages
+            are not covered.
+          </li>
+        </ul>
+        <h3>Tax cases the calculator leaves out</h3>
+        <ul class="content-list">
+          <li>The 2% stamp duty surcharge for buyers who are not resident in the UK.</li>
+          <li>Purchases by companies and trusts.</li>
+          <li>Shared ownership.</li>
+          <li>Linked purchases and buying several homes in one go.</li>
+          <li>
+            The refund of the higher rates when you buy a new main home first and sell your previous
+            one later. The "moving" buyer type assumes the old home is sold by completion.
+          </li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="limits" aria-labelledby="limits-title">
+        <h2 id="limits-title">Known limits</h2>
+        <ul class="content-list">
+          <li>
+            Area prices and rents are averages across every type of home. A flat and a detached
+            house in the same area can be far apart, so change the price and rent to match the home
+            you have in mind.
+          </li>
+          <li>
+            In Scotland and Northern Ireland, rents are published for Broad Rental Market Areas,
+            which can be larger than the council area. <a href={url('sources')}>Sources</a> explains
+            how each council is matched.
+          </li>
+          <li>
+            House price growth starts from the last 10 years. The past does not tell you what prices
+            will do next; the "What moves the answer" table shows how much the answer depends on it.
+          </li>
+          <li>
+            Mortgage rates are monthly averages of quoted rates, not an offer. The rate a lender
+            gives you depends on you and the home.
+          </li>
+          <li>
+            The calculator does not check whether a lender would lend you the amount, or whether you
+            could afford the payments.
+          </li>
+          <li>
+            Investment returns and price growth are steady in the model. Real ones go up and down
+            from year to year.
+          </li>
+          <li>
+            Costs both households pay alike, such as council tax and energy bills, are left out
+            because they do not change the comparison.
+          </li>
+          <li>The answer is in whole years, at each year-end.</li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="not-advice" aria-labelledby="not-advice-title">
+        <h2 id="not-advice-title">Not advice</h2>
+        <p>
+          <strong>This is a model, not financial advice.</strong> It shows what happens at the
+          figures you give it. It does not know your income, savings or plans, and it does not
+          recommend buying or renting.
+        </p>
+      </section>
+    </div>
   </div>
 </Base>

@@ -1,0 +1,172 @@
+---
+/**
+ * /rent-vs-buy/{slug}/: one page per local authority in data/areas.json and one per nation
+ * (england, scotland, wales, northern-ireland). Slugs never collide: the data checks fail on an
+ * area slug equal to a nation slug.
+ *
+ * Phase 5 skeleton by the lead; the areas teammate owns this file and fills in the templates.
+ * Area pages: heading, the calculator island pre-filled for the area (its answer is in the
+ * static HTML), then the local summary and links. Nation pages: heading, the nation's figures,
+ * its tax, and every area in a table.
+ */
+import Base from '../../layouts/Base.astro';
+import Calculator from '../../components/calculator/Calculator';
+import AreaSummary from '../../components/AreaSummary.astro';
+import NationTable from '../../components/NationTable.astro';
+import RelatedAreas from '../../components/RelatedAreas.astro';
+import FiguresTable from '../../components/area/FiguresTable.astro';
+import { spreadSentence } from '../../lib/area-summary';
+import {
+  areaPath,
+  areasByNation,
+  isFallback,
+  islandArea,
+  nationFigureRows,
+  nationName,
+  nationPageNotes,
+  nationPath,
+  nationSpreadFor,
+  summarySources,
+  nationTax,
+  nationsIndexPath,
+  rentVsBuyPaths,
+  typicalAnswer,
+  typicalAssumptions,
+  type RentVsBuyPage,
+} from '../../lib/areas';
+import { NATIONS } from '../../lib/types';
+import '../../styles/area.css';
+import { calculatorData } from '../../lib/calculator-data';
+import { formatMoney } from '../../lib/format';
+import {
+  absoluteUrl,
+  areaDescription,
+  areaTitle,
+  breadcrumbLd,
+  nationDescription,
+  nationTitle,
+  ogImageAlt,
+  ogImagePath,
+  webApplicationLd,
+} from '../../lib/seo';
+import { url } from '../../lib/url';
+
+export function getStaticPaths() {
+  return rentVsBuyPaths();
+}
+
+type Props = RentVsBuyPage;
+const page = Astro.props;
+const site = Astro.site ?? Astro.url;
+const abs = (path: string) => absoluteUrl(path, site);
+const nation = page.kind === 'area' ? page.area.nation : page.nation;
+const crumbs = [
+  { name: 'House Sums', url: abs(url()) },
+  { name: 'Rent v buy', url: abs(nationsIndexPath()) },
+  { name: nationName(nation), url: abs(nationPath(nation)) },
+  ...(page.kind === 'area' ? [{ name: page.area.name, url: abs(areaPath(page.area)) }] : []),
+];
+
+const answer = page.kind === 'area' ? typicalAnswer(page.area) : null;
+const tax = page.kind === 'nation' ? nationTax(page.nation) : null;
+const title = page.kind === 'area' ? areaTitle(page.area.name) : nationTitle(page.nation);
+const description =
+  page.kind === 'area' && answer
+    ? areaDescription({
+        answer: answer.sentence,
+        price: formatMoney(page.area.price),
+        rent: formatMoney(page.area.rent),
+        priceFallback: isFallback(page.area, 'price'),
+        rentFallback: isFallback(page.area, 'rent'),
+        fallbackLabel: `${nationName(page.area.nation)} figure`,
+      })
+    : nationDescription(nation, areasByNation(nation).length);
+const jsonLd =
+  page.kind === 'area'
+    ? [
+        webApplicationLd({
+          name: `Rent v buy in ${page.area.name}`,
+          url: abs(areaPath(page.area)),
+          description,
+        }),
+        breadcrumbLd(crumbs),
+      ]
+    : [breadcrumbLd(crumbs)];
+---
+
+<Base
+  title={title}
+  description={description}
+  ogImage={ogImagePath(nation)}
+  ogImageAlt={ogImageAlt(nation)}
+  jsonLd={jsonLd}
+>
+  {page.kind === 'area' ? (
+    <>
+      <h1 class="area-title">
+        Rent v buy in {page.area.name}: how long until buying beats renting?
+      </h1>
+      <Calculator
+        client:load
+        data={calculatorData()}
+        links={{ areaList: url('data/area-list.json'), howItWorks: url('how-it-works') }}
+        initialArea={islandArea(page.area)}
+      />
+      <AreaSummary area={page.area} />
+      <RelatedAreas area={page.area} />
+    </>
+  ) : (
+    <>
+      <h1 class="area-title">Rent v buy in {nationName(page.nation)}</h1>
+      <p class="area-lede">
+        The average price, rent and break-even year for each of the{' '}
+        {areasByNation(page.nation).length} local authorities in {nationName(page.nation)}, from
+        open government data. Each area's page opens the calculator with its figures.
+      </p>
+      <div class="area-block area-block--first">
+        <div class="area-block__text">
+          <h2>{nationName(page.nation)} in figures</h2>
+          <FiguresTable
+            rows={nationFigureRows(page.nation)}
+            caption={`Typical figures for ${nationName(page.nation)}`}
+            captionHidden
+            nationName={nationName(page.nation)}
+            testid="nation-figures"
+          />
+          {nationPageNotes(page.nation).map((note) => (
+            <p class="area-note">{note}</p>
+          ))}
+          <p>{spreadSentence(nationSpreadFor(page.nation), nationName(page.nation))}</p>
+          <p class="area-note">{typicalAssumptions()}</p>
+          <p class="area-note">
+            {summarySources()} <a href={url('sources')}>Sources and licences</a>
+          </p>
+
+          <h2 class="area-block__gap">Property tax</h2>
+          {tax?.lines.map((line) => (
+            <p>{line}</p>
+          ))}
+          <p class="area-note">
+            Every band and rate is on <a href={url('how-it-works')}>How it works</a>.
+          </p>
+
+          <h2 class="area-block__gap">Other nations</h2>
+          <ul class="area-links">
+            {NATIONS.filter((other) => other !== page.nation).map((other) => (
+              <li>
+                <a href={nationPath(other)}>{nationName(other)}</a>
+              </li>
+            ))}
+            <li>
+              <a href={nationsIndexPath()}>All four nations</a>
+            </li>
+          </ul>
+        </div>
+        <div class="area-block__table">
+          <h2>Every area in {nationName(page.nation)}</h2>
+          <NationTable nation={page.nation} />
+        </div>
+      </div>
+    </>
+  )}
+</Base>

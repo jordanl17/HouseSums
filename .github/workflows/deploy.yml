@@ -63,6 +63,13 @@ jobs:
       - name: JS budget
         run: npm run budget
 
+      # The artifact about to ship, checked with the same site and base path it was built with.
+      - name: Link check
+        run: npm run check:links
+        env:
+          SITE_URL: https://jordanl17.github.io
+          BASE_PATH: /HouseSums
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:

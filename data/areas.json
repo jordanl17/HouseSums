@@ -502,14 +502,15 @@
     },
     {
       "code": "E06000023",
-      "slug": "bristol-city-of",
-      "name": "Bristol, City of",
+      "slug": "bristol",
+      "name": "Bristol",
       "nation": "eng",
       "price": 352262,
       "growth10y": 0.031543,
       "rent": 1883,
       "rentGrowth": 0.059067,
-      "fallbacks": []
+      "fallbacks": [],
+      "onsName": "Bristol, City of"
     },
     {
       "code": "E07000144",
@@ -1708,14 +1709,15 @@
     },
     {
       "code": "E06000019",
-      "slug": "herefordshire-county-of",
-      "name": "Herefordshire, County of",
+      "slug": "herefordshire",
+      "name": "Herefordshire",
       "nation": "eng",
       "price": 289607,
       "growth10y": 0.035607,
       "rent": 821,
       "rentGrowth": 0.029339,
-      "fallbacks": []
+      "fallbacks": [],
+      "onsName": "Herefordshire, County of"
     },
     {
       "code": "E07000098",
@@ -1913,14 +1915,15 @@
     },
     {
       "code": "E06000010",
-      "slug": "kingston-upon-hull-city-of",
-      "name": "Kingston upon Hull, City of",
+      "slug": "kingston-upon-hull",
+      "name": "Kingston upon Hull",
       "nation": "eng",
       "price": 135511,
       "growth10y": 0.037847,
       "rent": 694,
       "rentGrowth": 0.074316,
-      "fallbacks": []
+      "fallbacks": [],
+      "onsName": "Kingston upon Hull, City of"
     },
     {
       "code": "E09000021",

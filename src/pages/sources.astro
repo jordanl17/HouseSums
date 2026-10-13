@@ -1,21 +1,243 @@
 ---
+/**
+ * /sources/: every dataset in data/sources.json with its publisher, link, licence, coverage, use
+ * and month; the Bank of England series; how Scottish and Northern Irish councils are matched to
+ * rental areas; the areas that use a nation figure; how the monthly refresh works and when it last
+ * ran; and the attribution statements the licences ask for. Every figure is read from data/.
+ * Owner: phase 5 content teammate.
+ */
 import Base from '../layouts/Base.astro';
+import DataTable from '../components/ui/DataTable.astro';
+import Disclosure from '../components/ui/Disclosure.astro';
+import SourcesList from '../components/content/SourcesList.astro';
+import { contentData } from '../components/content/content-data';
+import {
+  fallbackAreas,
+  formatDateLong,
+  isOgl,
+  OGL_URL,
+  formatMonthLong,
+  missingSeries,
+  REFRESH_SCHEDULE,
+  sourceEntries,
+} from '../lib/content';
+import { shortPercent } from '../lib/copy';
+import { formatPercent } from '../lib/format';
+import { areaPath } from '../lib/areas';
+import { NATION_NAMES } from '../lib/nations';
+import { NATIONS } from '../lib/types';
+import { url } from '../lib/url';
+import { MAX_MOVE, MAX_RATE_MOVE } from '../../scripts/data/validate';
+import '../styles/content.css';
+
+const { sources, rates, areas, brmaMap } = contentData();
+const entries = sourceEntries(sources);
+const lastRefresh = formatDateLong(sources.generatedAt);
+const boe = sources.sources.find((source) => source.id === 'boe-quoted-rates');
+const ratesMonth = formatMonthLong(rates.asOf);
+
+const seriesRows = [...rates.rates]
+  .sort((a, b) => a.fixYears - b.fixYears || a.ltv - b.ltv)
+  .map((rate) => ({
+    code: rate.series,
+    fix: `${rate.fixYears} years`,
+    ltv: `Up to ${shortPercent(rate.ltv)}`,
+    rate: formatPercent(rate.rate),
+  }));
+const gaps = missingSeries(rates);
+const descriptions = boe?.series ?? [];
+
+// One table per nation that uses rental areas (Scotland and Northern Ireland today).
+const rentAreaTables = NATIONS.map((nation) => ({
+  nation: NATION_NAMES[nation],
+  rows: areas.areas
+    .filter((area) => area.nation === nation && area.rentArea !== undefined)
+    .sort((a, b) => a.name.localeCompare(b.name, 'en-GB'))
+    .map((area) => ({ council: area.name, rentArea: area.rentArea ?? '' })),
+})).filter((table) => table.rows.length > 0);
+const rentAreaRows = rentAreaTables.flatMap((table) => table.rows);
+const rentAreaCount = new Set(rentAreaRows.map((row) => row.rentArea)).size;
+const overlapping = brmaMap.areas.filter((entry) => (entry.overlaps?.length ?? 0) > 1).length;
+const fallbacks = fallbackAreas(areas.areas);
+const pct = (rate: number) => shortPercent(rate);
+const oglCount = sources.sources.filter(isOgl).length;
+const oglText =
+  oglCount === sources.sources.length
+    ? `All ${sources.sources.length} datasets are published under`
+    : `${oglCount} of the ${sources.sources.length} datasets are published under`;
 ---
 
 <Base
   title="Sources"
-  description="The open data behind House Sums: every dataset with its publisher, licence and last refresh date."
+  description={`The open data behind House Sums: house prices, rents and Bank of England rates, with licences, months and the monthly refresh. Last refreshed ${lastRefresh}.`}
 >
-  <div class="prose">
+  <div class="prose content-page">
     <h1>Sources</h1>
-    <p>
-      This page will list every dataset the calculator uses, with its publisher, its licence and the
-      month it was last refreshed.
+    <p class="content-lead">
+      Every local figure comes from free, openly licensed government data. Once a month the data is
+      turned into small files that ship with the site, so the calculator never calls another website
+      while you use it.
     </p>
     <p>
-      The local figures will come from open government data: the UK House Price Index from HM Land
-      Registry, private rents from the Office for National Statistics and quoted mortgage rates from
-      the Bank of England.
+      Last refreshed:{' '}
+      <strong class="mono" data-testid="last-refresh">
+        {lastRefresh}
+      </strong>
+      .
     </p>
+
+    <section class="content-section" id="datasets" aria-labelledby="datasets-title">
+      <h2 id="datasets-title">Datasets</h2>
+      <SourcesList entries={entries} />
+    </section>
+
+    <section class="content-section" id="mortgage-rates" aria-labelledby="rates-title">
+      <h2 id="rates-title">Bank of England series</h2>
+      <p>
+        The starting mortgage rate is the Bank of England's monthly average of quoted rates for
+        fixed-rate mortgages, by the length of the fix and the loan-to-value (how much of the price
+        you are borrowing). The calculator takes the smallest band at or above your loan-to-value,
+        and the nearest fix length.
+      </p>
+      <div data-testid="boe-series">
+        <DataTable
+          caption={`Quoted rates, ${ratesMonth}`}
+          columns={[
+            { key: 'code', label: 'Series' },
+            { key: 'fix', label: 'Fix' },
+            { key: 'ltv', label: 'Loan-to-value' },
+            { key: 'rate', label: 'Rate', numeric: true },
+          ]}
+          rows={seriesRows}
+          rowHeader
+          class="data-table--codes"
+        />
+      </div>
+      {gaps.map((gap) => (
+        <p class="content-small">
+          {gap.usesLtv === null
+            ? `The Bank publishes no ${gap.fixYears}-year rate at ${pct(gap.ltv)} loan-to-value.`
+            : `The Bank publishes no ${gap.fixYears}-year rate at ${pct(gap.ltv)} loan-to-value, so a ${gap.fixYears}-year fix in that band uses the ${pct(gap.usesLtv)} rate. Nothing is estimated.`}
+        </p>
+      ))}
+      <Disclosure summary="What each series code means">
+        <dl class="facts">
+          {descriptions.map((series) => (
+            <div class="facts__row">
+              <dt>{series.code}</dt>
+              <dd class="facts__long">{series.description}</dd>
+            </div>
+          ))}
+        </dl>
+      </Disclosure>
+    </section>
+
+    <section class="content-section" id="rental-areas" aria-labelledby="rental-areas-title">
+      <h2 id="rental-areas-title">Rents in Scotland and Northern Ireland</h2>
+      <p>
+        In England and Wales, ONS publishes rents for each local authority. In Scotland and Northern
+        Ireland it publishes them for Broad Rental Market Areas (BRMAs), the areas used to set
+        housing benefit, which do not follow council boundaries. Each council takes the rent of one
+        BRMA, so councils that share a BRMA show the same rent.
+      </p>
+      <p>
+        Each council is matched as ONS matches it on its "Housing prices in your area" pages: to the
+        BRMA holding the largest share of the council's postcodes. Postcodes are the closest
+        published measure of where people live; no population split by BRMA is published. In
+        Scotland ONS gives one BRMA per council. In Northern Ireland {overlapping} of{' '}
+        {brmaMap.areas.filter((entry) => entry.code.startsWith('N')).length} districts overlap more
+        than one BRMA, and the best match is used. The matches were last checked against{' '}
+        <a href={brmaMap.source.url}>ONS's pages</a> on {formatDateLong(brmaMap.source.checked)}.
+      </p>
+      <Disclosure
+        summary={`Each council and its rental area (${rentAreaRows.length} councils, ${rentAreaCount} BRMAs)`}
+      >
+        <div class="stack stack--loose" data-testid="rental-areas">
+          {rentAreaTables.map((table) => (
+            <DataTable
+              caption={table.nation}
+              columns={[
+                { key: 'council', label: 'Council' },
+                { key: 'rentArea', label: 'Rental area (BRMA)' },
+              ]}
+              rows={table.rows}
+              rowHeader
+              class="data-table--wrap data-table--halves"
+            />
+          ))}
+        </div>
+      </Disclosure>
+    </section>
+
+    <section class="content-section" id="fallbacks" aria-labelledby="fallbacks-title">
+      <h2 id="fallbacks-title">Areas without a local figure</h2>
+      <p>
+        When a dataset has no recent figure for an area, the calculator uses the nation's figure and
+        tags it "Typical figure". Nothing is estimated.
+        {fallbacks.length === 0
+          ? ' Every area has all its own figures this month.'
+          : ' This month:'}
+      </p>
+      {fallbacks.length > 0 && (
+        <ul class="content-list" data-testid="fallback-areas">
+          {fallbacks.map((area) => (
+            <li>
+              <a href={areaPath(area)}>{area.name}</a>: the {area.nation} figure for {area.fields}.
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+
+    <section class="content-section" id="refresh" aria-labelledby="refresh-title">
+      <h2 id="refresh-title">How the data is refreshed</h2>
+      <ol class="content-list">
+        <li>
+          {`Automatically ${REFRESH_SCHEDULE.text}, a GitHub Action (a job that runs in the site's code repository) downloads the latest files from each publisher.`}
+        </li>
+        <li>
+          It works out each area's figures and runs checks. The run stops if any area is missing a
+          price or a rent, if two areas would share an address, if areas disappear, or if a price or
+          rent moves more than {pct(Math.max(MAX_MOVE.price, MAX_MOVE.rent))} in a month (a mortgage
+          rate more than {pct(MAX_RATE_MOVE.relative)} of its value). A move that big is more often
+          a change in a source file than a change in the market, so it is checked by hand first.
+        </li>
+        <li>
+          If the checks pass, it opens a pull request (a proposed change to the site) with a summary
+          of what moved.
+        </li>
+        <li>
+          Jordan reviews it, spot-checks a few areas against the source files and merges it. The
+          site then rebuilds with the new figures.
+        </li>
+        <li>If a check fails, nothing changes and the site keeps its last good data.</li>
+      </ol>
+      <p>
+        This refresh: prices to {formatMonthLong(areas.asOf.price)}, rents to{' '}
+        {formatMonthLong(areas.asOf.rent)} and mortgage rates for {ratesMonth}, built on{' '}
+        {lastRefresh}. Publishers release figures a month or two after the month they describe, and
+        Northern Ireland's prices are quarterly.
+      </p>
+    </section>
+
+    <section class="content-section" id="attribution" aria-labelledby="attribution-title">
+      <h2 id="attribution-title">Licences and attribution</h2>
+      <p>
+        {oglText} the <a href={OGL_URL}>Open Government Licence v3.0</a>, which allows reuse with
+        these statements:
+      </p>
+      <ul class="content-list" data-testid="attributions">
+        {entries
+          .filter((entry) => entry.attribution !== null)
+          .map((entry) => (
+            <li>{entry.attribution}</li>
+          ))}
+      </ul>
+      <p>
+        Tax rates are set by HM Revenue and Customs, Revenue Scotland and the Welsh Revenue
+        Authority; <a href={`${url('how-it-works')}#property-tax`}>How it works</a> lists them with
+        the official pages they were checked against.
+      </p>
+    </section>
   </div>
 </Base>

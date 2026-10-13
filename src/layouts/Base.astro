@@ -18,6 +18,18 @@ import '../styles/ui.css';
 import '../styles/shell.css';
 import Logo from '../components/Logo.astro';
 import { url } from '../lib/url';
+import {
+  DEFAULT_DESCRIPTION,
+  OG_IMAGE_SIZE,
+  SITE_NAME,
+  absoluteUrl,
+  canonicalUrl,
+  fullTitle as buildTitle,
+  jsonLdText,
+  ogImageAlt,
+  ogImagePath,
+  type JsonLd,
+} from '../lib/seo';
 
 interface Props {
   /** Page title without the site name. Omit on the home page. */
@@ -26,14 +38,32 @@ interface Props {
   description?: string;
   /** Exclude from search engines and skip the canonical link (e.g. the 404 page). */
   noindex?: boolean;
+  /**
+   * Phase 5, optional. Open Graph image as a site-relative path, from ogImagePath() in
+   * src/lib/seo.ts (e.g. "og/scotland.png"). Defaults to the site card, "og/default.png".
+   */
+  ogImage?: string;
+  /** Phase 5, optional. Alt text for ogImage; defaults to the site card's. */
+  ogImageAlt?: string;
+  /** Phase 5, optional. JSON-LD objects from the builders in src/lib/seo.ts. */
+  jsonLd?: JsonLd | readonly JsonLd[];
 }
 
-const DEFAULT_DESCRIPTION = 'Plain-English UK home-buying calculators. The maths of moving in.';
-const { title, description = DEFAULT_DESCRIPTION, noindex = false } = Astro.props;
-const fullTitle = title ? `${title} | House Sums` : 'House Sums';
+const {
+  title,
+  description = DEFAULT_DESCRIPTION,
+  noindex = false,
+  ogImage = ogImagePath(),
+  ogImageAlt: imageAlt = ogImageAlt(),
+  jsonLd,
+} = Astro.props;
+const fullTitle = buildTitle(title);
 // Commit the build came from. The deploy workflow waits for this before testing the live site.
 const buildSha = import.meta.env.PUBLIC_BUILD_SHA ?? 'dev';
-const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const site = Astro.site ?? Astro.url;
+const canonical = canonicalUrl(Astro.url.pathname, site);
+const ogImageUrl = absoluteUrl(url(ogImage), site);
+const ldBlocks = jsonLd === undefined ? [] : Array.isArray(jsonLd) ? jsonLd : [jsonLd];
 
 // Header nav and footer links. Paths go through url() so they work under any base path.
 const withSlash = (path: string) => (path.endsWith('/') ? path : `${path}/`);
@@ -57,6 +87,24 @@ const current = (href: string) => (withSlash(href) === here ? 'page' : undefined
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:locale" content="en_GB" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    {!noindex && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content={String(OG_IMAGE_SIZE.width)} />
+    <meta property="og:image:height" content={String(OG_IMAGE_SIZE.height)} />
+    <meta property="og:image:alt" content={imageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content={imageAlt} />
+    {ldBlocks.map((block) => (
+      <script is:inline type="application/ld+json" set:html={jsonLdText(block)} />
+    ))}
     <meta name="hs-build" content={buildSha} />
     <!-- Never more than our origin in a Referer: links carry figures in the query string. -->
     <meta name="referrer" content="strict-origin-when-cross-origin" />

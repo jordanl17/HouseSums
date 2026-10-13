@@ -20,7 +20,8 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import type { AreasFile, RatesFile, SourcesFile } from '../src/lib/types.ts';
-import { parseAreasFile, parseRatesFile } from '../src/lib/schema.ts';
+import { parseAreaNames, parseAreasFile, parseRatesFile } from '../src/lib/schema.ts';
+import { applyAreaNames, checkAreaNames } from './data/area-names.ts';
 import { parseIadbCsv } from './data/boe.ts';
 import { parseBrmaMap } from './data/brma.ts';
 import { buildAreas, buildRates } from './data/build.ts';
@@ -110,7 +111,11 @@ async function main(): Promise<number> {
     const rents = parsePiprRows(readXlsxSheet(downloads.pipr.file, PIPR_SHEET, 8));
     const iadb = parseIadbCsv(downloads.boe.text);
     const localAuthorities = parseLadQuery(downloads.geography.json);
-    const areas = buildAreas({ generatedAt, localAuthorities, prices, rents, brmaMap });
+    const areaNames = parseAreaNames(await readJson(join(dataDir, 'area-names.json')));
+    const builtAreas = buildAreas({ generatedAt, localAuthorities, prices, rents, brmaMap });
+    // Display names and stable slugs for "X, City of" names (data/area-names.json).
+    const named = applyAreaNames(builtAreas.file, areaNames);
+    const areas = { ...builtAreas, file: named.file, notes: [...builtAreas.notes, ...named.notes] };
     const rates = buildRates(iadb, generatedAt);
     const sources = buildSources({
       generatedAt,
@@ -135,6 +140,7 @@ async function main(): Promise<number> {
       checkRates(built.rates, prevRates, options),
       checkSources(built.sources),
       checkBrmaMap(built.areas, brmaMap),
+      checkAreaNames(built.areas, areaNames),
     );
   } catch (error) {
     const failure = error instanceof Error ? error.message : String(error);

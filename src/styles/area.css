@@ -1,0 +1,168 @@
+/*
+ * Area and nation pages (phase 5, areas teammate). Imported by the components in
+ * src/components/area/, AreaSummary, RelatedAreas and NationTable, and by the rent-vs-buy pages.
+ * Colours come from tokens only.
+ *
+ *   .area-title        the page's h1, the same size and spacing as the calculator's
+ *   .area-lede         one plain line under a nation page's h1
+ *   .area-block        a section on the page: text, then its table. One column on mobile; from
+ *                      60rem the same 5fr / 7fr columns as the calculator, text on the left
+ *   .area-links        a short inline list of links
+ *   .area-notes        plain notes under the summary (small, muted)
+ *   .area-note         one line of small print (fallback marks, sources)
+ *   .area-table        .data-table of areas (name, price, rent, break-even)
+ *   .figures-table     .data-table of figures with their months
+ */
+
+.area-title {
+  margin-block: var(--space-2) var(--space-5);
+}
+
+.area-lede {
+  max-width: 42rem;
+  margin-bottom: var(--space-8);
+}
+
+/* ---- Blocks ---- */
+
+.area-block {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5) var(--space-8);
+  align-items: start;
+  margin-top: var(--space-12);
+  padding-top: var(--space-5);
+  border-top: var(--border-thin) solid var(--color-rule);
+}
+
+.area-block__text,
+.area-block__table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.area-block__text {
+  max-width: 42rem;
+}
+
+.area-block h2 {
+  font-size: var(--size-xl);
+}
+
+.area-block .area-block__gap {
+  margin-top: var(--space-6);
+}
+
+.area-block h3 {
+  font-size: var(--size-md);
+  margin-top: var(--space-3);
+}
+
+@media (min-width: 60rem) {
+  .area-block {
+    grid-template-columns: minmax(20rem, 5fr) minmax(0, 7fr);
+  }
+}
+
+/* The first block straight after the h1 on nation and index pages needs no rule. */
+.area-block--first {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.area-summary__answer {
+  font-weight: var(--weight-bold);
+}
+
+/* A single column of tables and notes, no wider than reads well (the nations index). */
+.area-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 46rem;
+}
+
+.area-stack--tight {
+  gap: var(--space-3);
+}
+
+/* ---- Links and notes ---- */
+
+.area-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-5);
+}
+
+.area-notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--size-sm);
+  color: var(--color-muted);
+}
+
+.area-note {
+  font-size: var(--size-sm);
+  color: var(--color-muted);
+}
+
+.area-note a,
+.area-notes a {
+  color: var(--color-ink);
+}
+
+/* ---- Tables ---- */
+
+/* Names may wrap (long ONS names at 360px); the figures never do. */
+.data-table tbody .area-table__name,
+.data-table tbody .figures-table__label {
+  white-space: normal;
+  min-width: 6rem;
+}
+
+.data-table tbody .area-table__name {
+  hyphens: auto;
+}
+
+/* Four columns of figures at 360px: tighter gutters so nothing scrolls sideways. */
+@media (max-width: 30rem) {
+  .area-table th,
+  .area-table td {
+    padding-inline: var(--space-1);
+  }
+
+  /* Figures and headings one step smaller (the size of the tags); names stay at body size. */
+  .area-table td,
+  .area-table thead th {
+    font-size: var(--size-xs);
+  }
+}
+
+/* "None in 25 years" may wrap rather than widen a narrow screen. */
+.data-table .area-table__answer {
+  white-space: normal;
+  min-width: 6ch;
+}
+
+.area-table__current th,
+.area-table__current td {
+  font-weight: var(--weight-bold);
+}
+
+.figures-table__month {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--size-xs);
+  color: var(--color-muted);
+}
+
+/* ---- Nation links on the home page ---- */
+
+.nation-links {
+  margin-top: var(--space-10);
+  font-size: var(--size-sm);
+}

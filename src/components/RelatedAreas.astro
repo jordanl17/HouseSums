@@ -1,0 +1,70 @@
+---
+/**
+ * Links from an area page (phase 5): the six areas in the same nation with the closest average
+ * price (relatedAreas()), set in a table with this area in its place so the figures compare at a
+ * glance, then the nation page, How it works and Sources.
+ *
+ * Test hook: related-areas (the section).
+ */
+import AreaTable from './area/AreaTable.astro';
+import {
+  areaPath,
+  areaTableRow,
+  isFallback,
+  nationName,
+  nationPath,
+  relatedAreas,
+} from '../lib/areas';
+import type { Area } from '../lib/types';
+import { url } from '../lib/url';
+import '../styles/area.css';
+
+interface Props {
+  area: Area;
+}
+
+const { area } = Astro.props;
+const related = relatedAreas(area);
+const nation = nationName(area.nation);
+// With no local price (a nation fallback), "similar prices" would not hold: the neighbours are
+// the areas closest to the nation's average, and the heading says so.
+const priceIsNations = isFallback(area, 'price');
+const rows = [area, ...related]
+  .sort((a, b) => b.price - a.price || a.name.localeCompare(b.name, 'en-GB'))
+  .map(areaTableRow);
+---
+
+<section class="area-block" aria-labelledby="related-heading" data-testid="related-areas">
+  <div class="area-block__text">
+    <h2 id="related-heading">
+      {priceIsNations
+        ? `Places in ${nation} near the ${nation} average price`
+        : `Places in ${nation} with similar prices`}
+    </h2>
+    <p>
+      {priceIsNations
+        ? `No average price is published for ${area.name}, so these are the ${related.length} areas in ${nation} closest to the ${nation} average, dearest first, each with its own answer at typical assumptions.`
+        : `The ${related.length} areas in ${nation} with the closest average price to ${area.name}, dearest first, each with its own answer at typical assumptions.`}
+    </p>
+    <ul class="area-links">
+      <li>
+        <a href={nationPath(area.nation)}>Every area in {nation}</a>
+      </li>
+      <li>
+        <a href={url('how-it-works')}>How it works</a>
+      </li>
+      <li>
+        <a href={url('sources')}>Sources</a>
+      </li>
+    </ul>
+  </div>
+  <div class="area-block__table">
+    <AreaTable
+      rows={rows}
+      caption={`${area.name} and the ${related.length} areas in ${nation} closest in price`}
+      captionHidden
+      nationName={nation}
+      currentHref={areaPath(area)}
+    />
+  </div>
+</section>
