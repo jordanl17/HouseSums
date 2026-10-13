@@ -40,9 +40,11 @@ export type { ClientArea } from '../../lib/area-list';
 // ---------------------------------------------------------------------------------------------
 
 /**
- * Data the island needs before any area is picked. The page imports the JSON, validates it with
- * src/lib/schema.ts at build time and passes it in; it is serialised into the HTML as props, so
- * it never counts as JavaScript and the island never imports JSON.
+ * Data the island needs before any area is picked. The JSON is validated with src/lib/schema.ts
+ * at build time (src/lib/calculator-data.ts). Phase 6: pages no longer pass it as a prop (it was
+ * serialised into every page's HTML); they render CalculatorIsland.tsx, which reads it at build
+ * time and fetches data/calculator.json in the browser (island-data.ts). It never counts as
+ * JavaScript and the island never imports JSON.
  */
 export interface CalculatorData {
   defaults: DefaultsFile;
@@ -70,6 +72,12 @@ export interface CalculatorLinks {
    * calculatorLinks() in src/lib/calculator-data.ts.
    */
   areaPages?: string;
+  /**
+   * Phase 6 (perf): URL of the island's shared data, url('data/calculator.json') with a content
+   * hash in the query (calculatorLinks()). CalculatorIsland.tsx loads it; Calculator itself
+   * takes the data as a prop and never reads this.
+   */
+  data?: string;
 }
 
 export interface CalculatorProps {
@@ -91,6 +99,14 @@ export interface CalculatorProps {
    * page the `a=` parameter is left out while the picked area is `initialArea`.
    */
   syncUrl?: boolean;
+}
+
+/**
+ * Phase 6 (perf): props of CalculatorIsland.tsx, the component pages render. The same as
+ * Calculator's without `data`, which it loads itself from `links.data`.
+ */
+export interface CalculatorIslandProps extends Omit<CalculatorProps, 'data' | 'links'> {
+  links: CalculatorLinks & { data: string };
 }
 
 // ---------------------------------------------------------------------------------------------

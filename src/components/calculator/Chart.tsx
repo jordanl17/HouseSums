@@ -15,7 +15,7 @@
  *   (data-testid "chart-table"). The year-by-year table in the breakdown shows the same figures.
  * - The plot height is fixed in CSS, so the card never changes size with the figures.
  */
-import { useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import {
   areaPath,
   formatK,
@@ -29,9 +29,9 @@ import {
   yPercent,
   yScale,
 } from '../../lib/chart';
-import { chartSummary } from '../../lib/copy';
+import { chartSummary } from '../../lib/copy-details';
 import { formatMoney } from '../../lib/format';
-import { DataTable } from './ui';
+import { DataTable } from './ui/DataTable';
 import type { CalcProps } from './types';
 
 const yearName = (year: number) => (year === 0 ? 'Now' : `Year ${year}`);
@@ -40,6 +40,13 @@ export default function Chart({ calc }: CalcProps) {
   /** The year being inspected (hover, touch or keyboard), or null when none is. */
   const [active, setActive] = useState<number | null>(null);
   const plotRef = useRef<HTMLDivElement>(null);
+  /**
+   * Phase 6 (perf): the hidden table renders once the chart is live in the browser, not into the
+   * HTML (3.4 KB on every area page). Screen readers get it straight after hydration; the
+   * summary sentence above it is in the HTML either way.
+   */
+  const [live, setLive] = useState(false);
+  useEffect(() => setLive(true), []);
 
   const { result } = calc;
   if (!result || calc.status !== 'ready') return null;
@@ -269,21 +276,23 @@ export default function Chart({ calc }: CalcProps) {
         </div>
       </div>
       <div class="visually-hidden">
-        <DataTable
-          caption="What you'd walk away with if you sold, by year"
-          columns={[
-            { key: 'year', label: 'Year' },
-            { key: 'buy', label: 'If you buy', numeric: true },
-            { key: 'rent', label: 'If you rent', numeric: true },
-          ]}
-          rows={series.map((row) => ({
-            year: yearName(row.year),
-            buy: formatMoney(row.buyWealth),
-            rent: formatMoney(row.rentWealth),
-          }))}
-          rowHeader
-          testId="chart-table"
-        />
+        {live && (
+          <DataTable
+            caption="What you'd walk away with if you sold, by year"
+            columns={[
+              { key: 'year', label: 'Year' },
+              { key: 'buy', label: 'If you buy', numeric: true },
+              { key: 'rent', label: 'If you rent', numeric: true },
+            ]}
+            rows={series.map((row) => ({
+              year: yearName(row.year),
+              buy: formatMoney(row.buyWealth),
+              rent: formatMoney(row.rentWealth),
+            }))}
+            rowHeader
+            testId="chart-table"
+          />
+        )}
       </div>
     </figure>
   );

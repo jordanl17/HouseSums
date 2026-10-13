@@ -111,11 +111,19 @@ export function createTracker(options: TrackerOptions): (event: AnalyticsEvent) 
 
 let tracker: ((event: AnalyticsEvent) => void) | null = null;
 
+/**
+ * PUBLIC_GOATCOUNTER_CODE as the build saw it. Phase 6 (perf): read once into a constant, so a
+ * build without it reduces track() to an empty function and the bundler drops the rest of this
+ * module from the island.
+ */
+const BUILD_CODE: string | undefined = import.meta.env.PUBLIC_GOATCOUNTER_CODE;
+
 /** Record an event. A no-op unless PUBLIC_GOATCOUNTER_CODE was set at build time. */
 export function track(event: AnalyticsEvent): void {
+  if (!BUILD_CODE) return;
   try {
     tracker ??= createTracker({
-      code: import.meta.env.PUBLIC_GOATCOUNTER_CODE,
+      code: BUILD_CODE,
       hostname: typeof location === 'undefined' ? undefined : location.hostname,
     });
     tracker(event);

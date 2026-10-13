@@ -22,7 +22,8 @@ jobs:
   ci:
     name: Check, lint, test, build and e2e
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Phase 6: Lighthouse (about 5 minutes) runs after the e2e suite.
+    timeout-minutes: 35
     steps:
       - name: Check out
         uses: actions/checkout@v7
@@ -90,5 +91,21 @@ jobs:
           path: |
             playwright-report/
             test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      # Phase 6: Lighthouse on / and /rent-vs-buy/leeds/, mobile and desktop, three runs each on
+      # astro preview of the build above. Fails unless the median scores are 95+ in performance,
+      # accessibility, best practices and SEO, and the median run's LCP, TBT and CLS are within
+      # THRESHOLDS in scripts/lighthouse.mjs. Scores land in the job summary.
+      - name: Lighthouse
+        run: npm run lighthouse
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse
+          path: lighthouse/
           if-no-files-found: ignore
           retention-days: 14

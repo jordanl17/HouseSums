@@ -1,7 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { formatFieldValue } from '../../src/components/calculator/ui/units';
 import { formatMoney } from '../../src/lib/format';
-import { expectStatus, gotoCalculator, input, pickArea } from './calculator-helpers';
+import {
+  expectStatus,
+  gotoCalculator,
+  input,
+  openDisclosure,
+  pickArea,
+} from './calculator-helpers';
 import { defaults, expectedFor } from './oracle';
 
 /**
@@ -25,6 +31,7 @@ test('a Scottish area uses LBTT and shows the Home Report', async ({ page }) => 
   await expect(page.getByTestId('breakdown-upfront')).toContainText(formatMoney(result.tax.total));
 
   // The Home Report: an input in Scotland, and a selling cost the seller pays.
+  await openDisclosure(page, 'advanced');
   const homeReport = input(page, 'homeReport');
   await expect(homeReport).toHaveCount(1);
   await expect(homeReport).toHaveValue(
@@ -62,6 +69,7 @@ test('a Welsh area uses LTT, with no Home Report', async ({ page }) => {
   await expect(page.getByTestId('breakdown-tax')).toContainText(TAX_NAMES.wal);
   await expect(page.getByTestId('breakdown')).not.toContainText('LBTT');
   await expect(page.getByTestId('breakdown-upfront')).toContainText('£4,500');
+  await openDisclosure(page, 'advanced');
   await expect(input(page, 'homeReport')).toHaveCount(0);
   await expect(page.getByTestId('breakdown-selling')).not.toContainText('Home Report');
 });
@@ -71,6 +79,7 @@ test('an English area uses SDLT, with no Home Report', async ({ page }) => {
   await expectStatus(page, 'ready');
   await expect(page.getByTestId('breakdown-tax')).toContainText(TAX_NAMES.eng);
   await expect(page.getByTestId('breakdown-upfront')).toContainText('£5,000');
+  await openDisclosure(page, 'advanced');
   await expect(input(page, 'homeReport')).toHaveCount(0);
 });
 
