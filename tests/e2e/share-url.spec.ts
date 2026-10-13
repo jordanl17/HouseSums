@@ -196,10 +196,12 @@ test('over-precise typed values are kept as shown, so the link still reproduces 
   // The fields show what the model uses, and the link carries exactly that.
   await expect(input(page, 'mortgageRate')).toHaveValue('4.33');
   await expect(input(page, 'houseGrowth')).toHaveValue('3.33');
+  // Investment return shows one decimal (defaults.json), so it keeps one.
+  await expect(input(page, 'investmentReturn')).toHaveValue('6.7');
   expect(Object.fromEntries(params(page))).toMatchObject({
     mr: '4.33',
     g: '3.33',
-    ir: '6.67',
+    ir: '6.7',
     p: '312345.68',
     r: '1234.57',
   });

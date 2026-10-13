@@ -273,7 +273,7 @@ describe('provenance tags', () => {
     const capped = { ...local, held: { raw: 0.131, bound: 0.06, side: 'ceiling' } } as const;
     expect(provenanceTag(capped)).toEqual({ label: 'Capped at 6%', variant: 'typical' });
     expect(provenanceInfo(capped, 'Aug 2026')).toContain(
-      'The actual figure is 13.1% a year; the calculator caps it at 6%.',
+      'The actual figure is 13.10% a year; the calculator caps it at 6%.',
     );
     // An outlook-adjusted figure is typical, but its tooltip still explains the floor.
     const adjusted = { ...floored, kind: 'typical' } as const;

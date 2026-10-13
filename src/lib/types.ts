@@ -439,6 +439,12 @@ export interface FieldSpec {
   min: number;
   max: number;
   step: number;
+  /**
+   * Percentage fields only (required for them): decimal places of a percent the field always
+   * shows, wherever its figure appears (input, sensitivity rows, area summary, tables), and keeps
+   * when typed. 2 shows 0.051 as "5.10".
+   */
+  decimals?: number;
   /** Source note for the tooltip, e.g. "Common for first-time buyers". */
   source: string;
   /** Optional hint shown under the field. */

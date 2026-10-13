@@ -68,7 +68,8 @@ for (const path of ['./?a=leeds', 'rent-vs-buy/leeds/']) {
 
 /**
  * One value per input, each off its default for City of Edinburgh (Scotland, so the Home Report
- * field is shown too). Odd decimals so no value can equal a derived default by chance.
+ * field is shown too). Odd decimals so no value can equal a derived default by chance, each at
+ * its field's decimals from defaults.json (so the field shows exactly what was typed).
  */
 const CHANGES: Record<string, string> = {
   price: '255,555',
@@ -87,8 +88,8 @@ const CHANGES: Record<string, string> = {
   insurance: '444',
   serviceCharge: '1,212',
   rentGrowth: '2.75',
-  investmentReturn: '6.25',
-  inflation: '3.25',
+  investmentReturn: '6.3',
+  inflation: '3.2',
   agentFeeRate: '1.25',
   legalSelling: '1,666',
   homeReport: '666',

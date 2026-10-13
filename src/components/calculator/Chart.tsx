@@ -57,7 +57,7 @@ export default function Chart({ calc }: CalcProps) {
   const rent = series.map((point) => point.rentWealth);
   const scale = yScale([...buy, ...rent]);
   const breakEven = result.breakEvenYear;
-  const labels = labelPlacement(buy, rent, breakEven);
+  const labels = labelPlacement(buy, rent, breakEven, scale);
   const zero = yPercent(0, scale);
   const fromBottom = (value: number) => 100 - yPercent(value, scale);
 
@@ -103,8 +103,14 @@ export default function Chart({ calc }: CalcProps) {
   const labelX = xPercent(labels.year, years);
   const buyY = fromBottom(labels.buy);
   const rentY = fromBottom(labels.rent);
-  // The lower label flips above its line near the bottom, so it never covers the axis.
-  const { buy: buyLabel, rent: rentLabel } = labelSides(labels.buyOnTop, buyY, rentY);
+  // The lower label flips above its line near the bottom, so it never covers the axis, and
+  // neither label sits on either line (polish: Cardiff's rent label sat on the buy line at 360).
+  const { buy: buyLabel, rent: rentLabel } = labelSides(labels.buyOnTop, buyY, rentY, {
+    x: labelX,
+    buy: buy.map(fromBottom),
+    rent: rent.map(fromBottom),
+    floor: fromBottom(0),
+  });
 
   return (
     <figure class="chart chart--live" data-testid="chart">

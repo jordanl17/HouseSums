@@ -95,6 +95,19 @@ export function formatPercent(rate: number, options: PercentFormatOptions = {}):
   return `${sign}${digits}%${options.perYear === true ? ' a year' : ''}`;
 }
 
+/**
+ * A percentage field's figure at the precision the field always shows (its `decimals` in
+ * data/defaults.json), so the same figure reads the same in the field, the tables and the
+ * summary: 0.051 at 2 decimals -> "5.10%", 0.05 at 1 with { perYear: true } -> "5.0% a year".
+ */
+export function formatFieldPercent(
+  rate: number,
+  field: { decimals?: number | undefined },
+  options: Omit<PercentFormatOptions, 'decimals'> = {},
+): string {
+  return formatPercent(rate, { ...options, decimals: field.decimals ?? 2 });
+}
+
 /** 1 -> "1 year"; 6 -> "6 years". At most one decimal place ("2.5 years"). */
 export function formatYears(years: number): string {
   if (typeof years !== 'number' || !Number.isFinite(years)) return '';

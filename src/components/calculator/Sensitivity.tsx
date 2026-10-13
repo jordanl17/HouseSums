@@ -41,8 +41,9 @@ export default function Sensitivity({ calc }: CalcProps) {
   const { result, inputs } = calc;
   if (!ready || !result) return null;
 
-  const growth = growthTable(result, inputs);
-  const rate = rateTable(result, inputs);
+  const { fields } = calc.data.defaults;
+  const growth = growthTable(result, inputs, fields.houseGrowth);
+  const rate = rateTable(result, inputs, fields.mortgageRate);
   const answerColumn = { key: 'answer', label: 'Buying pulls ahead after', numeric: true };
 
   return (

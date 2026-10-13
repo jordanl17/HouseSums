@@ -74,8 +74,9 @@ describe('defaults', () => {
     expect(formatFieldValue(999, { unit: 'gbp' })).toBe('£999');
     expect(formatFieldValue(350, { unit: 'gbpPerYear' })).toBe('£350 a year');
     expect(formatFieldValue(1200, { unit: 'gbpPerMonth' })).toBe('£1,200 a month');
-    expect(formatFieldValue(0.014, { unit: 'percent' })).toBe('1.4%');
-    expect(formatFieldValue(0.025, { unit: 'percentPerYear' })).toBe('2.5% a year');
+    expect(formatFieldValue(0.014, { unit: 'percent', decimals: 2 })).toBe('1.40%');
+    expect(formatFieldValue(0.025, { unit: 'percentPerYear', decimals: 1 })).toBe('2.5% a year');
+    expect(formatFieldValue(0.01, { unit: 'percentPerYear', decimals: 1 })).toBe('1.0% a year');
     expect(formatFieldValue(30, { unit: 'years' })).toBe('30 years');
     expect(formatFieldValue(1, { unit: 'years' })).toBe('1 year');
   });
@@ -83,8 +84,8 @@ describe('defaults', () => {
   it('reads every default from defaults.json', () => {
     expect(fieldDefaultText('productFee', defaults)).toBe('£999');
     expect(fieldDefaultText('termYears', defaults)).toBe('30 years');
-    expect(fieldDefaultText('maintenanceRate', defaults)).toBe('1% a year');
-    expect(fieldDefaultText('agentFeeRate', defaults)).toBe('1.4%');
+    expect(fieldDefaultText('maintenanceRate', defaults)).toBe('1.0% a year');
+    expect(fieldDefaultText('agentFeeRate', defaults)).toBe('1.40%');
     expect(fieldDefaultText('survey', defaults)).toBe('£500 (Scotland £0)');
     expect(fieldDefaultText('homeReport', defaults)).toBe('£0 (Scotland £600)');
     expect(fieldDefaultText('deposit', defaults)).toBe('10% of the price');
@@ -94,7 +95,7 @@ describe('defaults', () => {
     expect(fieldDefaultText('rentGrowth', defaults)).toBe(
       "Area's latest annual change, kept between 1% and 6%",
     );
-    expect(fieldDefaultText('investmentReturn', defaults)).toBe('5% a year');
+    expect(fieldDefaultText('investmentReturn', defaults)).toBe('5.0% a year');
     expect(fieldDefaultText('rateAfterFix', defaults)).toBe('Same as the initial rate');
   });
 
@@ -160,7 +161,7 @@ describe('presets', () => {
     });
     expect(rows[2]?.values).toEqual({
       cautious: '3.5% a year',
-      typical: '5% a year',
+      typical: '5.0% a year',
       optimistic: '6.5% a year',
     });
     expect(rows[3]?.values.cautious).toBe('Initial rate + 0.5 points');

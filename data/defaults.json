@@ -39,6 +39,7 @@
       "min": 0,
       "max": 0.15,
       "step": 0.0005,
+      "decimals": 2,
       "source": "Bank of England quoted rates, matched to your loan-to-value band and fix length"
     },
     "houseGrowth": {
@@ -49,6 +50,7 @@
       "min": -0.05,
       "max": 0.1,
       "step": 0.001,
+      "decimals": 2,
       "source": "Area 10-year average, UK House Price Index, kept between 0% and 6%"
     },
     "termYears": {
@@ -79,6 +81,7 @@
       "min": 0,
       "max": 0.15,
       "step": 0.0005,
+      "decimals": 2,
       "source": "Same as the initial rate: assumes you remortgage rather than pay the standard variable rate"
     },
     "productFee": {
@@ -132,6 +135,7 @@
       "min": 0,
       "max": 0.05,
       "step": 0.001,
+      "decimals": 1,
       "source": "1% of the home's value a year, a common rule of thumb"
     },
     "insurance": {
@@ -163,6 +167,7 @@
       "min": -0.05,
       "max": 0.15,
       "step": 0.001,
+      "decimals": 2,
       "source": "Area annual rent growth, ONS Price Index of Private Rents, kept between 1% and 6%"
     },
     "investmentReturn": {
@@ -173,6 +178,7 @@
       "min": -0.05,
       "max": 0.15,
       "step": 0.001,
+      "decimals": 1,
       "source": "If you invested in a global index fund in an ISA, after fees. Set by the outlook"
     },
     "inflation": {
@@ -183,6 +189,7 @@
       "min": 0,
       "max": 0.1,
       "step": 0.001,
+      "decimals": 1,
       "source": "Uprates buildings insurance and the service charge each year"
     },
     "agentFeeRate": {
@@ -193,6 +200,7 @@
       "min": 0,
       "max": 0.05,
       "step": 0.001,
+      "decimals": 2,
       "source": "1.4% including VAT, a typical high-street fee"
     },
     "legalSelling": {

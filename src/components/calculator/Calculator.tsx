@@ -230,10 +230,11 @@ export default function Calculator(props: CalculatorProps) {
     if (syncUrl && window.location.search !== '') {
       const decoded = decodeState(window.location.search, defaults, undefined, data.slugAliases);
       const slug = decoded.selection.areaSlug ?? initialArea?.slug ?? null;
-      setState({
+      // A value typed before hydration (NumberField) is newer than the link, so it stays.
+      setState((current) => ({
         selection: { ...decoded.selection, areaSlug: slug },
-        overrides: decoded.overrides,
-      });
+        overrides: { ...decoded.overrides, ...current.overrides },
+      }));
       if (slug !== null && slug !== initialArea?.slug) {
         setArea(null);
         setPendingSlug(slug);

@@ -27,6 +27,7 @@ import {
   taxLabel,
   taxSummary,
   typicalDefinition,
+  type FieldDecimals,
   type FigureRow,
   type NationSpread,
   type SummaryInput,
@@ -268,6 +269,17 @@ export function nationName(nation: Nation): string {
 // helpers in src/lib/area-summary.ts.
 // ---------------------------------------------------------------------------------------------
 
+/** Decimals each percentage field shows, from defaults.json (2 if a field had none). */
+export function fieldDecimals(): FieldDecimals {
+  const { fields } = calculatorData().defaults;
+  return {
+    mortgageRate: fields.mortgageRate.decimals ?? 2,
+    houseGrowth: fields.houseGrowth.decimals ?? 2,
+    rentGrowth: fields.rentGrowth.decimals ?? 2,
+    investmentReturn: fields.investmentReturn.decimals ?? 2,
+  };
+}
+
 /** The data an area's summary is built from (see SummaryInput). */
 export function summaryInput(area: Area): SummaryInput {
   const { derived } = typicalAnswer(area);
@@ -288,6 +300,7 @@ export function summaryInput(area: Area): SummaryInput {
     nationFigures: nationFigures(area.nation),
     used: { houseGrowth: derived.inputs.houseGrowth, rentGrowth: derived.inputs.rentGrowth },
     clamps: calculatorData().defaults.areaClamps,
+    decimals: fieldDecimals(),
   };
 }
 
@@ -340,6 +353,7 @@ export function areaSummary(area: Area): AreaSummaryData {
       rentGrowth: inputs.rentGrowth,
       investmentReturn: inputs.investmentReturn,
       years: inputs.years,
+      decimals: fieldDecimals(),
     }),
     overtake: copy.overtake,
     middle: middleSentence(nationSpreadFor(area.nation), input.nationName),
@@ -361,6 +375,7 @@ export function nationFigureRows(nation: Nation): FigureRow[] {
     nationFigures: figures,
     used: { houseGrowth: figures.growth10y, rentGrowth: figures.rentGrowth },
     clamps,
+    decimals: fieldDecimals(),
   });
 }
 
@@ -417,6 +432,7 @@ export function typicalAssumptions(): string {
     depositFraction: defaults.depositFraction,
     fixYears: defaults.fields.fixYears.default ?? 0,
     investmentReturn: defaults.presets[defaults.defaultPreset].investmentReturn,
+    investmentReturnDecimals: fieldDecimals().investmentReturn,
     years: defaults.fields.years.default ?? 0,
   });
 }

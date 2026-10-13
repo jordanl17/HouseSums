@@ -27,7 +27,7 @@
  * 6%" rather than "Local figure". A nation figure, a fixed default, a Bank of England rate (a UK figure) or a value the
  * Outlook preset changed is "typical". Sample placeholder figures say so in the source.
  */
-import { formatPercent } from './format';
+import { formatFieldPercent, formatPercent } from './format';
 import {
   DERIVED_INPUT_KEYS,
   NUMERIC_INPUT_KEYS,
@@ -148,9 +148,9 @@ export const shortRate = (rate: number): string =>
  * What the tooltip adds for a figure the brief's range held: "The actual figure is −2.15% a
  * year; the calculator floors it at 0%." (or "caps it at 6%").
  */
-export function heldNote(held: HeldFigure): string {
+export function heldNote(held: HeldFigure, field: { decimals?: number | undefined } = {}): string {
   const verb = held.side === 'floor' ? 'floors' : 'caps';
-  return `The actual figure is ${shortRate(held.raw)} a year; the calculator ${verb} it at ${shortRate(held.bound)}.`;
+  return `The actual figure is ${formatFieldPercent(held.raw, field)} a year; the calculator ${verb} it at ${shortRate(held.bound)}.`;
 }
 
 /** Drops binary noise from sums such as 0.041 + 0.01, so derived values read and compare cleanly. */

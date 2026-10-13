@@ -58,4 +58,26 @@ describe('validators reject bad data with a path', () => {
     bad.fields.years.default = 99;
     expect(() => parseDefaults(bad)).toThrow(/fields\.years\.default/);
   });
+
+  it('a percentage field without whole decimals, or decimals on another field', () => {
+    const missing = clone(defaults);
+    delete (missing.fields.houseGrowth as { decimals?: number }).decimals;
+    expect(() => parseDefaults(missing)).toThrow(/fields\.houseGrowth\.decimals/);
+    const fractional = clone(defaults);
+    fractional.fields.mortgageRate.decimals = 1.5;
+    expect(() => parseDefaults(fractional)).toThrow(/fields\.mortgageRate\.decimals/);
+    const tooMany = clone(defaults);
+    tooMany.fields.inflation.decimals = 5;
+    expect(() => parseDefaults(tooMany)).toThrow(/fields\.inflation\.decimals/);
+    const money = clone(defaults);
+    (money.fields.price as { decimals?: number }).decimals = 0;
+    expect(() => parseDefaults(money)).toThrow(/fields\.price\.decimals/);
+  });
+
+  it('every percentage field in defaults.json has its decimals', () => {
+    for (const field of Object.values(parseDefaults(defaults).fields)) {
+      const percent = field.unit === 'percent' || field.unit === 'percentPerYear';
+      expect(field.decimals === undefined).toBe(!percent);
+    }
+  });
 });

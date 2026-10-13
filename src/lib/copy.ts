@@ -8,7 +8,7 @@
  * no exclamation marks, and never advice. Conditional wording only: "at these settings",
  * "if you sold", "buying would", never "you should".
  */
-import { formatMoney, formatPercent } from './format';
+import { formatFieldPercent, formatMoney, formatPercent } from './format';
 import type { Inputs, ModelResult } from './types';
 
 // ---------------------------------------------------------------------------------------------
@@ -181,6 +181,12 @@ export const FLIP_YEARS_MAX = 40;
 export interface FlipLimits {
   growthMax: number;
   yearsMax: number;
+  /**
+   * Decimal places the house price growth and mortgage rate fields show (defaults.json
+   * `decimals`), so the hint's figure reads as the field and the sensitivity table show it.
+   * Two each when left out.
+   */
+  decimals?: { houseGrowth?: number | undefined; mortgageRate?: number | undefined };
 }
 /** Mortgage rate tries up to 3 points lower, in quarter-point steps, never below 0. */
 export const FLIP_RATE_MAX_CUT = 0.03;
@@ -205,6 +211,8 @@ export function flipHint(
   limits: FlipLimits = { growthMax: FLIP_GROWTH_MAX, yearsMax: FLIP_YEARS_MAX },
 ): FlipHint {
   const { growthMax, yearsMax } = limits;
+  const growthField = { decimals: limits.decimals?.houseGrowth };
+  const rateField = { decimals: limits.decimals?.mortgageRate };
   // 1. House price growth.
   const startGrowth = Math.floor(inputs.houseGrowth / FLIP_GROWTH_STEP + 1e-9) + 1;
   for (let step = startGrowth; tidy(step * FLIP_GROWTH_STEP) <= growthMax + 1e-9; step++) {
@@ -214,7 +222,7 @@ export function flipHint(
       return {
         key: 'houseGrowth',
         breakEvenYear: year,
-        text: `At ${shortPercent(houseGrowth)} house price growth a year, buying would pull ahead after ${years(year)}.`,
+        text: `At ${formatFieldPercent(houseGrowth, growthField)} house price growth a year, buying would pull ahead after ${years(year)}.`,
       };
     }
   }
@@ -256,7 +264,7 @@ export function flipHint(
         return {
           key: 'mortgageRate',
           breakEvenYear: year,
-          text: `At a ${shortPercent(mortgageRate)} mortgage rate, buying would pull ahead after ${years(year)}.`,
+          text: `At a ${formatFieldPercent(mortgageRate, rateField)} mortgage rate, buying would pull ahead after ${years(year)}.`,
         };
       }
     }

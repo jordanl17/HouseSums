@@ -320,6 +320,15 @@ export function parseDefaults(value: unknown, path = 'defaults.json'): DefaultsF
       `${p}.unit`,
     );
     oneOf(f['level'], ['simple', 'advanced'] as const, `${p}.level`);
+    if (f['unit'] === 'percent' || f['unit'] === 'percentPerYear') {
+      // Whole decimal places, at most the URL's 4 so a typed value survives a shared link.
+      const decimals = num(f['decimals'], `${p}.decimals`, 0, 4);
+      if (!Number.isInteger(decimals)) {
+        throw new DataError(`${p}.decimals`, `expected a whole number, got ${decimals}`);
+      }
+    } else if ('decimals' in f) {
+      throw new DataError(`${p}.decimals`, 'only percentage fields take decimals');
+    }
     const min = num(f['min'], `${p}.min`);
     const max = num(f['max'], `${p}.max`, min);
     num(f['step'], `${p}.step`, Number.MIN_VALUE);

@@ -6,7 +6,7 @@
  * Voice (docs/brief.md): British English, plain words, hyphens never em-dashes, no exclamation
  * marks, no advice. Negative numbers use the true minus sign (U+2212) from format.ts.
  */
-import { formatMoney, formatPercent } from './format';
+import { formatFieldPercent, formatMoney, formatPercent } from './format';
 import type {
   AreaFigures,
   BuyerType,
@@ -16,6 +16,20 @@ import type {
   TaxBand,
   TaxRegime,
 } from './types';
+
+/**
+ * Decimal places each percentage field shows (defaults.json `decimals`), so a figure reads the
+ * same here as in the calculator's field and tables on the same page: Belfast's growth is
+ * "5.10%" in both.
+ */
+export type FieldDecimals = Record<
+  'mortgageRate' | 'houseGrowth' | 'rentGrowth' | 'investmentReturn',
+  number
+>;
+
+/** A rate at a field's decimals: (0.051, 2) -> "5.10%". */
+const at = (rate: number, decimals: number, signed = false): string =>
+  formatFieldPercent(rate, { decimals }, { signed });
 
 // ---------------------------------------------------------------------------------------------
 // Small formatters
@@ -103,10 +117,10 @@ export function compareWords(value: number, nationValue: number): string {
   return change < 0 ? `${-change}% less than` : `${change}% more than`;
 }
 
-/** Price in years of rent: 247695 / (1145 x 12) -> "18.0". */
+/** Price in years of rent, with its unit: 247695 / (1145 x 12) -> "18.0 years". */
 export function priceToRentYears(price: number, monthlyRent: number): string {
   if (!(monthlyRent > 0)) return '';
-  return (price / (monthlyRent * 12)).toFixed(1);
+  return `${(price / (monthlyRent * 12)).toFixed(1)} years`;
 }
 
 /** "England's", "Wales's" (Guardian and GOV.UK style: 's after a proper name ending in s). */
@@ -140,6 +154,8 @@ export interface SummaryInput {
   used: { houseGrowth: number; rentGrowth: number };
   /** The calculator's limits on area figures (defaults.json areaClamps). */
   clamps: Record<'houseGrowth' | 'rentGrowth', { min: number; max: number }>;
+  /** Decimals of the fields these figures feed (defaults.json). */
+  decimals: Pick<FieldDecimals, 'houseGrowth' | 'rentGrowth'>;
 }
 
 export interface FigureCell {
@@ -159,7 +175,7 @@ export interface FigureRow {
 
 /** The figures table: the area's figures beside its nation's, with months. */
 export function figureRows(input: SummaryInput): FigureRow[] {
-  const { figures, nationFigures: nation, months } = input;
+  const { figures, nationFigures: nation, months, decimals } = input;
   const fallback = (field: Field) => input.fallbacks.includes(field);
   const priceMonth = monthLabel(months.price, 'short');
   const rentMonth = monthLabel(months.rent, 'short');
@@ -178,8 +194,8 @@ export function figureRows(input: SummaryInput): FigureRow[] {
       key: 'growth10y',
       label: 'Price growth a year, 10-year average',
       month: `to ${priceMonth}`,
-      area: { text: plainPercent(figures.growth10y), fallback: fallback('growth10y') },
-      nation: { text: plainPercent(nation.growth10y), fallback: false },
+      area: { text: at(figures.growth10y, decimals.houseGrowth), fallback: fallback('growth10y') },
+      nation: { text: at(nation.growth10y, decimals.houseGrowth), fallback: false },
     },
     {
       key: 'rent',
@@ -192,8 +208,11 @@ export function figureRows(input: SummaryInput): FigureRow[] {
       key: 'rentGrowth',
       label: 'Rent change over the year',
       month: `to ${rentMonth}`,
-      area: { text: signedPercent(figures.rentGrowth), fallback: fallback('rentGrowth') },
-      nation: { text: signedPercent(nation.rentGrowth), fallback: false },
+      area: {
+        text: at(figures.rentGrowth, decimals.rentGrowth, true),
+        fallback: fallback('rentGrowth'),
+      },
+      nation: { text: at(nation.rentGrowth, decimals.rentGrowth, true), fallback: false },
     },
     {
       key: 'priceToRent',
@@ -244,7 +263,9 @@ function shortCompare(words: string): string {
  */
 export function summaryNotes(input: SummaryInput): string[] {
   const notes: string[] = [];
-  const { name, figures, used, clamps, months } = input;
+  const { name, figures, used, clamps, months, decimals } = input;
+  const growthAt = (rate: number) => at(rate, decimals.houseGrowth);
+  const rentAt = (rate: number) => at(rate, decimals.rentGrowth);
   const priceMonth = monthLabel(months.price);
   const rentMonth = monthLabel(months.rent);
 
@@ -254,16 +275,16 @@ export function summaryNotes(input: SummaryInput): string[] {
     if (growth < clamps.houseGrowth.min) {
       const fell =
         growth < 0
-          ? `Average prices in ${name} fell by ${plainPercent(-growth)} a year ${span}.`
-          : `Average prices in ${name} grew by ${plainPercent(growth)} a year ${span}.`;
+          ? `Average prices in ${name} fell by ${growthAt(-growth)} a year ${span}.`
+          : `Average prices in ${name} grew by ${growthAt(growth)} a year ${span}.`;
       const floor =
         clamps.houseGrowth.min === 0
           ? 'The calculator floors house price growth at 0%, so its answer assumes prices hold steady.'
-          : `The calculator uses at least ${roundPercent(clamps.houseGrowth.min)} a year for house price growth, so its answer uses ${roundPercent(used.houseGrowth)}.`;
+          : `The calculator uses at least ${roundPercent(clamps.houseGrowth.min)} a year for house price growth, so its answer uses ${growthAt(used.houseGrowth)}.`;
       notes.push(`${fell} ${floor}`);
     } else {
       notes.push(
-        `Average prices in ${name} grew by ${plainPercent(growth)} a year ${span}. The calculator caps house price growth at ${roundPercent(clamps.houseGrowth.max)} a year, so its answer uses ${roundPercent(used.houseGrowth)}.`,
+        `Average prices in ${name} grew by ${growthAt(growth)} a year ${span}. The calculator caps house price growth at ${roundPercent(clamps.houseGrowth.max)} a year, so its answer uses ${growthAt(used.houseGrowth)}.`,
       );
     }
   }
@@ -273,12 +294,12 @@ export function summaryNotes(input: SummaryInput): string[] {
     const span = `in the year to ${rentMonth}`;
     const moved =
       rentGrowth < 0
-        ? `Rents fell by ${plainPercent(-rentGrowth)} ${span}.`
-        : `Rents rose by ${plainPercent(rentGrowth)} ${span}.`;
+        ? `Rents fell by ${rentAt(-rentGrowth)} ${span}.`
+        : `Rents rose by ${rentAt(rentGrowth)} ${span}.`;
     const limit =
       rentGrowth < clamps.rentGrowth.min
-        ? `The calculator assumes rent rises by at least ${roundPercent(clamps.rentGrowth.min)} a year, so its answer uses ${roundPercent(used.rentGrowth)}.`
-        : `The calculator caps rent increases at ${roundPercent(clamps.rentGrowth.max)} a year, so its answer uses ${roundPercent(used.rentGrowth)}.`;
+        ? `The calculator assumes rent rises by at least ${roundPercent(clamps.rentGrowth.min)} a year, so its answer uses ${rentAt(used.rentGrowth)}.`
+        : `The calculator caps rent increases at ${roundPercent(clamps.rentGrowth.max)} a year, so its answer uses ${rentAt(used.rentGrowth)}.`;
     notes.push(`${moved} ${limit}`);
   }
 
@@ -372,42 +393,45 @@ export interface AssumptionsInput {
   rentGrowth: number;
   investmentReturn: number;
   years: number;
+  decimals: FieldDecimals;
 }
 
 /**
  * "That is a first-time buyer with a 10% deposit of £24,770 and a 5-year fix at 5.17% (Bank of
  * England, September 2026), with prices growing 4.19% a year, rent rising 4.23% a year and
- * savings earning 5% a year, over 25 years."
+ * savings earning 5.0% a year, over 25 years."
  */
 export function assumptionsSentence(input: AssumptionsInput): string {
   const share = input.price > 0 ? Math.round((input.deposit / input.price) * 100) : 0;
   const deposit =
     input.deposit >= input.price
       ? `paying the whole ${formatMoney(input.price)} in cash`
-      : `a ${share}% deposit of ${formatMoney(input.deposit)} and a ${input.fixYears}-year fix at ${plainPercent(input.mortgageRate)}${
+      : `a ${share}% deposit of ${formatMoney(input.deposit)} and a ${input.fixYears}-year fix at ${at(input.mortgageRate, input.decimals.mortgageRate)}${
           input.rateMonth ? ` (Bank of England, ${monthLabel(input.rateMonth)})` : ''
         }`;
   const prices =
     input.houseGrowth === 0
       ? 'prices holding steady'
-      : `prices growing ${plainPercent(input.houseGrowth)} a year`;
-  return `That is ${BUYERS[input.buyerType]} with ${deposit}, with ${prices}, rent rising ${plainPercent(input.rentGrowth)} a year and savings earning ${roundPercent(input.investmentReturn)} a year, over ${yearsText(input.years)}.`;
+      : `prices growing ${at(input.houseGrowth, input.decimals.houseGrowth)} a year`;
+  return `That is ${BUYERS[input.buyerType]} with ${deposit}, with ${prices}, rent rising ${at(input.rentGrowth, input.decimals.rentGrowth)} a year and savings earning ${at(input.investmentReturn, input.decimals.investmentReturn)} a year, over ${yearsText(input.years)}.`;
 }
 
 /**
  * What "typical assumptions" means on a nation page, where each area has its own figures:
  * "Typical assumptions: a first-time buyer with a 10% deposit and a 5-year fix at the Bank of
  * England's quoted rate for that loan-to-value, each area's own price growth and rent change
- * within the calculator's limits, and savings earning 5% a year, over 25 years."
+ * within the calculator's limits, and savings earning 5.0% a year, over 25 years."
  */
 export function typicalDefinition(input: {
   buyerType: BuyerType;
   depositFraction: number;
   fixYears: number;
   investmentReturn: number;
+  /** Decimals the investment return field shows (defaults.json). */
+  investmentReturnDecimals: number;
   years: number;
 }): string {
-  return `Typical assumptions: ${BUYERS[input.buyerType]} with a ${roundPercent(input.depositFraction)} deposit and a ${input.fixYears}-year fix at the Bank of England's quoted rate for that loan-to-value, each area's own price growth and rent change within the calculator's limits, and savings earning ${roundPercent(input.investmentReturn)} a year, over ${yearsText(input.years)}.`;
+  return `Typical assumptions: ${BUYERS[input.buyerType]} with a ${roundPercent(input.depositFraction)} deposit and a ${input.fixYears}-year fix at the Bank of England's quoted rate for that loan-to-value, each area's own price growth and rent change within the calculator's limits, and savings earning ${at(input.investmentReturn, input.investmentReturnDecimals)} a year, over ${yearsText(input.years)}.`;
 }
 
 // ---------------------------------------------------------------------------------------------

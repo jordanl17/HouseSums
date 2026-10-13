@@ -59,6 +59,10 @@ export default function AnswerCard({ calc }: CalcProps) {
       {
         growthMax: calc.data.defaults.areaClamps.houseGrowth.max,
         yearsMax: calc.data.defaults.fields.years.max,
+        decimals: {
+          houseGrowth: calc.data.defaults.fields.houseGrowth.decimals,
+          mortgageRate: calc.data.defaults.fields.mortgageRate.decimals,
+        },
       },
     );
     // `inputs` is read at the moment `result` changes, which is the frame it was computed for.
