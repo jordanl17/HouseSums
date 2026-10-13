@@ -233,13 +233,74 @@ export function defaultRows(defaults: DefaultsFile): {
     return {
       key,
       level: spec.level,
-      row: { key, label: spec.label, value: fieldDefaultText(key, defaults), reason: spec.source },
+      row: {
+        key,
+        label: spec.label,
+        value: fieldDefaultText(key, defaults),
+        reason: reasonText(fieldDefaultText(key, defaults), spec.source),
+      },
     };
   });
   return {
     simple: rows.filter((r) => r.level === 'simple').map((r) => r.row),
     advanced: rows.filter((r) => r.level === 'advanced').map((r) => r.row),
   };
+}
+
+const normalise = (text: string) =>
+  text.toLowerCase().replace(/'s\b/g, '').replace(/\s+/g, ' ').trim();
+
+/**
+ * The "Why" for a default: its source note from defaults.json without the clauses that only
+ * repeat the "Starts at" text. "Area average, UK House Price Index, latest month" beside
+ * "Area's average" becomes "UK House Price Index, latest month". Clauses are split at ", " and
+ * ": "; the note is kept whole when nothing repeats, or when everything would go.
+ */
+export function reasonText(value: string, source: string): string {
+  const parts = source.split(/(, |: )/);
+  const v = normalise(value);
+  const kept: string[] = [];
+  for (let i = 0; i < parts.length; i += 2) {
+    const clause = parts[i] ?? '';
+    const c = normalise(clause);
+    const repeats = c !== '' && (v.includes(c) || v.includes(c.replace(/s$/, '')));
+    if (!repeats) kept.push(kept.length === 0 ? '' : (parts[i - 1] ?? ', '), clause);
+  }
+  const text = kept.join('').trim();
+  if (text === '' || text === source) return source;
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+export interface ChoiceDefaultRow {
+  key: 'nation' | 'buyerType';
+  label: string;
+  value: string;
+  reason: string;
+}
+
+const BUYER_TYPE_NAMES: Record<DefaultsFile['defaultBuyerType'], string> = {
+  first: 'First-time buyer',
+  moving: 'Moving home',
+  additional: 'Additional property',
+};
+
+/** The two choices that are not numbers: the tax rules (nation) and the buyer type. */
+export function choiceDefaultRows(defaults: DefaultsFile): ChoiceDefaultRow[] {
+  return [
+    {
+      key: 'nation',
+      label: 'Tax rules',
+      value: `The area's nation (${NATION_NAMES[defaults.defaultNation]} before an area is picked)`,
+      reason: 'Each nation has its own property tax. The Tax rules input can change it',
+    },
+    {
+      key: 'buyerType',
+      label: 'Buyer type',
+      value: BUYER_TYPE_NAMES[defaults.defaultBuyerType],
+      reason:
+        'Built for renters weighing a first purchase. The others are moving home and additional property',
+    },
+  ];
 }
 
 export interface PresetColumn {

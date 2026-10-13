@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   bandRange,
   bandRows,
+  choiceDefaultRows,
   defaultRows,
   fieldDefaultText,
   formatDateLong,
@@ -17,6 +18,7 @@ import {
   presetAdjustText,
   presetTable,
   rateDeltaText,
+  reasonText,
   REFRESH_SCHEDULE,
   regimeSummaries,
   seriesTerms,
@@ -119,7 +121,10 @@ describe('defaults', () => {
     ]);
     for (const row of [...simple, ...advanced]) {
       expect(row.label).toBe(defaults.fields[row.key].label);
-      expect(row.reason).toBe(defaults.fields[row.key].source);
+      expect(row.reason).toBe(reasonText(row.value, defaults.fields[row.key].source));
+      expect(defaults.fields[row.key].source.toLowerCase()).toContain(
+        row.reason.slice(1).toLowerCase(),
+      );
       expect(row.value).not.toBe('');
       expect(row.value).not.toBe('Derived');
     }
@@ -358,5 +363,44 @@ describe('refresh schedule', () => {
     // Day-of-month field is what the page says.
     expect(REFRESH_SCHEDULE.cron.split(' ')[2]).toBe('20');
     expect(REFRESH_SCHEDULE.text).toContain('20th');
+  });
+});
+
+describe('reasonText', () => {
+  it('drops clauses that only repeat the starting figure', () => {
+    expect(reasonText("Area's average", 'Area average, UK House Price Index, latest month')).toBe(
+      'UK House Price Index, latest month',
+    );
+    expect(
+      reasonText('10% of the price', '10% of the price, a typical first-time buyer loan-to-value'),
+    ).toBe('A typical first-time buyer loan-to-value');
+    expect(
+      reasonText(
+        'Bank of England quoted rate',
+        'Bank of England quoted rates, matched to your loan-to-value band and fix length',
+      ),
+    ).toBe('Matched to your loan-to-value band and fix length');
+    expect(
+      reasonText(
+        'Same as the initial rate',
+        'Same as the initial rate: assumes you remortgage rather than pay the standard variable rate',
+      ),
+    ).toBe('Assumes you remortgage rather than pay the standard variable rate');
+  });
+
+  it('keeps a note that does not repeat, or would be emptied', () => {
+    expect(reasonText('£999', 'A typical lender arrangement fee')).toBe(
+      'A typical lender arrangement fee',
+    );
+    expect(reasonText('Same', 'Same')).toBe('Same');
+  });
+});
+
+describe('choiceDefaultRows', () => {
+  it('reads the buyer type and nation defaults from defaults.json', () => {
+    const rows = choiceDefaultRows(defaults);
+    expect(rows.map((row) => row.key)).toEqual(['nation', 'buyerType']);
+    expect(rows[1]?.value).toBe('First-time buyer');
+    expect(rows[0]?.value).toContain('England');
   });
 });

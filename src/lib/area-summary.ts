@@ -201,7 +201,8 @@ export function figureRows(input: SummaryInput): FigureRow[] {
       month: null,
       area: {
         text: priceToRentYears(figures.price, figures.rent),
-        fallback: fallback('price') && fallback('rent'),
+        // Marked when either figure is the nation's: the ratio is then not wholly local.
+        fallback: fallback('price') || fallback('rent'),
       },
       nation: { text: priceToRentYears(nation.price, nation.rent), fallback: false },
     },
@@ -371,8 +372,6 @@ export interface AssumptionsInput {
   rentGrowth: number;
   investmentReturn: number;
   years: number;
-  /** The year renting catches up again after break-even, or null. */
-  rentingOvertakesAgainYear: number | null;
 }
 
 /**
@@ -392,11 +391,7 @@ export function assumptionsSentence(input: AssumptionsInput): string {
     input.houseGrowth === 0
       ? 'prices holding steady'
       : `prices growing ${plainPercent(input.houseGrowth)} a year`;
-  const again =
-    input.rentingOvertakesAgainYear === null
-      ? ''
-      : ` Renting catches up again in year ${input.rentingOvertakesAgainYear}.`;
-  return `That is ${BUYERS[input.buyerType]} with ${deposit}, with ${prices}, rent rising ${plainPercent(input.rentGrowth)} a year and savings earning ${roundPercent(input.investmentReturn)} a year, over ${yearsText(input.years)}.${again}`;
+  return `That is ${BUYERS[input.buyerType]} with ${deposit}, with ${prices}, rent rising ${plainPercent(input.rentGrowth)} a year and savings earning ${roundPercent(input.investmentReturn)} a year, over ${yearsText(input.years)}.`;
 }
 
 /**
@@ -467,7 +462,11 @@ export function spreadSentence(spread: NationSpread, nationName: string): string
     spread.middle === null
       ? `the middle answer is no break-even in ${yearsText(spread.horizon)}`
       : `the middle answer is ${yearsText(spread.middle)}`;
-  const first = `At typical assumptions, buying pulls ahead within ${yearsText(spread.within)} in ${spread.withinCount} of ${possessive(nationName)} ${areasWord(spread.count)}, and ${middle}.`;
+  const share =
+    spread.withinCount === spread.count && spread.count > 1
+      ? `all ${spread.count} of ${possessive(nationName)} areas`
+      : `${spread.withinCount} of ${possessive(nationName)} ${areasWord(spread.count)}`;
+  const first = `At typical assumptions, buying pulls ahead within ${yearsText(spread.within)} in ${share}, and ${middle}.`;
   if (spread.noneCount === 0) return first;
   return `${first} Renting comes out ahead for all ${spread.horizon} years in ${areasWord(spread.noneCount)}.`;
 }

@@ -42,14 +42,14 @@ export function cards(taxRules: TaxRules): Card[] {
       name: 'default',
       heading: 'Rent v buy',
       subheading: 'How long until buying beats renting?',
-      tag: 'Local figures for every UK area',
+      tag: 'Area-by-area figures across the UK',
       tagAlt: allTaxes,
     },
     ...NATIONS.map((nation) => ({
       name: NATION_SLUGS[nation],
       heading: `Rent v buy in ${NATION_NAMES[nation]}`,
       subheading: 'How long until buying beats renting?',
-      tag: 'Local figures for every area',
+      tag: 'Area-by-area figures',
       tagAlt: `Property tax: ${taxShortName(nation, taxRules)}`,
     })),
   ];

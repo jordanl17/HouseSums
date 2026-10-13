@@ -64,7 +64,11 @@ const checked = regime.sources
     <li>{regime.additional.note}</li>
   </ul>
   <div class="content-small">
-    <p>{checked ? `Official pages, checked ${formatDateLong(checked)}:` : 'Official pages:'}</p>
+    <p>
+      {checked
+        ? `Official pages (rates checked ${formatDateLong(checked)} against search-engine copies of these pages):`
+        : 'Official pages:'}
+    </p>
     <ul class="content-list">
       {regime.sources.map((source) => (
         <li>

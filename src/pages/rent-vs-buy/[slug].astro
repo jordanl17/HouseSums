@@ -19,6 +19,7 @@ import { spreadSentence } from '../../lib/area-summary';
 import {
   areaPath,
   areasByNation,
+  isFallback,
   islandArea,
   nationFigureRows,
   nationName,
@@ -75,6 +76,9 @@ const description =
         answer: answer.sentence,
         price: formatMoney(page.area.price),
         rent: formatMoney(page.area.rent),
+        priceFallback: isFallback(page.area, 'price'),
+        rentFallback: isFallback(page.area, 'rent'),
+        fallbackLabel: `${nationName(page.area.nation)} figure`,
       })
     : nationDescription(nation, areasByNation(nation).length);
 const jsonLd =

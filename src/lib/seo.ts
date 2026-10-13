@@ -39,9 +39,26 @@ export function areaTitle(name: string): string {
  * "At typical assumptions, buying in Leeds pulls ahead after 2 years. Average price £247,695,
  * rent £1,145 a month. Change any figure to see your own answer."
  * `answer` is typicalAnswerSentence() from src/lib/areas.ts; price and rent are pre-formatted.
+ *
+ * A figure the area takes from its nation (a fallback in data/areas.json) is labelled with
+ * `fallbackLabel`, e.g. "rent £1,459 a month (England figure)", so a search snippet or link
+ * preview never passes a national figure off as a local one.
  */
-export function areaDescription(input: { answer: string; price: string; rent: string }): string {
-  return `${input.answer} Average price ${input.price}, rent ${input.rent} a month. Change any figure to see your own answer.`;
+export function areaDescription(input: {
+  answer: string;
+  price: string;
+  rent: string;
+  priceFallback?: boolean;
+  rentFallback?: boolean;
+  /** "England figure"; required when either figure is a fallback. */
+  fallbackLabel?: string;
+}): string {
+  const label = (isFallback: boolean | undefined) => {
+    if (!isFallback) return '';
+    if (!input.fallbackLabel) throw new Error('areaDescription: fallbackLabel is required');
+    return ` (${input.fallbackLabel})`;
+  };
+  return `${input.answer} Average price ${input.price}${label(input.priceFallback)}, rent ${input.rent} a month${label(input.rentFallback)}. Change any figure to see your own answer.`;
 }
 
 /** "Rent or buy in Scotland? Break-even years by area" */

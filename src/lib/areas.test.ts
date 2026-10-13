@@ -193,6 +193,7 @@ describe('page summaries (committed data)', () => {
     expect(city.rows.filter((row) => row.area.fallback).map((row) => row.key)).toEqual([
       'rent',
       'rentGrowth',
+      'priceToRent',
     ]);
   });
 

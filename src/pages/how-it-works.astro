@@ -12,6 +12,7 @@ import StackTable from '../components/content/StackTable.astro';
 import TaxRegime from '../components/content/TaxRegime.astro';
 import { contentData } from '../components/content/content-data';
 import {
+  choiceDefaultRows,
   defaultRows,
   formatDateLong,
   formatMonthLong,
@@ -114,7 +115,8 @@ const defaultColumns = [
   { key: 'value', label: 'Starts at' },
   { key: 'reason', label: 'Why' },
 ];
-const toRows = (rows: typeof simple) =>
+const choices = choiceDefaultRows(defaults);
+const toRows = (rows: readonly { label: string; value: string; reason: string }[]) =>
   rows.map(({ label, value, reason }) => ({ label, value, reason }));
 const clamps = defaults.areaClamps;
 const surveyScotland = fields.survey.byNation?.sco;
@@ -222,7 +224,7 @@ const toc = [
 
 <Base
   title="How it works"
-  description="The rent v buy method in plain English: two households month by month, the formulas, every starting figure and why, the Outlook presets, stamp duty, LBTT and LTT bands, and the assumptions."
+  description="The rent v buy method in plain English: two households month by month, the formulas, every starting figure, the presets and the property tax bands."
 >
   <div class="content-layout">
     <div class="prose content-page content-layout__head">
@@ -345,7 +347,7 @@ const toc = [
         <StackTable
           caption="The first inputs"
           columns={defaultColumns}
-          rows={toRows(simple)}
+          rows={toRows([...choices, ...simple])}
           class="data-table--defaults"
           testid="defaults-simple"
         />
@@ -396,9 +398,11 @@ const toc = [
         <p>
           Buyers pay a tax on the purchase price, and it differs by nation. The calculator picks the
           rules from the area's nation; the "Tax rules" input can change them. These are the
-          residential rates for the {taxRules.taxYear} tax year, in force from{' '}
+          residential rates that apply in the {taxRules.taxYear} tax year, which started on{' '}
           {formatDateLong(taxRules.effectiveFrom)}
-          {checked ? `, last checked against the official pages on ${formatDateLong(checked)}` : ''}
+          {checked
+            ? `. They were last checked on ${formatDateLong(checked)} against search-engine copies of the official pages listed with each tax`
+            : ''}
           . Each band's rate applies only to the part of the price within it.
         </p>
         <p>

@@ -32,6 +32,7 @@ const nation = nationName(area.nation);
     <p class="area-summary__answer" data-testid="area-summary-answer">
       {answer.sentence}
     </p>
+    {summary.overtake && <p data-testid="area-summary-overtake">{summary.overtake}</p>}
     <p>{summary.assumptions}</p>
     <p>{summary.middle}</p>
     {summary.comparison && <p>{summary.comparison}</p>}

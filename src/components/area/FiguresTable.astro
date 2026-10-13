@@ -21,6 +21,9 @@ interface Props {
 const { rows, caption, captionHidden = false, areaName, nationName, testid } = Astro.props;
 const anyFallback = areaName !== undefined && rows.some((row) => row.area.fallback);
 const owner = possessive(nationName);
+// Price in years of rent is marked when either figure behind it is the nation's.
+const derivedMarked =
+  areaName !== undefined && rows.some((row) => row.key === 'priceToRent' && row.area.fallback);
 ---
 
 <table class="data-table figures-table" data-testid={testid}>
@@ -51,7 +54,13 @@ const owner = possessive(nationName);
           <td class="data-table__num">
             {row.area.fallback && <span aria-hidden="true">*</span>}
             {row.area.text}
-            {row.area.fallback && <span class="visually-hidden"> ({nationName} figure)</span>}
+            {row.area.fallback && (
+              <span class="visually-hidden">
+                {row.key === 'priceToRent'
+                  ? ` (worked out using a ${nationName} figure)`
+                  : ` (${nationName} figure)`}
+              </span>
+            )}
           </td>
         )}
         <td class="data-table__num">{row.nation.text}</td>
@@ -59,4 +68,9 @@ const owner = possessive(nationName);
     ))}
   </tbody>
 </table>
-{anyFallback && <p class="area-note">* {owner} figure, used where no local figure is published.</p>}
+{anyFallback && (
+  <p class="area-note">
+    * {owner} figure, used where no local figure is published
+    {derivedMarked ? ', or worked out using one' : ''}.
+  </p>
+)}

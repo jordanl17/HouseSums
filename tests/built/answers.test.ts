@@ -50,6 +50,13 @@ function expectedSentence(name: string, breakEvenYear: number | null, years: num
   return `At typical assumptions, buying in ${name} pulls ahead after ${plural(breakEvenYear)}.`;
 }
 
+const NATION_LABEL: Record<Area['nation'], string> = {
+  eng: 'England',
+  sco: 'Scotland',
+  wal: 'Wales',
+  ni: 'Northern Ireland',
+};
+
 const money = (value: number) => `£${Math.round(value).toLocaleString('en-GB')}`;
 
 let site: BuiltSite;
@@ -100,7 +107,11 @@ describe('area page answers at typical assumptions', () => {
       }
 
       const description = page.meta.get('description') ?? '';
-      const wantDescription = `${sentence} Average price ${money(area.price)}, rent ${money(area.rent)} a month.`;
+      // Figures the area takes from its nation are labelled as the nation's, never as local.
+      const nationFigure = ` (${NATION_LABEL[area.nation]} figure)`;
+      const priceLabel = area.fallbacks.includes('price') ? nationFigure : '';
+      const rentLabel = area.fallbacks.includes('rent') ? nationFigure : '';
+      const wantDescription = `${sentence} Average price ${money(area.price)}${priceLabel}, rent ${money(area.rent)} a month${rentLabel}.`;
       if (!description.startsWith(wantDescription)) {
         problems.push(
           `${where}: description "${description}", want it to start "${wantDescription}"`,

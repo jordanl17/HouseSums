@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import {
+  choiceDefaultRows,
   defaultRows,
   formatDateLong,
   formatMonthLong,
@@ -59,7 +60,7 @@ test.describe('/how-it-works/', () => {
   test('lists every input with the default and reason from defaults.json', async ({ page }) => {
     const { simple, advanced } = defaultRows(defaults);
     for (const [testid, rows] of [
-      ['defaults-simple', simple],
+      ['defaults-simple', [...choiceDefaultRows(defaults), ...simple]],
       ['defaults-advanced', advanced],
     ] as const) {
       const body = page.getByTestId(testid).locator('tbody tr');

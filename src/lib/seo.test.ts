@@ -37,6 +37,34 @@ describe('titles', () => {
       'At typical assumptions, buying in Leeds pulls ahead after 2 years. Average price £247,695, rent £1,145 a month. Change any figure to see your own answer.',
     );
   });
+
+  it("labels figures taken from the nation as the nation's", () => {
+    const answer = 'At typical assumptions, buying in City of London pulls ahead after 9 years.';
+    expect(
+      areaDescription({
+        answer,
+        price: '£710,652',
+        rent: '£1,459',
+        rentFallback: true,
+        fallbackLabel: 'England figure',
+      }),
+    ).toBe(
+      `${answer} Average price £710,652, rent £1,459 a month (England figure). Change any figure to see your own answer.`,
+    );
+    expect(
+      areaDescription({
+        answer,
+        price: '£293,479',
+        rent: '£1,459',
+        priceFallback: true,
+        rentFallback: true,
+        fallbackLabel: 'England figure',
+      }),
+    ).toContain('Average price £293,479 (England figure), rent £1,459 a month (England figure).');
+    expect(() => areaDescription({ answer, price: '£1', rent: '£1', priceFallback: true })).toThrow(
+      /fallbackLabel/,
+    );
+  });
 });
 
 describe('URLs', () => {

@@ -115,9 +115,11 @@ describe('figure rows', () => {
 
   it('marks fallback figures as the nation figure', () => {
     const rows = figureRows({ ...leeds, fallbacks: ['rent', 'rentGrowth'] });
+    // Price in years of rent is marked too: it is worked out using the nation's rent.
     expect(rows.filter((row) => row.area.fallback).map((row) => row.key)).toEqual([
       'rent',
       'rentGrowth',
+      'priceToRent',
     ]);
   });
 
@@ -290,7 +292,6 @@ describe('assumptions sentence', () => {
     rentGrowth: 0.0423,
     investmentReturn: 0.05,
     years: 25,
-    rentingOvertakesAgainYear: null,
   };
 
   it('spells out what typical means', () => {
@@ -299,17 +300,16 @@ describe('assumptions sentence', () => {
     );
   });
 
-  it('covers steady prices, a cash purchase and renting catching up again', () => {
+  it('covers steady prices and a cash purchase', () => {
     const text = assumptionsSentence({
       ...base,
       deposit: base.price,
       houseGrowth: 0,
       rateMonth: null,
-      rentingOvertakesAgainYear: 19,
     });
     expect(text).toContain('paying the whole £247,695 in cash');
     expect(text).toContain('prices holding steady');
-    expect(text).toMatch(/Renting catches up again in year 19\.$/);
+    expect(text).not.toContain('catches up');
   });
 });
 
@@ -352,7 +352,7 @@ describe('nation spread', () => {
       "At typical assumptions, buying pulls ahead within 5 years in 4 of Scotland's 6 areas, and the middle answer is 2 years. Renting comes out ahead for all 25 years in 1 area.",
     );
     expect(spreadSentence(nationSpread([2, 2], 25), 'Wales')).toBe(
-      "At typical assumptions, buying pulls ahead within 5 years in 2 of Wales's 2 areas, and the middle answer is 2 years.",
+      "At typical assumptions, buying pulls ahead within 5 years in all 2 of Wales's areas, and the middle answer is 2 years.",
     );
     expect(middleSentence(spread, 'England')).toBe(
       "Across England's 6 areas, the middle answer at typical assumptions is 2 years.",

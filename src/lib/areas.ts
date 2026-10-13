@@ -312,6 +312,8 @@ export interface AreaSummaryData {
   rows: FigureRow[];
   /** "An average home in Leeds costs 16% less than the England average, ..." */
   comparison: string;
+  /** "Renting catches up again in year 19." (the island's wording), or null. Shown with the answer. */
+  overtake: string | null;
   /** "That is a first-time buyer with a 10% deposit of ..." */
   assumptions: string;
   /** "Across England's 296 areas, the middle answer at typical assumptions is 3 years." */
@@ -322,7 +324,7 @@ export interface AreaSummaryData {
 /** Everything the area summary shows apart from the answer sentence (typicalAnswer().sentence). */
 export function areaSummary(area: Area): AreaSummaryData {
   const input = summaryInput(area);
-  const { derived, result } = typicalAnswer(area);
+  const { derived, copy } = typicalAnswer(area);
   const { inputs, provenance } = derived;
   return {
     rows: figureRows(input),
@@ -338,8 +340,8 @@ export function areaSummary(area: Area): AreaSummaryData {
       rentGrowth: inputs.rentGrowth,
       investmentReturn: inputs.investmentReturn,
       years: inputs.years,
-      rentingOvertakesAgainYear: result.rentingOvertakesAgainYear,
     }),
+    overtake: copy.overtake,
     middle: middleSentence(nationSpreadFor(area.nation), input.nationName),
     notes: summaryNotes(input),
   };
