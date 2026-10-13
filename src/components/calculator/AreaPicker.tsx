@@ -128,7 +128,7 @@ export default function AreaPicker({ calc }: CalcProps) {
       label="Area"
       kind="text"
       value={query ?? calc.area?.name ?? ''}
-      class="calc-field calc-field--reserve calc-area"
+      class="calc-field calc-area"
       bodyClass="calc-field__body"
       hint={
         <>
