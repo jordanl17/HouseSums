@@ -80,6 +80,12 @@ export const AREA_KEYS: readonly NumericInputKey[] = ['price', 'rent', 'houseGro
 /** How long the answer must stay the same before the live region announces it, in ms. */
 const ANNOUNCE_DELAY = 600;
 
+/**
+ * sessionStorage key (phase 6): set to the slug just before an area page sends the visitor to
+ * another area's page, so that page puts focus back in the Area field and announces its answer.
+ */
+const PICKED_KEY = 'house-sums:picked-area';
+
 interface Computed {
   /** Slug the result was computed for, so an area change never shows a stale headline. */
   slug: string;
@@ -270,6 +276,66 @@ export default function Calculator(props: CalculatorProps) {
     }
   }, [pendingSlug, areaList.status, laterSettled]);
 
+  // ---- Area pages: another area means another page (phase 6) ----
+  // Each area page's heading, summary and title are static HTML about that area, so the island
+  // never shows a different area there: picking one (or an old link's ?a=) goes to its page.
+  const areaPage = initialArea !== null && syncUrl && links.areaPages !== undefined;
+  /** Area being opened, so the picker shows its name until the page changes. */
+  const [leaving, setLeaving] = useState<ClientArea | null>(null);
+
+  /** `${areaPages}${slug}/?...`: the selection and these overrides, encoded against that area. */
+  const areaPageHref = (next: ClientArea, overrides: Overrides): string => {
+    const nationOverride =
+      state.selection.nationOverride === next.nation ? null : state.selection.nationOverride;
+    const selection: Selection = { ...state.selection, areaSlug: next.slug, nationOverride };
+    const nextDerived = deriveInputs({
+      area: next,
+      areas: areasMeta,
+      rates,
+      defaults,
+      selection,
+      overrides,
+    });
+    // As in `encoded`: the page names the area, and a Home Report only exists under Scotland's rules.
+    const kept =
+      nextDerived.inputs.nation === 'sco' ? overrides : without(overrides, ['homeReport']);
+    const query = encodeState(
+      { selection: { ...selection, areaSlug: null }, overrides: kept },
+      nextDerived.base,
+      defaults,
+    );
+    return `${links.areaPages ?? ''}${next.slug}/${query === '' ? '' : `?${query}`}`;
+  };
+
+  const leaveFor = (next: ClientArea, overrides: Overrides, how: 'assign' | 'replace') => {
+    setLeaving(next);
+    try {
+      window.sessionStorage.setItem(PICKED_KEY, next.slug);
+    } catch {
+      // Storage blocked: the next page simply starts at the top.
+    }
+    const href = areaPageHref(next, overrides);
+    if (how === 'replace') window.location.replace(href);
+    else window.location.assign(href);
+  };
+
+  // An old link such as /rent-vs-buy/leeds/?a=york (before phase 6, picking an area here only
+  // rewrote the query): once York resolves, replace the entry with York's own page, keeping every
+  // figure the link carries.
+  useEffect(() => {
+    if (!areaPage || !area || area.slug === initialArea?.slug) return;
+    leaveFor(area, state.overrides, 'replace');
+  }, [area]);
+
+  // Back to a page kept in the back/forward cache: it is this page's area again.
+  useEffect(() => {
+    const onShow = (event: PageTransitionEvent) => {
+      if (event.persisted) setLeaving(null);
+    };
+    window.addEventListener('pageshow', onShow);
+    return () => window.removeEventListener('pageshow', onShow);
+  }, []);
+
   // ---- Actions ----
   const setSelection = (patch: Partial<Selection>) =>
     setState((current) => ({ ...current, selection: { ...current.selection, ...patch } }));
@@ -309,7 +375,15 @@ export default function Calculator(props: CalculatorProps) {
     outlook,
     result,
     field,
+    leavingFor: leaving,
     selectArea(next) {
+      // On an area page another area has its own page, heading and summary (phase 6): go there,
+      // carrying the person's own figures, instead of showing it under this page's heading.
+      if (next && areaPage && next.slug !== initialArea?.slug) {
+        track('area-selected');
+        leaveFor(next, without(state.overrides, AREA_KEYS), 'assign');
+        return;
+      }
       setArea(next);
       setProblem(null);
       setPendingSlug(null);
@@ -366,7 +440,8 @@ export default function Calculator(props: CalculatorProps) {
   // e.g. "Buying pulls ahead after 2 years in Leeds", plus "Renting catches up again in year M."
   // when that applies (so a change that only moves that year is heard), or an error message. It is written
   // ANNOUNCE_DELAY after the last change, and only when the text changes, so a slider drag or
-  // typing announces once, after it settles, not every step.
+  // typing announces once, after it settles, not every step. A change and back again within the
+  // delay announces nothing.
   let announcement = '';
   if (status === 'ready' && result && area) {
     const copy = answerCopy(answerFacts(result, result.series.length - 1, area.name));
@@ -374,12 +449,36 @@ export default function Calculator(props: CalculatorProps) {
   } else if (status === 'error') {
     announcement = messageText(status, calc.problem);
   }
+  // The answer the page loaded with is part of the page, not a change, so it is not announced
+  // (phase 6: an area page used to read its headline out once hydrated). `spoken` is the last
+  // text treated as heard; the region itself starts empty.
+  const spoken = useRef(announcement);
   const [announced, setAnnounced] = useState('');
+
+  // Arriving from another area page's picker: focus goes back to the Area field, where it was,
+  // and this page's answer is announced once, as a pick on the home page would be.
   useEffect(() => {
-    if (announcement === announced) return undefined;
-    const timer = window.setTimeout(() => setAnnounced(announcement), ANNOUNCE_DELAY);
+    if (!initialArea) return;
+    let picked: string | null;
+    try {
+      picked = window.sessionStorage.getItem(PICKED_KEY);
+      window.sessionStorage.removeItem(PICKED_KEY);
+    } catch {
+      return;
+    }
+    if (picked !== initialArea.slug) return;
+    spoken.current = '';
+    document.getElementById('calc-area')?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (announcement === spoken.current) return undefined;
+    const timer = window.setTimeout(() => {
+      spoken.current = announcement;
+      setAnnounced(announcement);
+    }, ANNOUNCE_DELAY);
     return () => window.clearTimeout(timer);
-  }, [announcement, announced]);
+  }, [announcement]);
 
   // Until there is an answer the card holds an invisible copy of its structure (CardGhost.tsx).
   // It reserves the answer's size only for a link that names an area (layout.css); a plain

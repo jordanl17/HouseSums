@@ -5,8 +5,10 @@ import ratesJson from '../../data/rates.json';
 import {
   deriveInputs,
   findArea,
+  heldNote,
   NoMortgageRatesError,
   pickMortgageRate,
+  shortRate,
   type DeriveOptions,
 } from './defaults';
 import { parseAreasFile, parseDefaults, parseRatesFile } from './schema';
@@ -271,18 +273,44 @@ describe('deriveInputs: clamps and nation specifics', () => {
     expect(low.inputs.rentGrowth).toBe(0.01); // only rent falls back, rent growth is local
   });
 
-  it('says in the source when a growth figure was held to the range, and stays local', () => {
+  it('marks a growth figure held to the range with the raw figure and the bound', () => {
     const high = deriveInputs(options({ area: hot })).provenance;
     expect(high.houseGrowth.kind).toBe('local');
-    expect(high.houseGrowth.source).toMatch(/10-year average of [\d.]+%, shown at the 6% ceiling$/);
+    expect(high.houseGrowth.source).toBe('UK House Price Index, 10-year average');
+    expect(high.houseGrowth.held).toEqual({ raw: hot.growth10y, bound: 0.06, side: 'ceiling' });
+    expect(high.rentGrowth.held?.side).toBe('ceiling');
     const low = deriveInputs(
       options({ area: cold, selection: selection({ areaSlug: 'cold-city' }) }),
     ).provenance;
-    expect(low.houseGrowth.source).toMatch(/10-year average of −[\d.]+%, shown at the 0% floor$/);
-    // An unclamped figure keeps the plain source.
-    expect(deriveInputs(options()).provenance.houseGrowth.source).toBe(
-      'UK House Price Index, 10-year average',
+    expect(low.houseGrowth.held).toEqual({ raw: cold.growth10y, bound: 0, side: 'floor' });
+    expect(heldNote(low.houseGrowth.held!)).toMatch(
+      /^The actual figure is −[\d.]+% a year; the calculator floors it at 0%\.$/,
     );
+    expect(heldNote(high.houseGrowth.held!)).toMatch(
+      /^The actual figure is [\d.]+% a year; the calculator caps it at 6%\.$/,
+    );
+    // An unclamped figure has no `held`.
+    const plain = deriveInputs(options()).provenance.houseGrowth;
+    expect(plain.source).toBe('UK House Price Index, 10-year average');
+    expect(plain.held).toBeUndefined();
+  });
+
+  it('keeps `held` when the outlook then adjusts a held figure', () => {
+    const optimistic = deriveInputs(
+      options({
+        area: cold,
+        selection: selection({ areaSlug: 'cold-city', outlook: 'optimistic' }),
+      }),
+    ).provenance.houseGrowth;
+    expect(optimistic.kind).toBe('typical');
+    expect(optimistic.source).toContain('adjusted for the');
+    expect(optimistic.held?.side).toBe('floor');
+  });
+
+  it('writes short rates without trailing zeros', () => {
+    expect(shortRate(-0.0215)).toBe('−2.15%');
+    expect(shortRate(0.06)).toBe('6%');
+    expect(shortRate(0.015)).toBe('1.5%');
   });
 
   it('uses the nation figure for a field listed in fallbacks, tagged typical', () => {

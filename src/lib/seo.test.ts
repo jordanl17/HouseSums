@@ -6,6 +6,7 @@ import {
   canonicalUrl,
   fullTitle,
   jsonLdText,
+  MAX_TITLE_LENGTH,
   nationTitle,
   ogImagePath,
   robotsTxt,
@@ -22,8 +23,23 @@ describe('titles', () => {
   });
 
   it('builds area and nation titles', () => {
-    expect(areaTitle('Leeds')).toBe('Rent or buy in Leeds? See your break-even year');
+    expect(areaTitle('Leeds')).toBe('Rent or buy in Leeds? Your break-even year');
     expect(nationTitle('ni')).toBe('Rent or buy in Northern Ireland? Break-even years by area');
+  });
+
+  it('keeps area titles to about 65 characters with the site name, dropping words for long names', () => {
+    expect(fullTitle(areaTitle('Leeds'))).toBe(
+      'Rent or buy in Leeds? Your break-even year | House Sums',
+    );
+    expect(areaTitle('Kingston upon Hull')).toBe(
+      'Rent or buy in Kingston upon Hull? Break-even year',
+    );
+    expect(areaTitle('Armagh City, Banbridge and Craigavon')).toBe(
+      'Rent or buy in Armagh City, Banbridge and Craigavon?',
+    );
+    for (const name of ['Leeds', 'Kingston upon Hull', 'Bournemouth, Christchurch and Poole']) {
+      expect(fullTitle(areaTitle(name)).length).toBeLessThanOrEqual(MAX_TITLE_LENGTH);
+    }
   });
 
   it('puts the answer first in an area description', () => {

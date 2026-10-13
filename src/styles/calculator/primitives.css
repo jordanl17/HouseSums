@@ -4,7 +4,8 @@
  *
  *   .field__meta          tag and Reset together at the end of .field__head
  *   .field__reset         the "Reset" link next to a changed input (a button styled as a link)
- *   .field__note          calm note under a field (clamped values, deposit notes); polite live
+ *   .field__note          calm note under a field (clamped values, deposit notes); polite live,
+ *                         always rendered, no size while empty
  *   .tag--button          a Tag that opens its source (a button)
  *   .tag__icon            the small "i" inside it
  *   .toggletip            wrapper positioning the bubble under the tag
@@ -38,8 +39,10 @@
   text-decoration-thickness: 2px;
 }
 
-.field__note[hidden] {
-  display: none;
+/* Always in the page, as a live region (phase 6); empty, it takes no space: the negative margin
+   cancels the gap its flex column puts before it. */
+.field__note:empty {
+  margin-block-start: calc(-1 * var(--space-1));
 }
 
 .toggletip {
@@ -50,6 +53,14 @@
 .tag--button {
   border: 0;
   cursor: pointer;
+}
+
+/* Forced colours: the fill is dropped, so the tag keeps the edge tag.css gives a plain .tag
+   (the reset above would otherwise remove it). Phase 6. */
+@media (forced-colors: active) {
+  .tag--button {
+    border: var(--border-thin) solid CanvasText;
+  }
 }
 
 .tag__icon {
@@ -82,8 +93,11 @@
   text-align: start;
 }
 
-.toggletip__bubble[hidden] {
-  display: none;
+/* The bubble is always in the page, as a live region that fills when it opens (phase 6). Closed,
+   it is empty and has no size, so nothing shows. */
+.toggletip__bubble:empty {
+  padding: 0;
+  border: 0;
 }
 
 .segmented__status {

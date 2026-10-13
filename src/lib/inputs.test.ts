@@ -15,6 +15,8 @@ import {
   NATION_NAMES,
   nationOptionLabel,
   normaliseName,
+  provenanceInfo,
+  provenanceTag,
   rangeNote,
   roundToStep,
   sliderRange,
@@ -245,5 +247,46 @@ describe('advanced panel', () => {
     // Every advanced numeric input, plus the tax rules, less the Home Report outside Scotland.
     expect(advancedCount('eng', defaults)).toBe(17);
     expect(advancedCount('sco', defaults)).toBe(18);
+  });
+});
+
+describe('provenance tags', () => {
+  const source = 'UK House Price Index, 10-year average';
+  const local = { kind: 'local', source, month: '2026-07' } as const;
+
+  it('tags an area figure local, anything else typical', () => {
+    expect(provenanceTag(local)).toEqual({ label: 'Local figure', variant: 'local' });
+    expect(provenanceTag({ ...local, kind: 'typical' })).toEqual({
+      label: 'Typical figure',
+      variant: 'typical',
+    });
+    expect(provenanceInfo(local, 'Jul 2026')).toBe(`${source}, Jul 2026`);
+    expect(provenanceInfo({ ...local, month: null }, '')).toBe(source);
+  });
+
+  it('never calls a floored or capped figure the local one, and gives the real figure', () => {
+    const floored = { ...local, held: { raw: -0.0215, bound: 0, side: 'floor' } } as const;
+    expect(provenanceTag(floored)).toEqual({ label: 'Floored at 0%', variant: 'typical' });
+    expect(provenanceInfo(floored, 'Jul 2026')).toBe(
+      `${source}, Jul 2026. The actual figure is −2.15% a year; the calculator floors it at 0%.`,
+    );
+    const capped = { ...local, held: { raw: 0.131, bound: 0.06, side: 'ceiling' } } as const;
+    expect(provenanceTag(capped)).toEqual({ label: 'Capped at 6%', variant: 'typical' });
+    expect(provenanceInfo(capped, 'Aug 2026')).toContain(
+      'The actual figure is 13.1% a year; the calculator caps it at 6%.',
+    );
+    // An outlook-adjusted figure is typical, but its tooltip still explains the floor.
+    const adjusted = { ...floored, kind: 'typical' } as const;
+    expect(provenanceTag(adjusted).label).toBe('Typical figure');
+    expect(provenanceInfo(adjusted, 'Jul 2026')).toContain('floors it at 0%');
+  });
+
+  it('fits every tag in the 14ch slot the tags share', () => {
+    for (const bound of [0, 0.01, 0.06]) {
+      for (const side of ['floor', 'ceiling'] as const) {
+        const tag = provenanceTag({ ...local, held: { raw: 0, bound, side } });
+        expect(tag.label.length).toBeLessThanOrEqual(14);
+      }
+    }
   });
 });

@@ -66,9 +66,8 @@
   left: 0;
 }
 
-.calc-field--reserve .field__note[hidden] {
-  display: block;
-  visibility: hidden;
+.calc-field--reserve .field__note:empty {
+  margin-block-start: 0;
 }
 
 .calc-field--reserve .field__note:empty::before {

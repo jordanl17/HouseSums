@@ -8,7 +8,8 @@
  * FieldInput is the one field used for every numeric input, here and in AdvancedPanel:
  * - label, unit, bounds and step from data/defaults.json (via calc.field);
  * - under the pill: the slider (price, rent, rate, growth), then either the provenance tag
- *   ("Local figure" / "Typical figure", whose toggletip names the source and month) or, once the
+ *   ("Local figure" / "Typical figure", or "Floored at 0%" / "Capped at 6%" for a growth figure
+ *   the brief's range held; its toggletip names the source and month) or, once the
  *   value is changed, the "Reset" link. One slot, so the field never changes height when a value
  *   is changed, and the tag never claims a figure the person typed;
  * - typed values apply live (clamped to the field's bounds; a deposit to the price) and the calm
@@ -22,6 +23,8 @@ import {
   FIELD_HINTS,
   mortgageRateLabel,
   NOT_A_NUMBER_NOTE,
+  provenanceInfo,
+  provenanceTag,
   rangeNote,
   roundToStep,
   SLIDER_KEYS,
@@ -95,7 +98,7 @@ export function FieldInput({ calc, name, reserve = false }: FieldInputProps) {
     setNote(settle(parsed).note);
   };
 
-  const month = formatMonth(provenance.month);
+  const tag = provenanceTag(provenance);
   const meta = model.changed ? (
     <ResetButton
       label={label}
@@ -110,13 +113,13 @@ export function FieldInput({ calc, name, reserve = false }: FieldInputProps) {
     />
   ) : (
     <Tag
-      variant={provenance.kind}
-      info={month ? `${provenance.source}, ${month}` : provenance.source}
+      variant={tag.variant}
+      info={provenanceInfo(provenance, formatMonth(provenance.month))}
       about={label}
       id={`${id}-source`}
       testId={`tag-${name}`}
     >
-      {provenance.kind === 'local' ? 'Local figure' : 'Typical figure'}
+      {tag.label}
     </Tag>
   );
 

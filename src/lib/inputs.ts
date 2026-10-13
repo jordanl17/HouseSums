@@ -5,7 +5,15 @@
  * (passed in as FieldSpec) and tax names from data/taxRules.json.
  */
 import { formatMoney, formatPercent } from './format';
-import type { DefaultsFile, FieldSpec, Nation, NumericInputKey, TaxRules } from './types';
+import { heldNote, shortRate } from './defaults';
+import type {
+  DefaultsFile,
+  FieldSpec,
+  Nation,
+  NumericInputKey,
+  Provenance,
+  TaxRules,
+} from './types';
 
 export const NATION_NAMES: Record<Nation, string> = {
   eng: 'England',
@@ -283,4 +291,38 @@ export function advancedKeys(nation: Nation, defaults: DefaultsFile): NumericInp
 /** N in "Adjust every assumption (N)": the tax rules control plus the numeric inputs shown. */
 export function advancedCount(nation: Nation, defaults: DefaultsFile): number {
   return advancedKeys(nation, defaults).length + 1;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Provenance tags (phase 6)
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * The tag under a field: "Local figure" (hi-vis) for an area's own figure, "Typical figure" for
+ * everything else, and "Floored at 0%" or "Capped at 6%" for an area's growth figure the brief's
+ * range held, so the tag never claims a figure the area did not report. The held tag uses the
+ * typical style: hi-vis marks only figures used exactly as published.
+ */
+export function provenanceTag(provenance: Provenance): {
+  label: string;
+  variant: 'local' | 'typical';
+} {
+  const { held } = provenance;
+  if (provenance.kind === 'local' && held) {
+    const word = held.side === 'floor' ? 'Floored' : 'Capped';
+    return { label: `${word} at ${shortRate(held.bound)}`, variant: 'typical' };
+  }
+  return provenance.kind === 'local'
+    ? { label: 'Local figure', variant: 'local' }
+    : { label: 'Typical figure', variant: 'typical' };
+}
+
+/**
+ * The tag's toggletip: "UK House Price Index, 10-year average, Jul 2026", and for a held figure
+ * also the real figure and the bound: "... Jul 2026. The actual figure is −2.15% a year; the
+ * calculator floors it at 0%." `month` is already formatted ("Jul 2026") or empty.
+ */
+export function provenanceInfo(provenance: Provenance, month: string): string {
+  const where = month ? `${provenance.source}, ${month}` : provenance.source;
+  return provenance.held ? `${where}. ${heldNote(provenance.held)}` : where;
 }
