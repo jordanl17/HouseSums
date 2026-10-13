@@ -144,3 +144,52 @@ export function breadcrumbLd(items: readonly { name: string; url: string }[]): J
 export function jsonLdText(data: JsonLd | readonly JsonLd[]): string {
   return JSON.stringify(data).replace(/</g, '\\u003c');
 }
+
+// ---------------------------------------------------------------------------------------------
+// sitemap.xml and robots.txt (served by src/pages/sitemap.xml.ts and src/pages/robots.txt.ts)
+// ---------------------------------------------------------------------------------------------
+
+/** Escape text for an XML element or attribute. */
+export function xmlEscape(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function assertAbsolute(href: string, what: string): void {
+  if (!/^https?:\/\//i.test(href)) {
+    throw new Error(`${what} must be an absolute http(s) URL, got "${href}"`);
+  }
+}
+
+/**
+ * A sitemaps.org urlset listing each absolute URL once, in the order given. No lastmod: the
+ * pages change with the monthly data refresh and the build has no honest per-page date.
+ */
+export function sitemapXml(urls: readonly string[]): string {
+  const unique = [...new Set(urls)];
+  for (const href of unique) assertAbsolute(href, 'A sitemap URL');
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...unique.map((href) => `<url><loc>${xmlEscape(href)}</loc></url>`),
+    '</urlset>',
+    '',
+  ].join('\n');
+}
+
+/**
+ * robots.txt: everything may be crawled (noindex pages say so in their own head, which a
+ * Disallow would hide from crawlers), plus the sitemap's absolute URL.
+ *
+ * Crawlers only read robots.txt at the root of a host, so under a base path (GitHub Pages'
+ * /HouseSums/) the file is served but not honoured; it takes effect with a custom domain at
+ * BASE_PATH=/. The sitemap URL still works when submitted directly.
+ */
+export function robotsTxt(sitemapUrl: string): string {
+  assertAbsolute(sitemapUrl, 'The sitemap URL');
+  return `User-agent: *\nAllow: /\n\nSitemap: ${sitemapUrl}\n`;
+}
