@@ -62,7 +62,8 @@
 
   /* ---- Type families ---- */
   --font-sans: 'B612', ui-sans-serif, system-ui, sans-serif; /* all text */
-  --font-mono: 'B612 Mono', ui-monospace, monospace; /* figures, tags, labels */
+  /* Figures, tags, labels. The first face supplies only a narrow , and . (see fonts.css). */
+  --font-mono: 'B612 Mono Punctuation', 'B612 Mono', ui-monospace, monospace;
   --weight-regular: 400;
   --weight-bold: 700;
 

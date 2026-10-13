@@ -5,12 +5,16 @@ import { expect, type Page } from '@playwright/test';
  * slash), so the same tests run against `astro preview` and the live site.
  */
 
-/** Every page in the site shell, with its h1. The styleguide has its own spec. */
+/**
+ * Every page in the site, with its h1. The unlisted styleguide is included so it gets the
+ * shared 200, no-scroll, no-JS and link checks; its layout checks are in styleguide.spec.ts.
+ */
 export const PAGES = [
   { path: './', title: 'House Sums', h1: 'Rent v buy: how long until buying beats renting?' },
   { path: 'how-it-works/', title: 'How it works | House Sums', h1: 'How it works' },
   { path: 'sources/', title: 'Sources | House Sums', h1: 'Sources' },
   { path: 'about/', title: 'About | House Sums', h1: 'About House Sums' },
+  { path: 'styleguide/', title: 'Style guide | House Sums', h1: 'Style guide' },
 ] as const;
 
 export const NOT_FOUND_PATH = 'this-page-does-not-exist/';

@@ -119,6 +119,28 @@ export const CONTRAST_PAIRS = [
       themes: [theme],
       use: 'focus ring: hi-vis against its ink outline',
     },
+    {
+      fg: '--color-surface',
+      bg: '--color-ink',
+      min: 4.5,
+      themes: [theme],
+      use: 'selected segmented option (reversed out)',
+    },
+    // Control boundaries, 3:1 (WCAG 1.4.11): pill inputs and the segmented track.
+    {
+      fg: '--color-control-edge',
+      bg: '--color-concrete',
+      min: 3,
+      themes: [theme],
+      use: 'input and segmented edge on the page',
+    },
+    {
+      fg: '--color-control-edge',
+      bg: '--color-surface',
+      min: 3,
+      themes: [theme],
+      use: 'input and segmented edge against its own fill',
+    },
   ]),
   // Focus indicator against the page, 3:1 (WCAG 2.4.13). Light: the ink outline carries it.
   {
