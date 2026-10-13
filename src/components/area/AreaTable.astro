@@ -1,0 +1,81 @@
+---
+/**
+ * A plain table of areas: name (linking to its page), average price, monthly rent and the
+ * break-even year at typical assumptions. Used by the nation pages (every area, A to Z) and by
+ * the related areas on an area page. `.data-table` markup with links in the row headers, which
+ * the DataTable primitive cannot hold (it takes string cells only).
+ *
+ * A figure that is the nation's own (no local figure published) gets a "*" and a note under the
+ * table; screen readers hear "(England figure)" instead of the mark.
+ */
+import type { AreaTableRow } from '../../lib/areas';
+import { possessive } from '../../lib/area-summary';
+import '../../styles/area.css';
+
+interface Props {
+  rows: AreaTableRow[];
+  caption: string;
+  captionHidden?: boolean;
+  /** The nation's name, for the fallback note ("England"). */
+  nationName: string;
+  /** The row to mark as this page (bold, aria-current), by href. */
+  currentHref?: string;
+  testid?: string;
+}
+
+const { rows, caption, captionHidden = false, nationName, currentHref, testid } = Astro.props;
+const anyFallback = rows.some((row) => row.priceFallback || row.rentFallback);
+/** "2 years" never breaks between the number and its unit; "None in 25 years" may wrap. */
+const keepTogether = (text: string) => text.replace(/^(\d+) (years?)$/, '$1\u00a0$2');
+const owner = possessive(nationName);
+---
+
+<table class="data-table area-table" data-testid={testid}>
+  <caption class:list={['data-table__caption', { 'visually-hidden': captionHidden }]}>
+    {caption}
+  </caption>
+  <thead>
+    <tr>
+      <th scope="col">Area</th>
+      <th scope="col" class="data-table__num">
+        Average price
+      </th>
+      <th scope="col" class="data-table__num">
+        Rent a month
+      </th>
+      <th scope="col" class="data-table__num area-table__answer">
+        Buying pulls ahead after
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    {rows.map((row) => {
+      const current = row.href === currentHref;
+      return (
+        <tr class:list={{ 'area-table__current': current }}>
+          <th scope="row" class="area-table__name">
+            {current ? (
+              <span aria-current="page">{row.name}</span>
+            ) : (
+              <a href={row.href}>{row.name}</a>
+            )}
+          </th>
+          <td class="data-table__num">
+            {row.priceFallback && <span aria-hidden="true">*</span>}
+            {row.price}
+            {row.priceFallback && <span class="visually-hidden"> ({nationName} figure)</span>}
+          </td>
+          <td class="data-table__num">
+            {row.rentFallback && <span aria-hidden="true">*</span>}
+            {row.rent}
+            {row.rentFallback && <span class="visually-hidden"> ({nationName} figure)</span>}
+          </td>
+          <td class="data-table__num area-table__answer">{keepTogether(row.breakEven)}</td>
+        </tr>
+      );
+    })}
+  </tbody>
+</table>
+{anyFallback && (
+  <p class="area-note">* {owner} figure: the source data has no local figure for this area.</p>
+)}

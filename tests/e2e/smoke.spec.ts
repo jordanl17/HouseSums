@@ -41,7 +41,9 @@ test.describe('home page', () => {
         .map((el) => el.tagName.toLowerCase())
         .filter((tag) => tag !== 'script' && tag !== 'style');
     });
-    expect(between).toEqual(['h1', 'astro-island']);
+    // Below the calculator: the one plain line of nation links (phase 5), nothing else.
+    expect(between).toEqual(['h1', 'astro-island', 'p']);
+    await expect(page.locator('main > p')).toHaveAttribute('data-testid', 'nation-links');
     await expect(page.getByRole('contentinfo')).toContainText(
       'This is a model, not financial advice.',
     );

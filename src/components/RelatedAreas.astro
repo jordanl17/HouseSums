@@ -1,12 +1,16 @@
 ---
 /**
- * Links from an area page (phase 5): the nation page, six related areas in the same nation
- * (closest average price) and How it works and Sources. Skeleton by the lead; the areas
- * teammate owns it.
+ * Links from an area page (phase 5): the six areas in the same nation with the closest average
+ * price (relatedAreas()), set in a table with this area in its place so the figures compare at a
+ * glance, then the nation page, How it works and Sources.
+ *
+ * Test hook: related-areas (the section).
  */
-import { areaPath, nationName, nationPath, relatedAreas } from '../lib/areas';
+import AreaTable from './area/AreaTable.astro';
+import { areaPath, areaTableRow, nationName, nationPath, relatedAreas } from '../lib/areas';
 import type { Area } from '../lib/types';
 import { url } from '../lib/url';
+import '../styles/area.css';
 
 interface Props {
   area: Area;
@@ -14,23 +18,38 @@ interface Props {
 
 const { area } = Astro.props;
 const related = relatedAreas(area);
+const nation = nationName(area.nation);
+const rows = [area, ...related]
+  .sort((a, b) => b.price - a.price || a.name.localeCompare(b.name, 'en-GB'))
+  .map(areaTableRow);
 ---
 
-<nav class="prose" aria-label="More places" data-testid="related-areas">
-  <ul>
-    {related.map((other) => (
+<section class="area-block" aria-labelledby="related-heading" data-testid="related-areas">
+  <div class="area-block__text">
+    <h2 id="related-heading">Places in {nation} with similar prices</h2>
+    <p>
+      The {related.length} areas in {nation} with the closest average price to {area.name}, dearest
+      first, each with its own answer at typical assumptions.
+    </p>
+    <ul class="area-links">
       <li>
-        <a href={areaPath(other)}>{other.name}</a>
+        <a href={nationPath(area.nation)}>Every area in {nation}</a>
       </li>
-    ))}
-    <li>
-      <a href={nationPath(area.nation)}>Every area in {nationName(area.nation)}</a>
-    </li>
-    <li>
-      <a href={url('how-it-works')}>How it works</a>
-    </li>
-    <li>
-      <a href={url('sources')}>Sources</a>
-    </li>
-  </ul>
-</nav>
+      <li>
+        <a href={url('how-it-works')}>How it works</a>
+      </li>
+      <li>
+        <a href={url('sources')}>Sources</a>
+      </li>
+    </ul>
+  </div>
+  <div class="area-block__table">
+    <AreaTable
+      rows={rows}
+      caption={`${area.name} and the ${related.length} areas in ${nation} closest in price`}
+      captionHidden
+      nationName={nation}
+      currentHref={areaPath(area)}
+    />
+  </div>
+</section>
