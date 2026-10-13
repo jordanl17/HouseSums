@@ -1,20 +1,81 @@
 ---
+/**
+ * /about/: who is behind House Sums, what it does not do, what happens to the figures you enter,
+ * the not-advice statement and how to report a problem. Facts only.
+ * Owner: phase 5 content teammate.
+ */
 import Base from '../layouts/Base.astro';
+import { ANALYTICS_EVENTS, EVENT_TITLES, siteCode } from '../lib/analytics';
+import { listText } from '../lib/content';
+import { url } from '../lib/url';
+import '../styles/content.css';
+
+const ISSUES_URL = 'https://github.com/jordanl17/HouseSums/issues';
+const countingOn = siteCode(import.meta.env.PUBLIC_GOATCOUNTER_CODE) !== null;
+const events = listText(ANALYTICS_EVENTS.map((event) => EVENT_TITLES[event].toLowerCase()));
 ---
 
 <Base
   title="About"
-  description="About House Sums: free, plain-English UK home-buying calculators. A model, not financial advice."
+  description="House Sums is an independent project by Jordan Lawrence: free UK home-buying calculators with no lenders, ads or lead forms. Your figures stay in your browser. A model, not financial advice."
 >
-  <div class="prose">
+  <div class="prose content-page">
     <h1>About House Sums</h1>
-    <p>
-      House Sums is a free, plain-English site of UK home-buying calculators. The first one, Rent v
-      buy, works out how long you would need to own a home before buying beats renting.
+    <p class="content-lead">
+      House Sums is an independent project by Jordan Lawrence. It is a free site of plain-English UK
+      home-buying calculators. The first, Rent v buy, works out how many years you would need to own
+      a home before buying beats renting, starting from your area's own prices and rents.
     </p>
-    <p>
-      This page will also say who is behind the site. House Sums collects no personal data, and it
-      is a model, not financial advice.
-    </p>
+
+    <section class="content-section" id="no-agenda" aria-labelledby="no-agenda-title">
+      <h2 id="no-agenda-title">What it does not do</h2>
+      <ul class="content-list">
+        <li>No lender, broker or estate agent is behind it, and none is named or ranked.</li>
+        <li>No adverts and no sponsored content.</li>
+        <li>No lead forms and no calls to apply for a mortgage.</li>
+        <li>No accounts, no sign-up and no personal data collected.</li>
+      </ul>
+    </section>
+
+    <section class="content-section" id="privacy" aria-labelledby="privacy-title">
+      <h2 id="privacy-title">Your figures</h2>
+      <p>
+        Every sum is worked out in your browser. The figures you enter are not sent anywhere. They
+        appear only in the page address, so a link you copy and share shows the same result; that
+        link goes wherever you choose to send it.
+      </p>
+      <p>
+        The site sets no cookies.{' '}
+        {countingOn
+          ? `It counts four things with GoatCounter, a cookieless analytics service: ${events}. Each count is the event's name and nothing else: no figures, no area, no page address.`
+          : `It can count four things with GoatCounter, a cookieless analytics service (${events}), but that counting is switched off in this version of the site. When it is on, each count is the event's name and nothing else: no figures, no area, no page address.`}
+      </p>
+    </section>
+
+    <section class="content-section" id="not-advice" aria-labelledby="not-advice-title">
+      <h2 id="not-advice-title">Not advice</h2>
+      <p>
+        <strong>This is a model, not financial advice.</strong> It shows what happens at the figures
+        it is given, using public data and the assumptions set out on{' '}
+        <a href={url('how-it-works')}>How it works</a>. It does not know your income, savings or
+        plans, and it does not recommend buying or renting.
+      </p>
+    </section>
+
+    <section class="content-section" id="report" aria-labelledby="report-title">
+      <h2 id="report-title">Report a problem</h2>
+      <p>
+        If a figure looks wrong, a page does not work or something is unclear, open an issue on
+        GitHub:{' '}
+        <a href={ISSUES_URL} data-testid="issues-link">
+          github.com/jordanl17/HouseSums/issues
+        </a>
+        . Include the page address, which carries the figures you were looking at.
+      </p>
+      <p>
+        Where each figure comes from, and when it was last refreshed, is on{' '}
+        <a href={url('sources')}>Sources</a>.
+      </p>
+    </section>
   </div>
 </Base>

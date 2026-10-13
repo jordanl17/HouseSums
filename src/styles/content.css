@@ -1,0 +1,330 @@
+/*
+ * Content pages: /how-it-works/, /sources/, /about/ (phase 5, content teammate).
+ * Imported by the pages and by the components under src/components/content/. Tokens only.
+ *
+ *   .content-page          the page column (a .prose, a little wider for the tables)
+ *   .content-layout        how-it-works: contents list beside the text from 64rem
+ *   .content-toc           "On this page" list of links
+ *   .content-section       a titled section; children spaced like .prose
+ *   .content-list          a plain bulleted list
+ *   .content-small         small muted print under a table
+ *   .formula               caption, expression in mono, symbol list (.formula__terms)
+ *   .facts                 a definition list of label and value rows (sources)
+ *   .tax-regime__tables    the tax tables of one regime, side by side when there is room
+ *   .data-table--wrap      a DataTable whose body cells may wrap (prose cells)
+ *   .data-table--tax       a two-column band table, kept narrow
+ */
+
+/* ---- Page column ---- */
+.content-page {
+  max-width: 46rem;
+}
+
+.content-lead {
+  font-size: var(--size-lg);
+}
+
+/* ---- Sections: the same rhythm as .prose, one level down ---- */
+.content-section > * + * {
+  margin-top: var(--space-4);
+}
+
+.content-section > * + h3,
+.content-section > * + .content-section,
+.content-section > * + .formula {
+  margin-top: var(--space-8);
+}
+
+.prose > * + .content-section {
+  margin-top: var(--space-10);
+}
+
+/* Anchor targets land a little below the top edge. */
+.content-section,
+.content-section h3,
+.formula {
+  scroll-margin-top: var(--space-4);
+}
+
+/* base.css removes markers from classed lists (ul[class]); [class] here outranks it. */
+ul.content-list[class] {
+  padding-inline-start: 1.25em;
+  list-style: disc;
+}
+
+ol.content-list[class] {
+  list-style: decimal;
+  padding-inline-start: 1.5em;
+}
+
+.content-list > li + li {
+  margin-top: var(--space-2);
+}
+
+.content-small {
+  font-size: var(--size-sm);
+  color: var(--color-muted);
+}
+
+/* ---- "On this page" ---- */
+.content-toc__title {
+  font-family: var(--font-mono);
+  font-size: var(--size-sm);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0;
+  color: var(--color-muted);
+}
+
+.content-toc__list {
+  margin-top: var(--space-2);
+  font-size: var(--size-sm);
+  columns: 2;
+  column-gap: var(--space-6);
+}
+
+.content-toc__list li {
+  break-inside: avoid;
+  padding-block: var(--space-1);
+}
+
+/*
+ * how-it-works from 64rem: the contents list sits in a narrow left column and stays in view
+ * while the page scrolls (CSS only). Below that it is a two-column list above the text.
+ */
+.content-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-8);
+}
+
+@media (min-width: 64rem) {
+  .content-layout {
+    grid-template-columns: 13rem minmax(0, 46rem);
+    grid-template-areas:
+      'toc head'
+      'toc body';
+    grid-template-rows: auto 1fr;
+    column-gap: var(--space-12);
+    row-gap: var(--space-10);
+    align-items: start;
+  }
+
+  .content-layout__head {
+    grid-area: head;
+  }
+
+  .content-layout__body {
+    grid-area: body;
+  }
+
+  .content-layout .content-toc {
+    grid-area: toc;
+    position: sticky;
+    top: var(--space-6);
+    /* Line the list up with the h1. */
+    padding-top: var(--space-1);
+  }
+
+  .content-layout .content-toc__list {
+    columns: 1;
+  }
+}
+
+/* ---- Formulas ---- */
+.formula {
+  margin: 0;
+  padding-top: var(--space-3);
+  border-top: var(--border-thin) solid var(--color-rule);
+}
+
+.formula__caption {
+  font-weight: var(--weight-bold);
+}
+
+.formula__expr {
+  margin-top: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--size-lg);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.formula__expr + .formula__expr {
+  margin-top: 0;
+}
+
+/* Symbols are upright mono everywhere (B612 has no italic; a synthesised slant reads badly). */
+.formula var {
+  font-family: var(--font-mono);
+  font-style: normal;
+}
+
+.formula__expr sub,
+.formula__expr sup,
+.formula__terms sub {
+  font-size: 0.7em;
+  line-height: 0;
+}
+
+.formula__terms {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-1) var(--space-4);
+  margin-top: var(--space-3);
+  font-size: var(--size-sm);
+}
+
+.formula__terms dt {
+  font-family: var(--font-mono);
+}
+
+.formula__terms dd {
+  margin: 0;
+}
+
+.formula__note {
+  margin-top: var(--space-3);
+  font-size: var(--size-sm);
+  color: var(--color-muted);
+}
+
+/* ---- Label and value rows (sources) ---- */
+.sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.source > * + * {
+  margin-top: var(--space-3);
+}
+
+.facts {
+  font-size: var(--size-sm);
+}
+
+.facts__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 var(--space-4);
+  padding-block: var(--space-2);
+  border-bottom: var(--border-thin) solid var(--color-rule);
+}
+
+.facts__row:first-child {
+  border-top: var(--border-thin) solid var(--color-rule);
+}
+
+.facts dt {
+  font-family: var(--font-mono);
+  color: var(--color-muted);
+}
+
+.facts dd {
+  margin: 0;
+}
+
+.facts__long {
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 36rem) {
+  .facts__row {
+    grid-template-columns: 11rem minmax(0, 1fr);
+  }
+}
+
+/* ---- Tables ---- */
+.data-table--wrap tbody :is(td, th) {
+  white-space: normal;
+}
+
+.data-table--defaults tbody th {
+  font-weight: var(--weight-bold);
+}
+
+/* The defaults tables: name, default and reason columns. */
+.data-table--defaults thead th:first-child {
+  width: 30%;
+}
+
+.data-table--defaults thead th:nth-child(2) {
+  width: 30%;
+}
+
+.data-table--halves thead th:first-child {
+  width: 50%;
+}
+
+/* Series codes are identifiers: mono, like the figures. */
+.data-table--codes tbody th {
+  font-family: var(--font-mono);
+}
+
+.data-table--tax {
+  width: auto;
+  min-width: min(100%, 17rem);
+}
+
+.tax-regime__tables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6) var(--space-8);
+  align-items: start;
+}
+
+.data-table__note {
+  font-family: var(--font-sans);
+}
+
+/*
+ * .data-table--stack: below 36rem each body row becomes a block: the row header on its own line,
+ * then one line per cell with its column name (data-label) before the value.
+ */
+@media (max-width: 35.999rem) {
+  /* Visually hidden, still read. display: block so the 1px box clips the wide row inside. */
+  .data-table--stack thead {
+    display: block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .data-table--stack tbody tr {
+    display: block;
+    padding-block: var(--space-2);
+    border-bottom: var(--border-thin) solid var(--color-rule);
+  }
+
+  .data-table--stack tbody :is(th, td) {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: var(--space-1) 0;
+    border: 0;
+  }
+
+  .data-table--stack tbody th {
+    display: block;
+    font-weight: var(--weight-bold);
+  }
+
+  .data-table--stack tbody td::before {
+    content: attr(data-label);
+    font-family: var(--font-mono);
+    color: var(--color-muted);
+  }
+}
+
+@media print {
+  .content-toc {
+    display: none;
+  }
+
+  .content-layout {
+    display: block;
+  }
+}

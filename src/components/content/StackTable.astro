@@ -1,0 +1,54 @@
+---
+/**
+ * A table of words (the starting figures, the Outlook presets) that stacks on narrow screens.
+ * From 36rem it is a plain .data-table. Below that each row becomes a block: the row header on
+ * its own line, then one line per cell with its column name (data-label) before the value, so
+ * three or four text columns never squeeze into 360px. Explicit ARIA table roles keep the table
+ * semantics when rows are laid out as blocks. Styles: src/styles/content.css.
+ */
+import '../../styles/content.css';
+
+interface Props {
+  caption: string;
+  /** The first column is the row header. */
+  columns: { key: string; label: string; note?: string }[];
+  rows: Record<string, string>[];
+  class?: string;
+  testid?: string;
+}
+
+const { caption, columns, rows, class: className, testid } = Astro.props;
+const [head, ...rest] = columns;
+---
+
+<table
+  class:list={['data-table', 'data-table--wrap', 'data-table--stack', className]}
+  role="table"
+  data-testid={testid}
+>
+  <caption class="data-table__caption">{caption}</caption>
+  <thead role="rowgroup">
+    <tr role="row">
+      {columns.map((column) => (
+        <th scope="col" role="columnheader">
+          {column.label}
+          {column.note && <span class="data-table__note"> {column.note}</span>}
+        </th>
+      ))}
+    </tr>
+  </thead>
+  <tbody role="rowgroup">
+    {rows.map((row) => (
+      <tr role="row">
+        <th scope="row" role="rowheader">
+          {head ? row[head.key] : ''}
+        </th>
+        {rest.map((column) => (
+          <td role="cell" data-label={column.label}>
+            {row[column.key]}
+          </td>
+        ))}
+      </tr>
+    ))}
+  </tbody>
+</table>
