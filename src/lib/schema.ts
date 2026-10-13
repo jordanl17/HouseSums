@@ -10,6 +10,7 @@
 import {
   AREA_FIELDS,
   BUYER_TYPES,
+  DERIVED_INPUT_KEYS,
   LTV_BANDS,
   NATIONS,
   NUMERIC_INPUT_KEYS,
@@ -252,6 +253,9 @@ export function parseDefaults(value: unknown, path = 'defaults.json'): DefaultsF
     const max = num(f['max'], `${p}.max`, min);
     num(f['step'], `${p}.step`, Number.MIN_VALUE);
     if (f['default'] !== null) num(f['default'], `${p}.default`, min, max);
+    else if (!DERIVED_INPUT_KEYS.includes(key)) {
+      throw new DataError(`${p}.default`, 'expected a number (only derived fields may be null)');
+    }
     optional(
       f,
       'byNation',
@@ -269,7 +273,7 @@ export function parseDefaults(value: unknown, path = 'defaults.json'): DefaultsF
   for (const key of Object.keys(fields)) {
     oneOf(key, NUMERIC_INPUT_KEYS, `${path}.fields.${key}`);
   }
-  num(o['depositFraction'], `${path}.depositFraction`, 0, 1);
+  num(o['depositFraction'], `${path}.depositFraction`, Number.MIN_VALUE, 1);
   const clamps = obj(o['areaClamps'], `${path}.areaClamps`);
   for (const key of ['houseGrowth', 'rentGrowth']) {
     const c = obj(clamps[key], `${path}.areaClamps.${key}`);
