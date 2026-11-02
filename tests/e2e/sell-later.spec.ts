@@ -43,3 +43,13 @@ test('has its own social card', async ({ page }) => {
     /\/og\/sell-later\.png$/,
   );
 });
+
+test('a sale year past the term is held to the term, on screen and in the link', async ({
+  page,
+}) => {
+  await page.goto('sell-later/');
+  await page.locator('#sl-yearsHeld').fill('35');
+  await page.keyboard.press('Tab');
+  await expect(page.locator('#sl-yearsHeld')).toHaveValue('30');
+  await expect.poll(() => new URL(page.url()).search).toBe('?y=30');
+});

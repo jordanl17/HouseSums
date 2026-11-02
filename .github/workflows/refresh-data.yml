@@ -45,7 +45,7 @@ env:
 jobs:
   refresh:
     name: Fetch, build and check data
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -101,7 +101,7 @@ jobs:
     name: Publish dry-run snapshot
     needs: refresh
     if: github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: write
@@ -132,7 +132,7 @@ jobs:
     name: Commit and open a pull request
     needs: refresh
     if: github.event_name != 'push' && needs.refresh.outputs.changed == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: write
@@ -178,7 +178,7 @@ jobs:
     name: No changes
     needs: refresh
     if: github.event_name != 'push' && needs.refresh.outputs.changed != 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions: {}
     steps:
       - name: Say so

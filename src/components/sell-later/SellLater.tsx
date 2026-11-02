@@ -48,16 +48,16 @@ export default function SellLater(props: SellLaterProps) {
     if (next !== current) window.history.replaceState(window.history.state, '', next);
   }, [inputs]);
 
+  /** Same caps as decodeSellLater, so the screen and a shared link always agree. */
+  const capped = (next: SellLaterInputs): SellLaterInputs => ({
+    ...next,
+    deposit: Math.min(next.deposit, next.price),
+    yearsHeld: Math.min(next.yearsHeld, next.termYears),
+  });
+
   const set = (field: SellLaterField, raw: number) => {
-    const spec = specs[field];
-    let value = clampToSpec(raw, spec).value;
-    if (field === 'deposit') value = Math.min(value, inputs.price);
-    setInputs((current) => {
-      const next = { ...current, [field]: value };
-      // Selling after the term just means the mortgage is gone; keep the slider in range.
-      if (field === 'termYears') next.yearsHeld = Math.min(next.yearsHeld, value);
-      return next;
-    });
+    const value = clampToSpec(raw, specs[field]).value;
+    setInputs((current) => capped({ ...current, [field]: value }));
   };
 
   const result = useMemo(() => sellLater(inputs, props.priceChanges), [inputs, props.priceChanges]);
@@ -73,7 +73,7 @@ export default function SellLater(props: SellLaterProps) {
       <ResetButton
         label={specs[field].label}
         testId={`reset-${field}`}
-        onReset={() => setInputs((current) => ({ ...current, [field]: initial[field] }))}
+        onReset={() => setInputs((current) => capped({ ...current, [field]: initial[field] }))}
       />
     );
 

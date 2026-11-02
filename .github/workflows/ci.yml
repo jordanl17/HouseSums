@@ -21,7 +21,8 @@ env:
 jobs:
   ci:
     name: Check, lint, test, build and e2e
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04, which Playwright 1.56 cannot install browsers on.
+    runs-on: ubuntu-24.04
     # Phase 6: Lighthouse (about 5 minutes) runs after the e2e suite.
     timeout-minutes: 60
     steps:
