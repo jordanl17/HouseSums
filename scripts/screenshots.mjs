@@ -33,8 +33,10 @@ import { ROOT, normaliseBase } from './lib/site.mjs';
  * @type {readonly { name: string, path: string, area?: boolean }[]}
  */
 export const SHOTS = [
-  { name: 'home-empty', path: './' },
-  { name: 'home-leeds', path: './?a=leeds', area: true },
+  { name: 'home', path: './' },
+  { name: 'rent-vs-buy-empty', path: 'rent-vs-buy/' },
+  { name: 'sell-later', path: 'sell-later/' },
+  { name: 'rent-vs-buy-leeds', path: 'rent-vs-buy/?a=leeds', area: true },
   { name: 'area-leeds', path: 'rent-vs-buy/leeds/', area: true },
   { name: 'area-glasgow-city', path: 'rent-vs-buy/glasgow-city/', area: true },
   { name: 'area-cardiff', path: 'rent-vs-buy/cardiff/', area: true },

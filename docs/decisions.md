@@ -639,7 +639,8 @@ Review nits after the phase 6 merge, on `polish/review-nits`.
 ## Home page of calculators
 
 - **The calculator moved to `/rent-vs-buy/`, not a new URL**: that page was already "Rent v buy" in the breadcrumbs, and area pages are the calculator above a summary, so the calculator above the nations table is the same shape. No area slug can collide.
-- **Redirect old links in the page, not the server**: GitHub Pages has no redirects. Any query on the home page is forwarded, since the home page itself takes none.
+- **No redirect for old home-page links**: the site has not launched, so links made before the move are not worth an inline script on the home page (Jordan).
+- **Lighthouse covers one page of every kind**, not every page: area and nation pages share templates, and 370+ pages at six runs each would take hours. New kinds of page join `PATHS`.
 - **Cards are links, not buttons**, each with an h2, one plain sentence and an icon. Two cards are not a feature grid in the brief's sense: they are the site's contents. Left-aligned, no shadow, the shared `.card` surface.
 - **Icons** follow the logo: 24-unit grid, 2-unit ink strokes, one hi-vis shape with the logo's sun edge (ink in light, hi-vis in dark), blue and orange only where they mean buy and rent. Decorative; the card heading names the calculator.
 

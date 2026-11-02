@@ -177,7 +177,7 @@ export const CALCULATOR_STATES: readonly CalculatorScene[] = [
   },
   {
     name: 'link to an unknown area',
-    path: './?a=nowhere-at-all',
+    path: 'rent-vs-buy/?a=nowhere-at-all',
     open: async (page) => {
       await expect(page.getByTestId('calculator')).toHaveAttribute('data-status', 'error');
       return '[data-testid="answer-card"]';

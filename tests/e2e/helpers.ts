@@ -11,19 +11,11 @@ import { expect, type Page } from '@playwright/test';
  * `island: true` marks a page that hydrates the calculator: it is checked for loading scripts
  * only from our own origin instead of loading none.
  */
-/** `script`: an inline script and no island (the home page's redirect for old calculator links). */
-export const PAGES: readonly {
-  path: string;
-  title: string;
-  h1: string;
-  island?: boolean;
-  script?: boolean;
-}[] = [
+export const PAGES: readonly { path: string; title: string; h1: string; island?: boolean }[] = [
   {
     path: './',
     title: 'House Sums',
     h1: 'UK home-buying calculators',
-    script: true,
   },
   {
     path: 'sell-later/',

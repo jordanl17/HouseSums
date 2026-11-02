@@ -14,7 +14,7 @@ import {
  * Runs at 360 and 1280 (the two Playwright projects).
  */
 
-for (const { path, title, h1, island, script } of PAGES) {
+for (const { path, title, h1, island } of PAGES) {
   test.describe(`page ${path}`, () => {
     test('loads with its heading, header and footer', async ({ page }) => {
       const response = await page.goto(path);
@@ -50,16 +50,6 @@ for (const { path, title, h1, island, script } of PAGES) {
         page,
       }) => {
         await expectOnlyOwnScripts(page, path);
-      });
-    } else if (script) {
-      test('loads no script files, only its inline script', async ({ page }) => {
-        const scripts: string[] = [];
-        page.on('request', (r) => {
-          if (r.resourceType() === 'script') scripts.push(r.url());
-        });
-        await page.goto(path, { waitUntil: 'networkidle' });
-        expect(scripts).toEqual([]);
-        await expect(page.locator('astro-island')).toHaveCount(0);
       });
     } else {
       test('loads no JavaScript', async ({ page }) => {

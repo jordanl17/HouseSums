@@ -41,12 +41,6 @@ test.describe('home page', () => {
     ).toBeVisible();
   });
 
-  test('sends links made before the move on to the Rent v buy calculator', async ({ page }) => {
-    await page.goto('./?a=leeds&p=320000');
-    await expect(page).toHaveURL(/\/rent-vs-buy\/\?a=leeds&p=320000$/);
-    await expect(page.getByTestId('calculator')).toHaveAttribute('data-status', 'ready');
-  });
-
   test('has no horizontal scroll', async ({ page }) => {
     await page.goto('./');
     await expectNoHorizontalScroll(page);

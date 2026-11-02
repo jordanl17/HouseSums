@@ -42,7 +42,7 @@ test('with only area and price entered, the answer card, chart and key numbers r
   }
 });
 
-for (const path of ['./?a=leeds', 'rent-vs-buy/leeds/']) {
+for (const path of ['rent-vs-buy/?a=leeds', 'rent-vs-buy/leeds/']) {
   test(`the first screen holds area, price and the answer, with no scrolling (${path})`, async ({
     page,
   }) => {

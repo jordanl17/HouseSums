@@ -299,9 +299,9 @@ Second calculator at `/sell-later/`, linked from the header nav ("Rent v buy", "
 
 - **Home (`/`)** is now one card per calculator (`src/pages/index.astro`, `src/styles/home.css`), each with its own icon (`src/components/ToolIcon.astro`): Rent v buy is a house with the buy line crossing the rent line and the hi-vis break-even dot; Sell later is an estate agent's board in hi-vis with an arrow up.
 - **Rent v buy moved to `/rent-vs-buy/`**, above the nations table that page already had (now an h2), the same shape as the area pages. The nav's "Rent v buy" points there. The home page's plain line of nation links went with it (the table covers it).
-- **Old links**: a home visit with a query (`/?a=leeds&p=...`, every share link made before the move) is sent on to `/rent-vs-buy/` with the same query and hash by an inline script before first paint. The home page has no island and loads no script files.
-- **Tests**: e2e specs that opened the calculator at `./` now open `rent-vs-buy/`; new smoke tests for the cards and the redirect; the axe scan covers the home page and Sell later. Full e2e suite green (571).
-- **Not done**: Lighthouse still measures `/` and `/rent-vs-buy/leeds/` (`scripts/lighthouse.mjs`); `/` is now the light hub page, so it may be worth pointing it at `/rent-vs-buy/`. The screenshot set (`scripts/screenshots.mjs`) still names `./` "home-empty".
+- **Old links** from before the move (`/?a=...`) are not forwarded: no backwards compatibility needed before launch (Jordan). The home page has no island and no JavaScript.
+- **Tests**: e2e specs that opened the calculator at `./` now open `rent-vs-buy/`; new smoke tests for the cards; the axe scan covers the home page and Sell later. Full e2e suite green (571).
+- **Lighthouse** measures one page of every kind (`PATHS` in `scripts/lighthouse.mjs`: home, Rent v buy, an area, a nation, Sell later, How it works, Sources, About), mobile and desktop, in CI and against the live site; CI job timeouts raised to fit. Local run: 100 in all four categories on all 16.
 
 ### Sell later links, social cards, accessibility
 

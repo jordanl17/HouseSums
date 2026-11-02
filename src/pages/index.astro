@@ -1,11 +1,7 @@
 ---
 /**
  * Home: the calculators, one card each. Rent v buy lives at /rent-vs-buy/ (above the nations
- * table) and Sell later at /sell-later/.
- *
- * Links shared before the move point at the home page with the calculator's figures in the query
- * (?a=leeds&p=...). The inline script sends any home visit with a query on to /rent-vs-buy/ with
- * the same query and hash, before first paint.
+ * table) and Sell later at /sell-later/. No JavaScript.
  */
 import Base from '../layouts/Base.astro';
 import ToolIcon from '../components/ToolIcon.astro';
@@ -13,11 +9,10 @@ import { nationsIndexPath } from '../lib/areas';
 import { url } from '../lib/url';
 import '../styles/home.css';
 
-const rentVsBuy = nationsIndexPath();
 const tools = [
   {
     kind: 'rent-v-buy',
-    href: rentVsBuy,
+    href: nationsIndexPath(),
     title: 'Rent v buy',
     text: 'How long until buying beats renting, starting from local prices and rents.',
   },
@@ -31,9 +26,6 @@ const tools = [
 ---
 
 <Base description="House Sums: plain-English UK home-buying calculators that start from real figures.">
-  <script is:inline define:vars={{ rentVsBuy }}>
-    if (location.search.length > 1) location.replace(rentVsBuy + location.search + location.hash);
-  </script>
   <h1 class="home-title">UK home-buying calculators</h1>
   <ul class="tools" data-testid="tools">
     {tools.map((tool) => (
