@@ -561,9 +561,9 @@ export function seriesTerms(description: string): { fixYears: number; ltv: numbe
  * Sources page can't drift from it.
  */
 export const REFRESH_SCHEDULE = {
-  cron: '17 6 20 * *',
+  cron: '17 6 28 * *',
   /** As the Sources page says it. */
-  text: 'on the 20th of each month',
+  text: 'on the 28th of each month',
 } as const;
 
 // ---------------------------------------------------------------------------------------------
