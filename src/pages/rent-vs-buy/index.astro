@@ -14,7 +14,7 @@ import {
   nationsIndexPath,
   typicalAssumptions,
 } from '../../lib/areas';
-import { absoluteUrl, breadcrumbLd, webApplicationLd } from '../../lib/seo';
+import { TOOL_OG, absoluteUrl, breadcrumbLd, webApplicationLd } from '../../lib/seo';
 import { url } from '../../lib/url';
 import '../../styles/area.css';
 
@@ -38,7 +38,14 @@ const england = nationFigures('eng').months;
 const ni = nationFigures('ni').months;
 ---
 
-<Base title="Rent v buy" description={description} jsonLd={jsonLd} preloads={calculatorPreloads()}>
+<Base
+  title="Rent v buy"
+  description={description}
+  jsonLd={jsonLd}
+  preloads={calculatorPreloads()}
+  ogImage={TOOL_OG['rent-v-buy'].path}
+  ogImageAlt={TOOL_OG['rent-v-buy'].alt}
+>
   <h1 class="calc-title">Rent v buy: how long until buying beats renting?</h1>
   <script is:inline>
     if (/[?&]a=[^&]/.test(location.search)) document.documentElement.dataset.calcLink = '';

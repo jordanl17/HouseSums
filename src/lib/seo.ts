@@ -122,6 +122,12 @@ export function ogImagePath(nation?: Nation | null): string {
   return nation ? `og/${NATION_SLUGS[nation]}.png` : 'og/default.png';
 }
 
+/** OG image and alt text for a calculator's own page (cards in scripts/og/card.ts). */
+export const TOOL_OG = {
+  'rent-v-buy': { path: 'og/rent-v-buy.png', alt: 'House Sums: rent v buy' },
+  'sell-later': { path: 'og/sell-later.png', alt: 'House Sums: sell later' },
+} as const;
+
 /** Alt text for the OG image. */
 export function ogImageAlt(nation?: Nation | null): string {
   return nation

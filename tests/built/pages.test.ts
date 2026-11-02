@@ -154,11 +154,16 @@ describe('every page', () => {
     expect(problems).toEqual([]);
   });
 
-  it('points og:image at its nation card (or the site card) as an absolute URL that exists', () => {
+  it('points og:image at its calculator, nation or site card as an absolute URL that exists', () => {
     const problems: string[] = [];
+    const ownCard: Record<string, string> = {
+      'rent-vs-buy/': 'rent-v-buy',
+      'sell-later/': 'sell-later',
+    };
     for (const p of site.pages) {
       const nation = areaOf(p)?.nation ?? nationOf(p);
-      const want = `${config.siteRoot}og/${nation ? NATION_SLUGS[nation] : 'default'}.png`;
+      const card = ownCard[p.route] ?? (nation ? NATION_SLUGS[nation] : 'default');
+      const want = `${config.siteRoot}og/${card}.png`;
       const got = p.meta.get('og:image');
       if (got !== want) problems.push(`${p.rel}: og:image is ${got}, want ${want}`);
       if (!site.files.has(want.slice(config.siteRoot.length)))

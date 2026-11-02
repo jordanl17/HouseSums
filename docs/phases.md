@@ -302,3 +302,10 @@ Second calculator at `/sell-later/`, linked from the header nav ("Rent v buy", "
 - **Old links**: a home visit with a query (`/?a=leeds&p=...`, every share link made before the move) is sent on to `/rent-vs-buy/` with the same query and hash by an inline script before first paint. The home page has no island and loads no script files.
 - **Tests**: e2e specs that opened the calculator at `./` now open `rent-vs-buy/`; new smoke tests for the cards and the redirect; the axe scan covers the home page and Sell later. Full e2e suite green (571).
 - **Not done**: Lighthouse still measures `/` and `/rent-vs-buy/leeds/` (`scripts/lighthouse.mjs`); `/` is now the light hub page, so it may be worth pointing it at `/rent-vs-buy/`. The screenshot set (`scripts/screenshots.mjs`) still names `./` "home-empty".
+
+### Sell later links, social cards, accessibility
+
+- **Links keep the figures**: `src/lib/sell-later-state.ts` writes changed figures to the query with the Rent v buy keys and units (`p`, `d`, `mr` in percentage points, `t`, plus `y` for the sale year); the island reads them on load, keeps the address bar in step with `replaceState`, and has the same "Copy link to these figures" button as Rent v buy (`CopyLink.tsx`, with the manual-copy fallback).
+- **Social cards**: `npm run og` now also renders `og/rent-v-buy.png` (used on `/rent-vs-buy/` and the nation and area pages keep their nation cards) and `og/sell-later.png`, each with its calculator icon; `og/default.png` is now the site card ("UK home-buying calculators"). The icon shapes live in `src/lib/tool-icons.ts`, shared by `ToolIcon.astro` and the cards.
+- **Accessibility**: the axe scan covers the home page, Sell later and Sell later opened from a link, light and dark, 360 and 1280. `tests/e2e/sell-later.spec.ts` covers the link, Reset and copy.
+- **Budget**: total client JS 94,061 of 102,400 bytes.

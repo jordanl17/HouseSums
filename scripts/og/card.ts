@@ -9,6 +9,7 @@
  * src/styles/tokens.css and shell.css and uses var(--...) only.
  */
 import { NATION_NAMES, NATION_SLUGS } from '../../src/lib/nations';
+import { TOOL_ICON_SHAPES, type ToolKind } from '../../src/lib/tool-icons';
 import { NATIONS, type Nation, type TaxRules } from '../../src/lib/types';
 
 export const OG_WIDTH = 1200;
@@ -23,6 +24,8 @@ export interface Card {
   tag: string;
   /** The second, quieter tag. */
   tagAlt: string;
+  /** The calculator's icon (src/lib/tool-icons.ts), drawn large on the right. */
+  icon?: ToolKind;
 }
 
 /** The property tax line: "Property tax: LBTT", or for the default card "SDLT, LBTT and LTT". */
@@ -30,7 +33,10 @@ function taxShortName(nation: Nation, taxRules: TaxRules): string {
   return taxRules.regimes[taxRules.nations[nation]].shortName;
 }
 
-/** Every card: the site default first, then one per nation in NATIONS order. */
+/**
+ * Every card: the site default, the two calculators, then one per nation in NATIONS order.
+ * Card names match seo.ts (ogImagePath, TOOL_OG).
+ */
 export function cards(taxRules: TaxRules): Card[] {
   const shortNames = [...new Set(NATIONS.map((nation) => taxShortName(nation, taxRules)))];
   const allTaxes =
@@ -40,10 +46,26 @@ export function cards(taxRules: TaxRules): Card[] {
   return [
     {
       name: 'default',
+      heading: 'UK home-buying calculators',
+      subheading: 'Rent v buy, and what you get back when you sell.',
+      tag: 'From open UK data',
+      tagAlt: 'Free, no sign-up',
+    },
+    {
+      name: 'rent-v-buy',
       heading: 'Rent v buy',
       subheading: 'How long until buying beats renting?',
       tag: 'Area-by-area figures across the UK',
       tagAlt: allTaxes,
+      icon: 'rent-v-buy',
+    },
+    {
+      name: 'sell-later',
+      heading: 'Sell later',
+      subheading: 'What do you get back once the mortgage is cleared?',
+      tag: 'Sale prices from -20% to +20%',
+      tagAlt: 'Interest v equity',
+      icon: 'sell-later',
     },
     ...NATIONS.map((nation) => ({
       name: NATION_SLUGS[nation],
@@ -51,6 +73,7 @@ export function cards(taxRules: TaxRules): Card[] {
       subheading: 'How long until buying beats renting?',
       tag: 'Area-by-area figures',
       tagAlt: `Property tax: ${taxShortName(nation, taxRules)}`,
+      icon: 'rent-v-buy' as const,
     })),
   ];
 }
@@ -99,6 +122,7 @@ ${links}
     background-image: var(--contour-background);
     color: var(--color-ink);
     font-family: var(--font-sans);
+    position: relative;
   }
   .logo { --logo-size: 56px; }
   .card__body { margin-top: auto; }
@@ -128,6 +152,7 @@ ${links}
     background-color: var(--color-tag-alt);
   }
   .card__tag--hi-vis { background-color: var(--color-hi-vis); color: var(--color-on-hi-vis); }
+  .card__icon { position: absolute; top: 72px; right: 80px; }
   .card__foot {
     margin: 48px 0 0;
     font-family: var(--font-mono);
@@ -141,6 +166,11 @@ ${links}
     <svg class="logo__mark" width="56" height="56" viewBox="0 0 24 24" aria-hidden="true">${logo}</svg>
     <span class="logo__word">House Sums</span>
   </span>
+  ${
+    card.icon
+      ? `<svg class="tool-icon card__icon" width="200" height="200" viewBox="0 0 24 24" aria-hidden="true">${TOOL_ICON_SHAPES[card.icon]}</svg>`
+      : ''
+  }
   <div class="card__body">
     <h1>${escapeHtml(card.heading)}</h1>
     <p class="card__sub">${escapeHtml(card.subheading)}</p>

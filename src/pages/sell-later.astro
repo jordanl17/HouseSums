@@ -13,7 +13,7 @@ import { areasFile, calculatorData } from '../lib/calculator-data';
 import { pickMortgageRate } from '../lib/defaults';
 import { NATION_NAMES } from '../lib/nations';
 import { roundToStep } from '../lib/inputs';
-import { absoluteUrl, webApplicationLd } from '../lib/seo';
+import { TOOL_OG, absoluteUrl, webApplicationLd } from '../lib/seo';
 import type { FieldSpec, Nation } from '../lib/types';
 import { url } from '../lib/url';
 import '../styles/sell-later.css';
@@ -76,7 +76,13 @@ const jsonLd = webApplicationLd({
 });
 ---
 
-<Base title="Sell later" description={description} jsonLd={jsonLd}>
+<Base
+  title="Sell later"
+  description={description}
+  jsonLd={jsonLd}
+  ogImage={TOOL_OG['sell-later'].path}
+  ogImageAlt={TOOL_OG['sell-later'].alt}
+>
   <h1 class="calc-title">Sell later: what do you get back?</h1>
   <SellLater client:load {...props} />
 </Base>

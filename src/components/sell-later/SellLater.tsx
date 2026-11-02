@@ -6,10 +6,11 @@
  * src/lib/sell-later.ts. Field behaviour (typing, clamping on blur, sliders) follows the Rent v
  * buy inputs, using the same primitives.
  */
-import { useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { formatMoney, formatPercent } from '../../lib/format';
 import { clampToSpec, roundToStep } from '../../lib/inputs';
 import { gainSeries, sellLater, type SellLaterInputs } from '../../lib/sell-later';
+import { decodeSellLater, encodeSellLater } from '../../lib/sell-later-state';
 import { DataTable } from '../calculator/ui/DataTable';
 import {
   KeyNumber,
@@ -21,6 +22,7 @@ import {
 } from '../calculator/ui';
 import { formatYearsValue, parseYears } from '../calculator/ui/units';
 import { GainChart } from './GainChart';
+import { CopyLink } from './CopyLink';
 import type { SellLaterField, SellLaterProps } from './types';
 
 const changeLabel = (change: number) =>
@@ -31,6 +33,20 @@ const years = (n: number) => `${n} ${n === 1 ? 'year' : 'years'}`;
 export default function SellLater(props: SellLaterProps) {
   const { specs, sources, initial } = props;
   const [inputs, setInputs] = useState<SellLaterInputs>(initial);
+
+  // A link with figures in it (?p=...&y=...) opens with those figures.
+  useEffect(() => {
+    if (window.location.search === '') return;
+    setInputs(decodeSellLater(window.location.search, initial, specs));
+  }, []);
+
+  // Keep the address bar in step, so copying it (or the button) shares these figures.
+  useEffect(() => {
+    const query = encodeSellLater(inputs, initial);
+    const next = `${window.location.pathname}${query}${window.location.hash}`;
+    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (next !== current) window.history.replaceState(window.history.state, '', next);
+  }, [inputs]);
 
   const set = (field: SellLaterField, raw: number) => {
     const spec = specs[field];
@@ -147,6 +163,12 @@ export default function SellLater(props: SellLaterProps) {
             cash: formatMoney(s.cashBack),
             gain: formatMoney(s.gain, { signed: true }),
           }))}
+        />
+        <CopyLink
+          url={() =>
+            `${window.location.origin}${window.location.pathname}${encodeSellLater(inputs, initial)}`
+          }
+          version={encodeSellLater(inputs, initial)}
         />
         <p class="sell-later__note">
           Cash back is the sale price less selling costs (

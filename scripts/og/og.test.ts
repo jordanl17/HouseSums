@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import taxRulesJson from '../../data/taxRules.json';
 import { parseTaxRules } from '../../src/lib/schema';
-import { OG_IMAGE_SIZE, ogImagePath } from '../../src/lib/seo';
+import { OG_IMAGE_SIZE, TOOL_OG, ogImagePath } from '../../src/lib/seo';
 import { NATIONS } from '../../src/lib/types';
 import { findColourLiterals } from '../check-tokens.mjs';
 import { OG_HEIGHT, OG_WIDTH, cardHtml, cards, escapeHtml, logoShapes } from './card';
@@ -22,9 +22,11 @@ function pngSize(file: string): { width: number; height: number } {
 }
 
 describe('OG cards', () => {
-  it('has the site default and one card per nation, named as seo.ts expects', () => {
+  it('has the site default, the calculators and one card per nation, named as seo.ts expects', () => {
     expect(cards(taxRules).map((card) => `og/${card.name}.png`)).toEqual([
       ogImagePath(),
+      TOOL_OG['rent-v-buy'].path,
+      TOOL_OG['sell-later'].path,
       ...NATIONS.map((nation) => ogImagePath(nation)),
     ]);
   });
@@ -37,7 +39,7 @@ describe('OG cards', () => {
     });
     expect(byName['northern-ireland']?.tagAlt).toBe('Property tax: SDLT');
     expect(byName['wales']?.tagAlt).toBe('Property tax: LTT');
-    expect(byName['default']?.tagAlt).toBe('SDLT, LBTT and LTT');
+    expect(byName['rent-v-buy']?.tagAlt).toBe('SDLT, LBTT and LTT');
   });
 
   it('follows the copy rules: no em-dashes, no exclamation marks', () => {

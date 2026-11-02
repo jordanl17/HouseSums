@@ -30,6 +30,7 @@ export const A11Y_PAGES: readonly { name: string; path: string; calculator?: boo
   { name: 'rent v buy, empty', path: 'rent-vs-buy/', calculator: true },
   { name: 'rent v buy, with an area', path: 'rent-vs-buy/?a=leeds', calculator: true },
   { name: 'sell later', path: 'sell-later/' },
+  { name: 'sell later, from a link', path: 'sell-later/?p=320000&mr=4.25&y=10' },
   { name: 'area page', path: 'rent-vs-buy/leeds/', calculator: true },
   { name: 'nation page', path: 'rent-vs-buy/scotland/' },
   { name: 'how it works', path: 'how-it-works/' },
