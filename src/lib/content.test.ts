@@ -362,8 +362,8 @@ describe('refresh schedule', () => {
     const crons = [...workflow.matchAll(/cron:\s*'([^']+)'/g)].map((m) => m[1]);
     expect(crons).toEqual([REFRESH_SCHEDULE.cron]);
     // Day-of-month field is what the page says.
-    expect(REFRESH_SCHEDULE.cron.split(' ')[2]).toBe('20');
-    expect(REFRESH_SCHEDULE.text).toContain('20th');
+    expect(REFRESH_SCHEDULE.cron.split(' ')[2]).toBe('28');
+    expect(REFRESH_SCHEDULE.text).toContain('28th');
   });
 });
 

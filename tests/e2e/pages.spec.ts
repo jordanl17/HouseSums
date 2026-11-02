@@ -27,7 +27,12 @@ for (const { path, title, h1, island } of PAGES) {
       const header = page.getByRole('banner');
       await expect(header.getByRole('link', { name: 'House Sums' })).toBeVisible();
       const nav = page.getByRole('navigation', { name: 'Main' });
-      await expect(nav.getByRole('link')).toHaveText(['How it works', 'Sources']);
+      await expect(nav.getByRole('link')).toHaveText([
+        'Rent v buy',
+        'Sell later',
+        'How it works',
+        'Sources',
+      ]);
 
       const footer = page.getByRole('contentinfo');
       await expect(footer).toContainText('This is a model, not financial advice.');
@@ -64,6 +69,8 @@ for (const { path, title, h1, island } of PAGES) {
 test('the 404 page carries the same header and footer', async ({ page }) => {
   await page.goto(NOT_FOUND_PATH);
   await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveText([
+    'Rent v buy',
+    'Sell later',
     'How it works',
     'Sources',
   ]);

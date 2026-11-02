@@ -20,7 +20,7 @@ export function calculator(page: Page): Locator {
 
 /** Open the home page with an optional query ("a=leeds&p=300000") and wait for hydration. */
 export async function gotoCalculator(page: Page, query = ''): Promise<void> {
-  await page.goto(query === '' ? './' : `./?${query.replace(/^\?/, '')}`);
+  await page.goto(query === '' ? 'rent-vs-buy/' : `rent-vs-buy/?${query.replace(/^\?/, '')}`);
   await expect(calculator(page)).toHaveAttribute('data-hydrated', 'true');
 }
 

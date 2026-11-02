@@ -55,7 +55,7 @@ for (const theme of ['light', 'dark'] as const) {
     });
 
     test('the skip link moves focus to the main content', async ({ page }) => {
-      await page.goto('./');
+      await page.goto('rent-vs-buy/');
       await page.keyboard.press('Tab');
       await page.keyboard.press('Enter');
       await expect(page.locator('main#main')).toBeFocused();
@@ -76,9 +76,11 @@ for (const theme of ['light', 'dark'] as const) {
       expect(style.boxShadow).toContain(ring);
 
       await page.keyboard.press('Tab');
-      const howItWorks = page.getByRole('link', { name: 'How it works' });
-      await expect(howItWorks).toBeFocused();
-      style = await focusStyle(howItWorks);
+      const firstNav = page.getByRole('navigation', { name: 'Main' }).getByRole('link', {
+        name: 'Rent v buy',
+      });
+      await expect(firstNav).toBeFocused();
+      style = await focusStyle(firstNav);
       expect(style.outlineStyle).toBe('solid');
       expect(style.boxShadow).toContain(ring);
     });

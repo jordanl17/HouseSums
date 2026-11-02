@@ -1,0 +1,95 @@
+/*
+ * Home: the two calculators as cards (src/pages/index.astro), with their icons
+ * (src/components/ToolIcon.astro). Cards stack on phones and sit side by side from 48rem.
+ */
+.tools {
+  display: grid;
+  gap: var(--layout-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 48rem) {
+  .tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.tool-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  height: 100%;
+  text-decoration: none;
+}
+
+.tool-card:hover .tool-card__title,
+.tool-card:focus-visible .tool-card__title {
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+}
+
+.tool-card .tool-icon {
+  grid-row: span 2;
+}
+
+.tool-card__title {
+  margin: 0;
+  font-size: var(--size-xl);
+  line-height: var(--leading-tight);
+}
+
+.tool-card__text {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.tool-icon {
+  flex: none;
+  overflow: visible;
+}
+
+.tool-icon path {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tool-icon .tool-icon__thin {
+  stroke-width: 1.5;
+}
+
+.tool-icon__ink {
+  stroke: var(--color-ink);
+}
+
+.tool-icon__on-hi-vis {
+  stroke: var(--color-on-hi-vis);
+}
+
+.tool-icon__buy {
+  stroke: var(--color-buy);
+}
+
+.tool-icon__rent {
+  stroke: var(--color-rent);
+}
+
+.tool-icon__hi-vis {
+  fill: var(--color-hi-vis);
+  stroke: var(--color-logo-sun-edge);
+  stroke-width: 1.5;
+}
+
+@media (forced-colors: active) {
+  .tool-icon path,
+  .tool-icon__hi-vis {
+    stroke: CanvasText;
+  }
+
+  .tool-icon__hi-vis {
+    fill: Canvas;
+  }
+}

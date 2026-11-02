@@ -77,15 +77,15 @@ test('an old link naming another area on an area page goes to that area', async 
   await expect(input(page, 'price')).toHaveValue('300,000');
 });
 
-test('the home page keeps picking in place', async ({ page }) => {
-  await page.goto('./?a=leeds');
+test('the Rent v buy page keeps picking in place', async ({ page }) => {
+  await page.goto('rent-vs-buy/?a=leeds');
   await expectStatus(page, 'ready');
   const area = page.locator('#calc-area');
   await area.click();
   await area.fill('York');
   await page.getByRole('option', { name: /^York,/ }).click();
   await expect.poll(() => params(page).get('a')).toBe('york');
-  expect(new URL(page.url()).pathname).not.toContain('rent-vs-buy');
+  expect(new URL(page.url()).pathname).toMatch(/\/rent-vs-buy\/$/);
   await expect(area).toBeFocused();
 });
 

@@ -35,8 +35,21 @@ import desktopConfig from 'lighthouse/core/config/desktop-config.js';
 import { computeMedianRun } from 'lighthouse/core/lib/median-run.js';
 import { ROOT, normaliseBase } from './lib/site.mjs';
 
-/** Pages measured by default: the home page and one area page (brief, acceptance criteria). */
-export const PATHS = ['./', 'rent-vs-buy/leeds/'];
+/**
+ * Pages measured by default: one of every kind of page. The 361 area pages share one template, as
+ * do the four nation pages, so one of each stands in for the rest; measuring every built page
+ * (370+, six runs each) would take hours. A new kind of page belongs here.
+ */
+export const PATHS = [
+  './',
+  'rent-vs-buy/',
+  'rent-vs-buy/leeds/',
+  'rent-vs-buy/scotland/',
+  'sell-later/',
+  'how-it-works/',
+  'sources/',
+  'about/',
+];
 export const FORMS = /** @type {const} */ (['mobile', 'desktop']);
 export const CATEGORIES = /** @type {const} */ ([
   'performance',

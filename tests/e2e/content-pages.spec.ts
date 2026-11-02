@@ -191,7 +191,7 @@ test.describe('/sources/', () => {
     const refresh = page.locator('#refresh');
     await expect(refresh).toContainText('GitHub Action');
     await expect(refresh).toContainText('pull request');
-    await expect(refresh).toContainText('20th of each month');
+    await expect(refresh).toContainText('28th of each month');
     const fallbacks = areas.areas.filter((area) => area.fallbacks.length > 0);
     await expect(page.getByTestId('fallback-areas').getByRole('listitem')).toHaveCount(
       fallbacks.length,
@@ -213,7 +213,14 @@ test.describe('/about/', () => {
     await page.goto('about/');
     const main = page.getByRole('main');
     await expect(main).toContainText('independent project by Jordan Lawrence');
+    await expect(main).toContainText('Why it exists');
+    await expect(main).toContainText('estate agents, lenders, brokers, conveyancers');
+    await expect(main.getByRole('link', { name: 'Sell later' })).toHaveAttribute(
+      'href',
+      /\/sell-later\/?$/,
+    );
     await expect(main).toContainText('No adverts');
+    await expect(main).toContainText('no leads sold');
     await expect(main).toContainText('no personal data collected');
     await expect(main).toContainText('worked out in your browser');
     await expect(main).toContainText('no cookies');

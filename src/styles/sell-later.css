@@ -1,0 +1,168 @@
+/*
+ * The Sell later calculator (src/components/sell-later). Inputs and results sit side by side
+ * from 60rem; the chart runs full width under them. Field, card, key-number and table styles
+ * are the shared ones.
+ */
+.sell-later {
+  display: grid;
+  gap: var(--layout-gap);
+}
+
+@media (min-width: 60rem) {
+  .sell-later {
+    grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .sell-later__chart {
+    grid-column: 1 / -1;
+  }
+}
+
+.sell-later__inputs {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.sell-later__results,
+.sell-later__chart {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.sell-later__chart h2 {
+  margin: 0;
+}
+
+.sell-later__lead {
+  margin: 0;
+  font-size: var(--size-lg);
+  line-height: var(--leading-tight);
+}
+
+.sell-later__note {
+  margin: 0;
+  max-width: 65ch;
+  font-size: var(--size-sm);
+  color: var(--color-muted);
+}
+
+/* ---- Chart ---- */
+.gain-chart {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr) 5.5rem;
+  grid-template-rows: 16rem auto auto;
+  padding-top: var(--space-6);
+  font-family: var(--font-mono);
+  font-size: var(--size-xs);
+  color: var(--color-muted);
+}
+
+.gain-chart__y,
+.gain-chart__plot,
+.gain-chart__x {
+  position: relative;
+}
+
+.gain-chart__y {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.gain-chart__y span {
+  position: absolute;
+  right: var(--space-2);
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
+.gain-chart__plot {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.gain-chart__plot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.gain-chart__grid {
+  stroke: var(--color-contour);
+  stroke-width: 1;
+}
+
+.gain-chart__zero {
+  stroke: var(--color-ink);
+  stroke-width: 1;
+}
+
+.gain-chart__marker {
+  stroke: var(--color-hi-vis);
+  stroke-width: 3;
+  stroke-dasharray: 6 4;
+}
+
+.gain-chart__line {
+  fill: none;
+  stroke-width: 2;
+}
+
+.gain-chart__line--up {
+  stroke: var(--color-buy);
+}
+
+.gain-chart__line--down {
+  stroke: var(--color-rent);
+}
+
+.gain-chart__line--flat {
+  stroke: var(--color-ink);
+}
+
+.gain-chart__label {
+  position: absolute;
+  left: calc(100% + var(--space-2));
+  transform: translateY(-50%);
+  white-space: nowrap;
+  color: var(--color-ink);
+}
+
+.gain-chart__marker-label {
+  position: absolute;
+  bottom: 100%;
+  margin-bottom: var(--space-1);
+  padding: 0 var(--space-1);
+  background: var(--color-hi-vis);
+  color: var(--color-on-hi-vis);
+  white-space: nowrap;
+}
+
+.gain-chart__x {
+  grid-column: 2;
+  grid-row: 2;
+  height: var(--space-6);
+}
+
+.gain-chart__x span {
+  position: absolute;
+  top: var(--space-1);
+  transform: translateX(-50%);
+}
+
+.gain-chart__x-title {
+  grid-column: 2;
+  grid-row: 3;
+  margin: 0;
+  font-family: var(--font-sans);
+}
+
+@media (forced-colors: active) {
+  .gain-chart__line,
+  .gain-chart__zero,
+  .gain-chart__marker {
+    stroke: CanvasText;
+  }
+}

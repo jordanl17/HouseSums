@@ -1,5 +1,5 @@
 /**
- * Renders the Open Graph cards to public/og/{default,england,scotland,wales,northern-ireland}.png
+ * Renders the Open Graph cards to public/og/{default,rent-v-buy,sell-later,england,...}.png
  * (1200x630) with Playwright's Chromium, in the light theme. Run it after changing the cards,
  * the logo, the tokens or the tax names, and commit the PNGs:
  *
@@ -26,6 +26,7 @@ const STYLESHEETS = [
   'src/styles/fonts.css',
   'src/styles/tokens.css',
   'src/styles/shell.css',
+  'src/styles/home.css',
 ].map((rel) => pathToFileURL(path.join(ROOT, rel)).href);
 
 async function main(): Promise<void> {

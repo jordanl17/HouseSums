@@ -21,9 +21,10 @@ env:
 jobs:
   ci:
     name: Check, lint, test, build and e2e
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04, which Playwright 1.56 cannot install browsers on.
+    runs-on: ubuntu-24.04
     # Phase 6: Lighthouse (about 5 minutes) runs after the e2e suite.
-    timeout-minutes: 35
+    timeout-minutes: 60
     steps:
       - name: Check out
         uses: actions/checkout@v7
@@ -94,7 +95,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-      # Phase 6: Lighthouse on / and /rent-vs-buy/leeds/, mobile and desktop, three runs each on
+      # Lighthouse on one page of every kind (PATHS in scripts/lighthouse.mjs), mobile and
+      # desktop, three runs each on
       # astro preview of the build above. Fails unless the median scores are 95+ in performance,
       # accessibility, best practices and SEO, and the median run's LCP, TBT and CLS are within
       # THRESHOLDS in scripts/lighthouse.mjs. Scores land in the job summary.

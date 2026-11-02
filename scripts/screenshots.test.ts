@@ -5,8 +5,10 @@ import { SHOTS, THEMES, WIDTHS, parseArgs, plan, shotFile } from './screenshots.
 describe('screenshots: the slop-review set', () => {
   it('covers every page type the phase asks for', () => {
     expect(SHOTS.map((shot) => shot.name)).toEqual([
-      'home-empty',
-      'home-leeds',
+      'home',
+      'rent-vs-buy-empty',
+      'sell-later',
+      'rent-vs-buy-leeds',
       'area-leeds',
       'area-glasgow-city',
       'area-cardiff',
@@ -29,7 +31,7 @@ describe('screenshots: the slop-review set', () => {
   it('waits for an answer on every page that names an area', () => {
     const named = SHOTS.filter((shot) => shot.area).map((shot) => shot.name);
     expect(named).toEqual([
-      'home-leeds',
+      'rent-vs-buy-leeds',
       'area-leeds',
       'area-glasgow-city',
       'area-cardiff',
@@ -42,7 +44,7 @@ describe('screenshots: the slop-review set', () => {
     const shots = plan();
     expect(shots).toHaveLength(SHOTS.length * WIDTHS.length * THEMES.length);
     expect(new Set(shots.map((shot) => shot.file)).size).toBe(shots.length);
-    expect(shots.map((shot) => shot.file)).toContain('home-empty-360-light.png');
+    expect(shots.map((shot) => shot.file)).toContain('sell-later-360-light.png');
     expect(shots.map((shot) => shot.file)).toContain('404-1280-dark.png');
   });
 
@@ -81,9 +83,11 @@ describe('screenshots: command line', () => {
     expect(() => parseArgs(['--out', '/tmp/s', '--width', '360'])).toThrow(/Unknown argument/);
     expect(() => parseArgs(['--out'])).toThrow(/Missing value/);
     expect(() => parseArgs(['--out', '--url', 'x'])).toThrow(/Missing value/);
-    expect(() => parseArgs(['--out', '/tmp/s', '--only', 'home,about'])).toThrow(/Unknown shot/);
-    expect(parseArgs(['--out', '/tmp/s', '--only', 'home-empty,about']).only).toEqual([
-      'home-empty',
+    expect(() => parseArgs(['--out', '/tmp/s', '--only', 'home-empty,about'])).toThrow(
+      /Unknown shot/,
+    );
+    expect(parseArgs(['--out', '/tmp/s', '--only', 'sell-later,about']).only).toEqual([
+      'sell-later',
       'about',
     ]);
   });

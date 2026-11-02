@@ -193,7 +193,7 @@ for (const theme of THEMES) {
         page.getByTestId('field-calc-houseGrowth'),
       );
 
-      await page.goto('./');
+      await page.goto('rent-vs-buy/');
       await waitForCalculator(page);
       await shot(page, `forced-${theme}-home`);
     });

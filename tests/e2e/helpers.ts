@@ -15,7 +15,12 @@ export const PAGES: readonly { path: string; title: string; h1: string; island?:
   {
     path: './',
     title: 'House Sums',
-    h1: 'Rent v buy: how long until buying beats renting?',
+    h1: 'UK home-buying calculators',
+  },
+  {
+    path: 'sell-later/',
+    title: 'Sell later | House Sums',
+    h1: 'Sell later: what do you get back?',
     island: true,
   },
   { path: 'how-it-works/', title: 'How it works | House Sums', h1: 'How it works' },
@@ -26,8 +31,9 @@ export const PAGES: readonly { path: string; title: string; h1: string; island?:
   // contract the areas teammate builds to.
   {
     path: 'rent-vs-buy/',
-    title: 'Rent v buy by nation | House Sums',
-    h1: 'Rent v buy by nation',
+    title: 'Rent v buy | House Sums',
+    h1: 'Rent v buy: how long until buying beats renting?',
+    island: true,
   },
   {
     path: 'rent-vs-buy/scotland/',

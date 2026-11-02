@@ -185,8 +185,10 @@ for (const slug of ['leeds', 'belfast', 'westminster']) {
   });
 }
 
-test('the home page HTML holds no made-up answer or figures in the card', async ({ request }) => {
-  const html = await (await request.get('./')).text();
+test('the Rent v buy page HTML holds no made-up answer or figures in the card', async ({
+  request,
+}) => {
+  const html = await (await request.get('rent-vs-buy/')).text();
   const start = html.indexOf('data-testid="answer-card"');
   expect(start).toBeGreaterThan(0);
   const end = html.indexOf('class="share-link', start);

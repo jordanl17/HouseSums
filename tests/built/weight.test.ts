@@ -50,7 +50,9 @@ const areaPages = () =>
     const match = /^rent-vs-buy\/([^/]+)\/$/.exec(page.route);
     return match !== null && !nationSlugs.has(match[1] ?? '');
   });
-const islandPages = () => site.pages.filter((page) => page.html.includes('<astro-island'));
+/** Pages with the Rent v buy island. Sell later (/sell-later/) has its own, smaller island. */
+const islandPages = () =>
+  site.pages.filter((page) => page.html.includes('<astro-island') && page.route !== 'sell-later/');
 
 function tagsOf(page: BuiltPage, tag: string) {
   return startTags(page.html).filter((t) => t.tag === tag);
@@ -74,10 +76,11 @@ describe('HTML weight', () => {
 });
 
 describe('the calculator island', () => {
-  it('is on the home page and every area page, and nowhere else', () => {
+  it('is on /rent-vs-buy/ and every area page, and nowhere else', () => {
     const routes = islandPages().map((page) => page.route);
     expect(routes).toHaveLength(362);
-    expect(routes).toContain('');
+    expect(routes).toContain('rent-vs-buy/');
+    expect(routes).not.toContain('');
     expect(routes).toContain('rent-vs-buy/leeds/');
   });
 
@@ -125,7 +128,7 @@ describe('data/calculator.json', () => {
   });
 
   it('is not preloaded on pages without the island', () => {
-    for (const page of site.pages.filter((p) => !p.html.includes('<astro-island'))) {
+    for (const page of site.pages.filter((p) => !islandPages().includes(p))) {
       expect(page.html, page.route).not.toContain('data/calculator.json');
     }
   });

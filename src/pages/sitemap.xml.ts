@@ -18,6 +18,7 @@ export const GET: APIRoute = ({ site, url: requestUrl }) => {
   const origin = site ?? requestUrl;
   const paths = [
     url(),
+    url('sell-later'),
     url('how-it-works'),
     url('sources'),
     url('about'),

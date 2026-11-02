@@ -27,7 +27,7 @@ jobs:
     name: Build
     needs: ci
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
@@ -78,7 +78,7 @@ jobs:
   deploy:
     name: Deploy
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       pages: write
@@ -96,8 +96,8 @@ jobs:
   live:
     name: Test the live site
     needs: deploy
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
     permissions:
       contents: read
     env:

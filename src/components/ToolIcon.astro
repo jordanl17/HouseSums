@@ -1,0 +1,33 @@
+---
+/**
+ * Calculator icons for the home page cards, in the logo's style: a 24-unit grid, whole-unit ink
+ * strokes, one hi-vis accent with an ink edge, data colours only where they mean data.
+ *
+ * - rent-v-buy: a house with the chart inside it, the buy line (blue) rising across the rent
+ *   line (orange), and the hi-vis break-even dot where they cross.
+ * - sell-later: an estate agent's board on its post, hi-vis with an ink edge and an ink arrow
+ *   up, by the ground line.
+ *
+ * Decorative (aria-hidden): the card's heading names the calculator. Colours come from tokens
+ * through classes in src/styles/home.css; the shapes are in src/lib/tool-icons.ts.
+ */
+import { TOOL_ICON_SHAPES, type ToolKind } from '../lib/tool-icons';
+
+interface Props {
+  kind: ToolKind;
+  /** Height in px. Default 48. */
+  size?: number;
+}
+
+const { kind, size = 48 } = Astro.props;
+---
+
+<svg
+  class="tool-icon"
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  aria-hidden="true"
+  focusable="false"
+  set:html={TOOL_ICON_SHAPES[kind]}
+/>

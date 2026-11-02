@@ -97,12 +97,3 @@ test('/rent-vs-buy/ lists the four nations', async ({ page }) => {
   const counts = await table.locator('tbody td:first-of-type').allTextContents();
   expect(counts.map(Number).reduce((a, b) => a + b, 0)).toBe(areas.areas.length);
 });
-
-test('the home page has one plain line of links to the four nation pages', async ({ page }) => {
-  await page.goto('./');
-  const line = page.getByTestId('nation-links');
-  await expect(line).toHaveText('Rent v buy by nation: England, Scotland, Wales, Northern Ireland');
-  await expect(line.getByRole('link')).toHaveCount(4);
-  await line.getByRole('link', { name: 'Scotland' }).click();
-  await expect(page.locator('h1')).toHaveText('Rent v buy in Scotland');
-});
