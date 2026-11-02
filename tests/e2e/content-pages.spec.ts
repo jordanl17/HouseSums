@@ -191,7 +191,7 @@ test.describe('/sources/', () => {
     const refresh = page.locator('#refresh');
     await expect(refresh).toContainText('GitHub Action');
     await expect(refresh).toContainText('pull request');
-    await expect(refresh).toContainText('20th of each month');
+    await expect(refresh).toContainText('28th of each month');
     const fallbacks = areas.areas.filter((area) => area.fallbacks.length > 0);
     await expect(page.getByTestId('fallback-areas').getByRole('listitem')).toHaveCount(
       fallbacks.length,
