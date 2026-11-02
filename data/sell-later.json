@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "defaultNation": "eng",
+  "fixYears": 5,
+  "yearsHeld": {
+    "label": "Sell after",
+    "default": 5,
+    "min": 1,
+    "max": 40,
+    "step": 1,
+    "source": "A common fix length, when many people move or remortgage"
+  },
+  "priceChanges": [-0.2, -0.15, -0.1, -0.05, 0, 0.05, 0.1, 0.15, 0.2],
+  "chartChanges": [-0.2, -0.1, 0, 0.1, 0.2]
+}

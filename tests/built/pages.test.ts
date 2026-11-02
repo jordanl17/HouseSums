@@ -205,9 +205,11 @@ describe('JSON-LD', () => {
     }
   });
 
-  it('describes the calculator as a free WebApplication on the home page and every area page', () => {
-    const calculatorPages = site.pages.filter((p) => p.route === '' || areaOf(p) !== null);
-    expect(calculatorPages).toHaveLength(areas.length + 1);
+  it('describes the calculators as free WebApplications on their pages, and nowhere else', () => {
+    const calculatorPages = site.pages.filter(
+      (p) => p.route === '' || p.route === 'sell-later/' || areaOf(p) !== null,
+    );
+    expect(calculatorPages).toHaveLength(areas.length + 2);
     for (const p of calculatorPages) {
       const apps = ldOfType(p, 'WebApplication');
       expect(apps, p.rel).toHaveLength(1);

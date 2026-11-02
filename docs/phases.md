@@ -284,3 +284,13 @@ Branch `polish/review-nits`, one PR into `main`. Review nits from the phase 6 pa
 - **Fonts**: B612 Mono 700 is preloaded only on area pages and /sources/ (`Base` prop `boldFigures`); `tests/e2e/fonts.spec.ts` checks with document.fonts that nothing preloaded goes unused and CLS stays 0.
 - **Chart labels**: given the axis, `labelPlacement` and `labelSides` keep both direct labels off both lines (Cardiff at 360); at typical assumptions no area's labels touch a line.
 - **Typed before hydration**: a server-rendered number field typed in before the island hydrates keeps what was typed (`NumberField`), tested in `hydration.spec.ts`.
+
+### Sell later calculator
+
+Second calculator at `/sell-later/`, linked from the header nav ("Rent v buy", "Sell later" now lead it). Decisions in `docs/decisions.md`, "Sell later calculator".
+
+- **Inputs**: price, deposit, mortgage rate, term, and years until the sale (field plus slider, 1 to the term). Starting figures come from `data/`: England's average price (`areas.json`), the 10% deposit fraction and term from `defaults.json`, the BoE quoted 5-year fix for that LTV (`rates.json`), selling costs from `defaults.json`, and the sale year and price-change lists from `data/sell-later.json`.
+- **Engine**: `src/lib/sell-later.ts` (pure, tested in `sell-later.test.ts`): mortgage left, interest v principal paid, cash back and gain or loss for each sale price, the price change and yearly growth needed to break even, and a year-by-year gain series.
+- **UI**: `src/components/sell-later/` (own island, reuses the calculator's field, slider, key-number and table primitives), `src/styles/sell-later.css`. Results: two sentences, four key numbers, a table at -20% to +20% in 5% steps, and a chart of gain or loss by sale year for -20/-10/0/+10/+20%, with the chosen year marked.
+- **Budget**: island 28.6KB; total client JS about 91.6KB of 100KB.
+- **Tests**: unit tests for the engine; `links.spec.ts` drives the page through the nav. **Not done**: no axe spec for the page yet, no share link or query-string state, no OG image of its own, no area picker.

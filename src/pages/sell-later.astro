@@ -1,0 +1,88 @@
+---
+/**
+ * Sell later: buy, sell after some years at a range of prices, see what comes back once the
+ * mortgage is cleared. Starting figures come from data/ (the nation average price, the deposit
+ * fraction and the quoted rate for that loan-to-value from the Rent v buy defaults, plus
+ * data/sell-later.json); the island gets them as small props.
+ */
+import Base from '../layouts/Base.astro';
+import SellLater from '../components/sell-later/SellLater';
+import type { SellLaterProps } from '../components/sell-later/types';
+import sellLaterJson from '../../data/sell-later.json';
+import { areasFile, calculatorData } from '../lib/calculator-data';
+import { pickMortgageRate } from '../lib/defaults';
+import { NATION_NAMES } from '../lib/nations';
+import { roundToStep } from '../lib/inputs';
+import { absoluteUrl, webApplicationLd } from '../lib/seo';
+import type { FieldSpec, Nation } from '../lib/types';
+import { url } from '../lib/url';
+import '../styles/sell-later.css';
+
+const { defaults, rates } = calculatorData();
+const fields = defaults.fields;
+const nation = sellLaterJson.defaultNation as Nation;
+const price = areasFile().nations[nation].price;
+const deposit = roundToStep(price * defaults.depositFraction, fields.deposit.step);
+const quoted = pickMortgageRate(rates, 1 - defaults.depositFraction, sellLaterJson.fixYears);
+if (!quoted) throw new Error('No mortgage rates in data/rates.json');
+const termYears = fields.termYears.default ?? 30;
+const held = sellLaterJson.yearsHeld;
+
+const yearsHeldSpec: FieldSpec = {
+  label: held.label,
+  unit: 'years',
+  level: 'simple',
+  default: held.default,
+  min: held.min,
+  max: held.max,
+  step: held.step,
+  source: held.source,
+};
+
+const props: SellLaterProps = {
+  initial: {
+    price,
+    deposit,
+    mortgageRate: quoted.rate,
+    termYears,
+    yearsHeld: held.default,
+    agentFeeRate: fields.agentFeeRate.default ?? 0,
+    legalSelling: fields.legalSelling.default ?? 0,
+  },
+  specs: {
+    price: fields.price,
+    deposit: fields.deposit,
+    mortgageRate: fields.mortgageRate,
+    termYears: fields.termYears,
+    yearsHeld: yearsHeldSpec,
+  },
+  sources: {
+    price: `${NATION_NAMES[nation]} average, UK House Price Index`,
+    deposit: '',
+    mortgageRate: `Bank of England quoted ${quoted.fixYears}-year fix at ${Math.round(quoted.ltv * 100)}% loan-to-value`,
+    termYears: fields.termYears.source,
+    yearsHeld: held.source,
+  },
+  priceChanges: sellLaterJson.priceChanges,
+  chartChanges: sellLaterJson.chartChanges,
+};
+
+const description =
+  'Sell later: buy a home, sell it after a few years, and see what you get back once the mortgage is cleared.';
+const jsonLd = webApplicationLd({
+  name: 'House Sums: Sell later',
+  url: absoluteUrl(url('sell-later'), Astro.site ?? Astro.url),
+  description,
+});
+---
+
+<Base title="Sell later" description={description} jsonLd={jsonLd}>
+  <h1 class="calc-title">Sell later: what do you get back?</h1>
+  <SellLater client:load {...props} />
+</Base>
+
+<style>
+  .calc-title {
+    margin-block: var(--space-2) var(--space-5);
+  }
+</style>

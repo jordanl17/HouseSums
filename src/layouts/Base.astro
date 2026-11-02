@@ -101,7 +101,10 @@ const ldBlocks = jsonLd === undefined ? [] : Array.isArray(jsonLd) ? jsonLd : [j
 // Header nav and footer links. Paths go through url() so they work under any base path.
 const withSlash = (path: string) => (path.endsWith('/') ? path : `${path}/`);
 const here = withSlash(Astro.url.pathname);
+// The calculators first, then the pages about them.
 const nav = [
+  { label: 'Rent v buy', href: url() },
+  { label: 'Sell later', href: url('sell-later') },
   { label: 'How it works', href: url('how-it-works') },
   { label: 'Sources', href: url('sources') },
 ];

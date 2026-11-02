@@ -47,3 +47,21 @@ test('the nav takes you to each page and marks it as current', async ({ page }) 
     }),
   ).toBeVisible();
 });
+
+test('the nav reaches Sell later, which works out an answer', async ({ page }) => {
+  await page.goto('./');
+  const nav = page.getByRole('navigation', { name: 'Main' });
+  await nav.getByRole('link', { name: 'Sell later' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'Sell later: what do you get back?',
+  );
+  await expect(nav.getByRole('link', { name: 'Sell later' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  const answer = page.getByTestId('sell-later-answer');
+  await expect(answer).toContainText('Sell after 5 years');
+  await page.locator('#sl-yearsHeld').fill('10');
+  await page.keyboard.press('Tab');
+  await expect(answer).toContainText('Sell after 10 years');
+});
