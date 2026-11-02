@@ -102,7 +102,7 @@ for (const theme of THEMES) {
     test.use({ colorScheme: theme });
 
     test('home page: pick an area by keyboard, then every stop to the footer', async ({ page }) => {
-      await page.goto('./');
+      await page.goto('rent-vs-buy/');
       await expect(calculator(page)).toHaveAttribute('data-hydrated', 'true');
       await skipToArea(page);
       await page.keyboard.type('Leeds');
@@ -150,7 +150,7 @@ test('"Try again" keeps focus in the Area field when the list loads', async ({ p
     if (fail) await route.fulfill({ status: 503, body: '' });
     else await route.continue();
   });
-  await page.goto('./');
+  await page.goto('rent-vs-buy/');
   await expect(calculator(page)).toHaveAttribute('data-hydrated', 'true');
   await skipToArea(page);
   const retry = page.getByRole('button', { name: 'Try again' });

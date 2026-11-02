@@ -76,10 +76,11 @@ describe('HTML weight', () => {
 });
 
 describe('the calculator island', () => {
-  it('is on the home page and every area page, and nowhere else', () => {
+  it('is on /rent-vs-buy/ and every area page, and nowhere else', () => {
     const routes = islandPages().map((page) => page.route);
     expect(routes).toHaveLength(362);
-    expect(routes).toContain('');
+    expect(routes).toContain('rent-vs-buy/');
+    expect(routes).not.toContain('');
     expect(routes).toContain('rent-vs-buy/leeds/');
   });
 

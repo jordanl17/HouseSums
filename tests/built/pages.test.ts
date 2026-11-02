@@ -207,7 +207,7 @@ describe('JSON-LD', () => {
 
   it('describes the calculators as free WebApplications on their pages, and nowhere else', () => {
     const calculatorPages = site.pages.filter(
-      (p) => p.route === '' || p.route === 'sell-later/' || areaOf(p) !== null,
+      (p) => p.route === 'rent-vs-buy/' || p.route === 'sell-later/' || areaOf(p) !== null,
     );
     expect(calculatorPages).toHaveLength(areas.length + 2);
     for (const p of calculatorPages) {

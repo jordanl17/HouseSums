@@ -15,7 +15,7 @@ const ALIASES = [
 
 for (const alias of ALIASES) {
   test(`?a=${alias.old} opens ${alias.name} and rewrites the link`, async ({ page }) => {
-    await page.goto(`./?a=${alias.old}&p=300000`);
+    await page.goto(`rent-vs-buy/?a=${alias.old}&p=300000`);
     await expect(calculator(page)).toHaveAttribute('data-hydrated', 'true');
     await expectStatus(page, 'ready');
     await expect(page.locator('#calc-area')).toHaveValue(alias.name);

@@ -14,7 +14,7 @@ import {
  * Runs at 360 and 1280 (the two Playwright projects).
  */
 
-for (const { path, title, h1, island } of PAGES) {
+for (const { path, title, h1, island, script } of PAGES) {
   test.describe(`page ${path}`, () => {
     test('loads with its heading, header and footer', async ({ page }) => {
       const response = await page.goto(path);
@@ -27,7 +27,12 @@ for (const { path, title, h1, island } of PAGES) {
       const header = page.getByRole('banner');
       await expect(header.getByRole('link', { name: 'House Sums' })).toBeVisible();
       const nav = page.getByRole('navigation', { name: 'Main' });
-      await expect(nav.getByRole('link')).toHaveText(['How it works', 'Sources']);
+      await expect(nav.getByRole('link')).toHaveText([
+        'Rent v buy',
+        'Sell later',
+        'How it works',
+        'Sources',
+      ]);
 
       const footer = page.getByRole('contentinfo');
       await expect(footer).toContainText('This is a model, not financial advice.');
@@ -45,6 +50,16 @@ for (const { path, title, h1, island } of PAGES) {
         page,
       }) => {
         await expectOnlyOwnScripts(page, path);
+      });
+    } else if (script) {
+      test('loads no script files, only its inline script', async ({ page }) => {
+        const scripts: string[] = [];
+        page.on('request', (r) => {
+          if (r.resourceType() === 'script') scripts.push(r.url());
+        });
+        await page.goto(path, { waitUntil: 'networkidle' });
+        expect(scripts).toEqual([]);
+        await expect(page.locator('astro-island')).toHaveCount(0);
       });
     } else {
       test('loads no JavaScript', async ({ page }) => {
@@ -64,6 +79,8 @@ for (const { path, title, h1, island } of PAGES) {
 test('the 404 page carries the same header and footer', async ({ page }) => {
   await page.goto(NOT_FOUND_PATH);
   await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveText([
+    'Rent v buy',
+    'Sell later',
     'How it works',
     'Sources',
   ]);

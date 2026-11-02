@@ -207,7 +207,7 @@ test.describe('a shared link', () => {
       await released;
       await route.continue();
     });
-    await page.goto('./?a=leeds&p=320000');
+    await page.goto('rent-vs-buy/?a=leeds&p=320000');
     await expect(page.getByTestId('calculator')).toHaveAttribute('data-hydrated', 'true');
     await expectStatus(page, 'loading');
     await page.evaluate(() => document.fonts.ready);
@@ -256,7 +256,7 @@ test('before an area the card is compact; a link reserves the answer from the fi
   await page.route('**/data/area-list.json', () => {
     // Never answer: the card must hold its reserved size while it waits.
   });
-  await page.goto('./?a=leeds');
+  await page.goto('rent-vs-buy/?a=leeds');
   const waiting = await answerBox(page);
   expect(Math.abs(waiting.height - answered.height)).toBeLessThan(1);
 });

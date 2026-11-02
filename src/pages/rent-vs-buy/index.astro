@@ -1,9 +1,12 @@
 ---
 /**
- * /rent-vs-buy/: the four nations, each with its number of areas, typical price and rent and the
+ * /rent-vs-buy/: the Rent v buy calculator (it was the home page until the home page became the
+ * list of calculators), then the four nations, each with its number of areas, typical price and rent and the
  * middle break-even year at typical assumptions, linking to the nation pages.
  */
 import Base from '../../layouts/Base.astro';
+import CalculatorIsland from '../../components/calculator/CalculatorIsland';
+import { calculatorLinks, calculatorPreloads } from '../../lib/calculator-data';
 import { monthLabel } from '../../lib/area-summary';
 import {
   nationFigures,
@@ -11,27 +14,39 @@ import {
   nationsIndexPath,
   typicalAssumptions,
 } from '../../lib/areas';
-import { absoluteUrl, breadcrumbLd } from '../../lib/seo';
+import { absoluteUrl, breadcrumbLd, webApplicationLd } from '../../lib/seo';
 import { url } from '../../lib/url';
 import '../../styles/area.css';
 
 const site = Astro.site ?? Astro.url;
-const jsonLd = breadcrumbLd([
-  { name: 'House Sums', url: absoluteUrl(url(), site) },
-  { name: 'Rent v buy', url: absoluteUrl(nationsIndexPath(), site) },
-]);
+const description =
+  'Rent v buy: how long until buying beats renting? A plain-English UK calculator that starts from local figures, for every local authority.';
+const jsonLd = [
+  webApplicationLd({
+    name: 'House Sums: Rent v buy',
+    url: absoluteUrl(nationsIndexPath(), site),
+    description,
+  }),
+  breadcrumbLd([
+    { name: 'House Sums', url: absoluteUrl(url(), site) },
+    { name: 'Rent v buy', url: absoluteUrl(nationsIndexPath(), site) },
+  ]),
+];
 const rows = nationOverview();
 const total = rows.reduce((sum, row) => sum + row.count, 0);
 const england = nationFigures('eng').months;
 const ni = nationFigures('ni').months;
 ---
 
-<Base
-  title="Rent v buy by nation"
-  description="Rent v buy for every local authority in England, Scotland, Wales and Northern Ireland, from open government data."
-  jsonLd={jsonLd}
->
-  <h1 class="area-title">Rent v buy by nation</h1>
+<Base title="Rent v buy" description={description} jsonLd={jsonLd} preloads={calculatorPreloads()}>
+  <h1 class="calc-title">Rent v buy: how long until buying beats renting?</h1>
+  <script is:inline>
+    if (/[?&]a=[^&]/.test(location.search)) document.documentElement.dataset.calcLink = '';
+  </script>
+  <CalculatorIsland client:load links={calculatorLinks()} />
+  <h2 class="area-title area-title--section" id="by-nation">
+    Rent v buy by nation
+  </h2>
   <p class="area-lede">
     {total} local authorities across the four nations, each with its own page. Pick a nation for its
     areas, figures and property tax.
@@ -82,3 +97,13 @@ const ni = nationFigures('ni').months;
     </div>
   </div>
 </Base>
+
+<style>
+  .calc-title {
+    margin-block: var(--space-2) var(--space-5);
+  }
+
+  .area-title--section {
+    margin-top: var(--space-12);
+  }
+</style>

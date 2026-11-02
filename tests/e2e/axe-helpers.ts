@@ -26,11 +26,12 @@ export const THEMES: readonly Theme[] = ['light', 'dark'];
  * the answer); wait for `ready` before scanning those (see `waitForCalculator`).
  */
 export const A11Y_PAGES: readonly { name: string; path: string; calculator?: boolean }[] = [
-  { name: 'home, empty', path: './', calculator: true },
-  { name: 'home, with an area', path: './?a=leeds', calculator: true },
+  { name: 'home', path: './' },
+  { name: 'rent v buy, empty', path: 'rent-vs-buy/', calculator: true },
+  { name: 'rent v buy, with an area', path: 'rent-vs-buy/?a=leeds', calculator: true },
+  { name: 'sell later', path: 'sell-later/' },
   { name: 'area page', path: 'rent-vs-buy/leeds/', calculator: true },
   { name: 'nation page', path: 'rent-vs-buy/scotland/' },
-  { name: 'rent v buy index', path: 'rent-vs-buy/' },
   { name: 'how it works', path: 'how-it-works/' },
   { name: 'sources', path: 'sources/' },
   { name: 'about', path: 'about/' },
@@ -153,7 +154,7 @@ export const CALCULATOR_STATES: readonly CalculatorScene[] = [
   },
   {
     name: 'area list open',
-    path: './',
+    path: 'rent-vs-buy/',
     open: async (page) => {
       const area = page.locator('#calc-area');
       await area.click();

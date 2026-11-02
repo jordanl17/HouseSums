@@ -41,11 +41,20 @@ test('the nav takes you to each page and marks it as current', async ({ page }) 
 
   await page.getByRole('banner').getByRole('link', { name: 'House Sums' }).click();
   await expect(
+    page.getByRole('heading', { level: 1, name: 'UK home-buying calculators' }),
+  ).toBeVisible();
+
+  await nav.getByRole('link', { name: 'Rent v buy' }).click();
+  await expect(
     page.getByRole('heading', {
       level: 1,
       name: 'Rent v buy: how long until buying beats renting?',
     }),
   ).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Rent v buy' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
 });
 
 test('the nav reaches Sell later, which works out an answer', async ({ page }) => {

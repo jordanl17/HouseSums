@@ -11,11 +11,24 @@ import { expect, type Page } from '@playwright/test';
  * `island: true` marks a page that hydrates the calculator: it is checked for loading scripts
  * only from our own origin instead of loading none.
  */
-export const PAGES: readonly { path: string; title: string; h1: string; island?: boolean }[] = [
+/** `script`: an inline script and no island (the home page's redirect for old calculator links). */
+export const PAGES: readonly {
+  path: string;
+  title: string;
+  h1: string;
+  island?: boolean;
+  script?: boolean;
+}[] = [
   {
     path: './',
     title: 'House Sums',
-    h1: 'Rent v buy: how long until buying beats renting?',
+    h1: 'UK home-buying calculators',
+    script: true,
+  },
+  {
+    path: 'sell-later/',
+    title: 'Sell later | House Sums',
+    h1: 'Sell later: what do you get back?',
     island: true,
   },
   { path: 'how-it-works/', title: 'How it works | House Sums', h1: 'How it works' },
@@ -26,8 +39,9 @@ export const PAGES: readonly { path: string; title: string; h1: string; island?:
   // contract the areas teammate builds to.
   {
     path: 'rent-vs-buy/',
-    title: 'Rent v buy by nation | House Sums',
-    h1: 'Rent v buy by nation',
+    title: 'Rent v buy | House Sums',
+    h1: 'Rent v buy: how long until buying beats renting?',
+    island: true,
   },
   {
     path: 'rent-vs-buy/scotland/',

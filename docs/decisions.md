@@ -635,3 +635,10 @@ Review nits after the phase 6 merge, on `polish/review-nits`.
 - **Starting price is the England average**: England is most users; no area picker in the first version.
 - **Separate island and page**, not a mode of the Rent v buy island: that island is close to its 45KB limit and its state, URL and tests are built around one calculator. Built-page tests now treat `/sell-later/` as a second calculator page.
 - **Chart**: blue for price rises, orange for falls, ink for the same price; direct labels in ink. HTML labels over an SVG with non-scaling strokes so text keeps its size at 360px. Hidden from assistive tech: the sentences and table carry the same figures.
+
+## Home page of calculators
+
+- **The calculator moved to `/rent-vs-buy/`, not a new URL**: that page was already "Rent v buy" in the breadcrumbs, and area pages are the calculator above a summary, so the calculator above the nations table is the same shape. No area slug can collide.
+- **Redirect old links in the page, not the server**: GitHub Pages has no redirects. Any query on the home page is forwarded, since the home page itself takes none.
+- **Cards are links, not buttons**, each with an h2, one plain sentence and an icon. Two cards are not a feature grid in the brief's sense: they are the site's contents. Left-aligned, no shadow, the shared `.card` surface.
+- **Icons** follow the logo: 24-unit grid, 2-unit ink strokes, one hi-vis shape with the logo's sun edge (ink in light, hi-vis in dark), blue and orange only where they mean buy and rent. Decorative; the card heading names the calculator.

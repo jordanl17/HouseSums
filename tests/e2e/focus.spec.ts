@@ -55,7 +55,7 @@ for (const theme of ['light', 'dark'] as const) {
     });
 
     test('the skip link moves focus to the main content', async ({ page }) => {
-      await page.goto('./');
+      await page.goto('rent-vs-buy/');
       await page.keyboard.press('Tab');
       await page.keyboard.press('Enter');
       await expect(page.locator('main#main')).toBeFocused();

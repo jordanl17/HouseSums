@@ -14,39 +14,37 @@ import {
  */
 
 test.describe('home page', () => {
-  test('is the heading and the calculator, with nothing else above it', async ({ page }) => {
+  test('is the heading and one card per calculator, each opening it', async ({ page }) => {
     const response = await page.goto('./');
     expect(response?.status()).toBe(200);
-
     await expect(page).toHaveTitle('House Sums');
-    const heading = page.getByRole('heading', {
-      level: 1,
-      name: 'Rent v buy: how long until buying beats renting?',
-    });
-    await expect(heading).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'UK home-buying calculators' }),
+    ).toBeVisible();
+    const cards = page.getByTestId('tools').getByRole('link');
+    await expect(cards).toHaveCount(2);
+    await expect(cards.getByRole('heading', { level: 2 })).toHaveText(['Rent v buy', 'Sell later']);
 
-    const calculator = page.getByTestId('calculator');
-    await expect(calculator).toHaveAttribute('data-hydrated', 'true');
-    // Before an area is picked, the answer panel is a calm empty state.
-    await expect(calculator).toHaveAttribute('data-status', 'empty');
-    await expect(page.getByTestId('answer-card')).toContainText(
-      "Pick a place. We'll bring the local numbers.",
-    );
+    await cards.filter({ hasText: 'Rent v buy' }).click();
+    await expect(
+      page.getByRole('heading', {
+        level: 1,
+        name: 'Rent v buy: how long until buying beats renting?',
+      }),
+    ).toBeVisible();
+    await expect(page.getByTestId('calculator')).toHaveAttribute('data-hydrated', 'true');
 
-    // Nothing but the heading sits between the header and the calculator: no hero, no CTA.
-    const between = await page.evaluate(() => {
-      const main = document.querySelector('main');
-      if (!main) return [];
-      return [...main.children]
-        .map((el) => el.tagName.toLowerCase())
-        .filter((tag) => tag !== 'script' && tag !== 'style');
-    });
-    // Below the calculator: the one plain line of nation links (phase 5), nothing else.
-    expect(between).toEqual(['h1', 'astro-island', 'p']);
-    await expect(page.locator('main > p')).toHaveAttribute('data-testid', 'nation-links');
-    await expect(page.getByRole('contentinfo')).toContainText(
-      'This is a model, not financial advice.',
-    );
+    await page.goBack();
+    await cards.filter({ hasText: 'Sell later' }).click();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Sell later: what do you get back?' }),
+    ).toBeVisible();
+  });
+
+  test('sends links made before the move on to the Rent v buy calculator', async ({ page }) => {
+    await page.goto('./?a=leeds&p=320000');
+    await expect(page).toHaveURL(/\/rent-vs-buy\/\?a=leeds&p=320000$/);
+    await expect(page.getByTestId('calculator')).toHaveAttribute('data-status', 'ready');
   });
 
   test('has no horizontal scroll', async ({ page }) => {
@@ -54,8 +52,8 @@ test.describe('home page', () => {
     await expectNoHorizontalScroll(page);
   });
 
-  test('loads scripts only from our own origin', async ({ page }) => {
-    await expectOnlyOwnScripts(page, './');
+  test('the Rent v buy page loads scripts only from our own origin', async ({ page }) => {
+    await expectOnlyOwnScripts(page, 'rent-vs-buy/');
   });
 });
 
@@ -83,10 +81,7 @@ test.describe('404 page', () => {
     await homeLink.click();
     await expect(page).toHaveURL(new URL(basePath, baseURL).href);
     await expect(
-      page.getByRole('heading', {
-        level: 1,
-        name: 'Rent v buy: how long until buying beats renting?',
-      }),
+      page.getByRole('heading', { level: 1, name: 'UK home-buying calculators' }),
     ).toBeVisible();
   });
 
